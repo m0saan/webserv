@@ -76,11 +76,21 @@ int main() {
                     case eGlobalDirectives::ERROR_PAGE:
                     case eGlobalDirectives::MAX_FILE_SIZE:
                     case eGlobalDirectives::TIME_OUT:
+                    case eLocationDirectives::LOC_ROOT:
+                    case eLocationDirectives::LOC_ALLOWED_METHODS:
+                    case eLocationDirectives::LOC_INDEX:
+                    case eLocationDirectives::LOC_AUTO_INDEX:
+                    case eLocationDirectives::LOC_AUTH_BASIC:
                         if (tokens.size() == 2) globalConfig[tokens[0]] = tokens[1];
                         else exitError("SYNTAX ERROR.");
                     break;
 
                 case eGlobalDirectives::LOCATION:
+                    if (tokens.size() == 3) globalConfig[tokens[0]] = tokens[1];
+                    else if (tokens.size() == 4) std::cout << "size is 3" << std::endl;
+                    else exitError("SYNTAX ERROR.");
+//                case eGlobalDirectives::INVALID:
+//                    exitError("SYNTAX ERROR.");
                 default:
                     break;
                 // exitError("Invalid directive found in config file");
