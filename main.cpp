@@ -83,7 +83,7 @@ int main() {
     ifs.open(filename, std::ios_base::in);
 
     std::string line;
-    int i = -1;
+    int i = -1, j = -1;
     if (ifs.is_open()) {
         while (std::getline(ifs, line)) {
             if (line.empty()) continue;
@@ -127,32 +127,34 @@ int main() {
                     globalConfig[i]->_time_out = tokens[1];
                     break;
                 case eLocationDirectives::LOC_ROOT:
-                    if (globalConfig[i]->loc._root != "null")
+                    if (globalConfig[i]->_loc[j]->_root != "null")
                         exitError("Erooor");
-                    globalConfig[i]->loc._root = tokens[1];
+                    globalConfig[i]->_loc[j]->_root = tokens[1];
                     break;
                 case eLocationDirectives::LOC_ALLOWED_METHODS:
-                    if (globalConfig[i]->loc._allowed_method != "null")
+                    if (globalConfig[i]->_loc[j]->_allowed_method != "null")
                         exitError("Erooor");
-                    globalConfig[i]->loc._allowed_method = tokens[1];
+                    globalConfig[i]->_loc[j]->_allowed_method = tokens[1];
                     break;
                 case eLocationDirectives::LOC_INDEX:
-                    if (globalConfig[i]->loc._index != "null")
+                    if (globalConfig[i]->_loc[j]->_index != "null")
                         exitError("Erooor");
-                    globalConfig[i]->loc._index = tokens[1];
+                    globalConfig[i]->_loc[j]->_index = tokens[1];
                     break;
                 case eLocationDirectives::LOC_AUTO_INDEX:
-                    if (globalConfig[i]->loc._auto_index != "null")
+                    if (globalConfig[i]->_loc[j]->_auto_index != "null")
                         exitError("Erooor");
-                    globalConfig[i]->loc._auto_index = tokens[1];
+                    globalConfig[i]->_loc[j]->_auto_index = tokens[1];
                     break;
                 case eLocationDirectives::LOC_AUTH_BASIC:
-                    if (globalConfig[i]->loc._auth_basic != "null")
+                    if (globalConfig[i]->_loc[j]->_auth_basic != "null")
                         exitError("Erooor");
-                    globalConfig[i]->loc._auth_basic = tokens[1];
+                    globalConfig[i]->_loc[j]->_auth_basic = tokens[1];
                     break;
 
                 case eGlobalDirectives::LOCATION:
+                    globalConfig[i]->_loc.push_back(new Location());
+                    ++j;
                     break;
 //                    if (tokens.size() == 3) globalConfig[tokens[0]] = tokens[1];
 //                    else if (tokens.size() == 4) std::cout << "size is 3" << std::endl;

@@ -36,6 +36,7 @@ struct Server {
     Server() : _port("null"), _host("null"), _server_name("null"), _error_page("null"),_max_file_size("null"), _time_out("null") {}
     std::string _port, _host, _server_name, _error_page, _max_file_size, _time_out;
     Location loc;
+    std::vector<Location*> _loc;
 };
 
 #endif // __PARSER_HPP__
