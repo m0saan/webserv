@@ -26,15 +26,21 @@ public:
         static const int  AUTH_BASIC = 13;
         static const int  UPLOAD = 14;
         static const int  LOCATION_END = 99;
+    static const int  SERVER_END = 100;
 
 };
 
 typedef enum error {
-    INVALID_DIRECTIVE,
+    INVALID_DIRECTIVE = -2,
 }            e_error;
 
 struct Server { 
-    Server() : _port("null"), _host("null"), _server_name("null"), _error_page("null"),_max_file_size("null"), _time_out("null") {}
+    Server() :
+    _port("null"), _host("null"), _server_name("null"),
+    _error_page("null"),_max_file_size("null"),
+    _time_out("null"), _cgi("null"), _root("null"),
+    _auto_index("null"), _auth_basic("null"), _redirect(), _index(),
+    _allowed_method(), _location(), upload_pass() {}
 
     std::string _port;
     std::string _host;
