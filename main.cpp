@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include "parser/parser.hpp"
+#include "includes/parser.hpp"
+#include "includes/request.hpp"
 #include <array>
+#include "includes/utility.hpp"
 
 std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec) {
     os << "[ ";
@@ -70,7 +72,7 @@ int getDirective(std::string const &token) {
             std::make_pair("auto_index", Directives::AUTO_INDEX),
             std::make_pair("auth_basic", Directives::AUTH_BASIC),
             std::make_pair("]", Directives::LOCATION_END),
-            std::make_pair("}", Directives::LOCATION_END),
+            std::make_pair("}", Directives::SERVER_END),
     };
 
     for (int i = 0; i < globalDirectives.size(); ++i)
@@ -102,126 +104,147 @@ void parseLocation(int directive, std::vector<std::string> const &tokens, std::v
 
 }
 
+//void performParsing() {
+//    std::vector<Server *> globalConfig;
+//    std::ifstream ifs;
+//    const std::string filename("../webserv/config_files/webserv.config");
+//    ifs.open(filename, std::ios_base::in);
+//
+//    std::string line;
+//    int i = -1, j = -1;
+//    bool isLocation = false;
+//    if (ifs.is_open()) {
+//        while (std::getline(ifs, line)) {
+//            if (line.empty())
+//                continue;
+//
+//            std::vector<std::string> tokens = split(line);
+//            int directive = getDirective(tokens[0]);
+//            if (tokens[0] == "server")
+//                directive = -1;
+//
+//            switch (directive) {
+//                case -1:
+//                    globalConfig.push_back(new Server());
+//                    ++i;
+//                    j = -1;
+//                    break;
+//                case Directives::PORT:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_port, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_port, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::HOST:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_host, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_host, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::SERVER_NAME:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_server_name, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_server_name, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::ERROR_PAGE:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_error_page, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_error_page, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::MAX_FILE_SIZE:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_max_file_size, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_max_file_size, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::TIME_OUT:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_time_out, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_time_out, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::ROOT:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_root, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_root, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::ALLOWED_METHODS:
+//                    if (!globalConfig[i]->_location[j]->_allowed_method.empty())
+//                        exitError("Erooor");
+//                    if (!isLocation)
+//                        for (int k = 1; k < tokens.size(); ++k) globalConfig[i]->_allowed_method.insert(tokens[k]);
+//                    else
+//                        for (int k = 1; k < tokens.size(); ++k)
+//                            globalConfig[i]->_location[j]->_allowed_method.insert(tokens[k]);
+//                    break;
+//                case Directives::INDEX:
+//                    if (!isLocation)
+//                        std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]->_index));
+//                    else std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]->_location[j]->_index));
+//                    break;
+//                case Directives::AUTO_INDEX:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_auto_index, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_auto_index, tokens[1], tokens[0]);
+//                    break;
+//                case Directives::AUTH_BASIC:
+//                    if (!isLocation)
+//                        fillGlobalDirectives(globalConfig[i]->_auth_basic, tokens[1], tokens[0]);
+//                    else
+//                        fillGlobalDirectives(globalConfig[i]->_location[j]->_auth_basic, tokens[1], tokens[0]);
+//                    break;
+//
+//                case Directives::LOCATION:
+//                    globalConfig[i]->_location.push_back(new Server());
+//                    ++j;
+//                    isLocation = true;
+//                    break;
+//                    //                    if (tokens.size() == 3) globalConfig[tokens[0]] = tokens[1];
+//                    //                    else if (tokens.size() == 4) std::cout << "size is 3" << std::endl;
+//                    //                    else exitError("SYNTAX ERROR.");
+//
+//                    //                case Directives::INVALID:
+//                    //                    exitError("SYNTAX ERROR.");
+//                case Directives::LOCATION_END:
+//                    isLocation = false;
+//                    break;
+//                case e_error::INVALID_DIRECTIVE:
+//                    exitError("Invalid Directive");
+//                default:
+//                    break;
+//                    // exitError("Invalid directive found in config file");
+//            }
+//            //            std::cout << tokens << std::endl;
+//        }
+//    } else
+//        exitError("wrong config file path");
+//    std::cout << globalConfig << std::endl;
+//}
 
 int main() {
-    std::vector<Server *> globalConfig;
+    Request request;
     std::ifstream ifs;
-    const std::string filename("../webserv/config_files/webserv.config");
-    ifs.open(filename, std::ios_base::in);
-
-    std::string line;
-    int i = -1, j = -1;
-    bool isLocation = false;
+    ifs.open("./request", std::ios_base::in);
     if (ifs.is_open()) {
-        while (std::getline(ifs, line)) {
-            if (line.empty())
-                continue;
+        std::stringstream ss;
+        std::string line;
+        while (std::getline(ifs, line))
+            ss << line << std::endl;
 
-            std::vector<std::string> tokens = split(line);
-            int directive = getDirective(tokens[0]);
-            if (tokens[0] == "server")
-                directive = -1;
+        request.parseRequest(ss);
+        auto it = request.getMap().begin();
 
-            switch (directive) {
-                case -1:
-                    globalConfig.push_back(new Server());
-                    ++i;
-                    j = -1;
-                    break;
-                case Directives::PORT:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_port, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_port, tokens[1], tokens[0]);
-                    break;
-                case Directives::HOST:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_host, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_host, tokens[1], tokens[0]);
-                    break;
-                case Directives::SERVER_NAME:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_server_name, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_server_name, tokens[1], tokens[0]);
-                    break;
-                case Directives::ERROR_PAGE:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_error_page, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_error_page, tokens[1], tokens[0]);
-                    break;
-                case Directives::MAX_FILE_SIZE:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_max_file_size, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_max_file_size, tokens[1], tokens[0]);
-                    break;
-                case Directives::TIME_OUT:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_time_out, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_time_out, tokens[1], tokens[0]);
-                    break;
-                case Directives::ROOT:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_root, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_root, tokens[1], tokens[0]);
-                    break;
-                case Directives::ALLOWED_METHODS:
-                    if (!globalConfig[i]->_location[j]->_allowed_method.empty())
-                        exitError("Erooor");
-                    if (!isLocation)
-                        for (int k = 1; k < tokens.size(); ++k) globalConfig[i]->_allowed_method.insert(tokens[k]);
-                    else
-                        for (int k = 1; k < tokens.size(); ++k)
-                            globalConfig[i]->_location[j]->_allowed_method.insert(tokens[k]);
-                    break;
-                case Directives::INDEX:
-                    if (!isLocation)
-                        std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]->_index));
-                    else std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]->_location[j]->_index));
-                    break;
-                case Directives::AUTO_INDEX:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_auto_index, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_auto_index, tokens[1], tokens[0]);
-                    break;
-                case Directives::AUTH_BASIC:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_auth_basic, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_auth_basic, tokens[1], tokens[0]);
-                    break;
-
-                case Directives::LOCATION:
-                    globalConfig[i]->_location.push_back(new Server());
-                    ++j;
-                    isLocation = true;
-                    break;
-                    //                    if (tokens.size() == 3) globalConfig[tokens[0]] = tokens[1];
-                    //                    else if (tokens.size() == 4) std::cout << "size is 3" << std::endl;
-                    //                    else exitError("SYNTAX ERROR.");
-
-                    //                case Directives::INVALID:
-                    //                    exitError("SYNTAX ERROR.");
-                case Directives::LOCATION_END:
-                    isLocation = false;
-                    break;
-                case e_error::INVALID_DIRECTIVE:
-                    exitError("Invalid Directive");
-                default:
-                    break;
-                    // exitError("Invalid directive found in config file");
-            }
-            //            std::cout << tokens << std::endl;
+        for(; it != request.getMap().end(); ++it) {
+            std::cout << it->first << " ";
+            for (int i = 0; i < it->second.size(); ++i)
+                std::cout << it->second[i] << " ";
+            std::cout << std::endl;
         }
-    } else
-        exitError("wrong config file path");
-    std::cout << globalConfig << std::endl;
+    }
     return EXIT_SUCCESS;
 }
 

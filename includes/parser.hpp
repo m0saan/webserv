@@ -26,7 +26,7 @@ public:
         static const int  AUTH_BASIC = 13;
         static const int  UPLOAD = 14;
         static const int  LOCATION_END = 99;
-    static const int  SERVER_END = 100;
+        static const int  SERVER_END = 100;
 
 };
 
@@ -63,5 +63,7 @@ struct Server {
 
 
 };
+
+static void foo();
 
 #endif // __PARSER_HPP__
