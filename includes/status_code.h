@@ -112,11 +112,11 @@ namespace HTTP {
         CLIENT_CLOSED_REQUEST=499,
 
 
-        /* 5xx Server Error status code */
+        /* 5xx ServerConfig Error status code */
 
         /*
          *
-         * A 5xx Server error status code means that while the request appears to be valid, the server could not complete the request.
+         * A 5xx ServerConfig error status code means that while the request appears to be valid, the server could not complete the request.
          * If you're experiencing 5xx server errors for your website, you should immediately look at your server.
          * If you're hosting your own server you'll need to start debugging to figure out why it is not responding properly.
          * If you're using an external hosting provider you'll need to reach out to them, so they can look at it.
