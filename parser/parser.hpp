@@ -6,7 +6,17 @@
 #define __PARSER_HPP__
 
 #include <set>
-#include "status_code.h"
+#include <string>
+#include <vector>
+#include <map>
+#include <sstream>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include "../includes/request.hpp"
+#include <array>
+#include "../includes/utility.hpp"
+#include "../includes/status_code.h"
 
 class Directives {
 public:
@@ -34,8 +44,9 @@ typedef enum error {
     INVALID_DIRECTIVE = -2,
 }            e_error;
 
-struct Server { 
-    Server() :
+struct ServerConfig {
+
+    ServerConfig() :
     _port("null"), _host("null"), _server_name("null"),
     _error_page("null"),_max_file_size("null"),
     _time_out("null"), _cgi("null"), _root("null"),
@@ -57,13 +68,18 @@ struct Server {
     std::vector<std::string> _index;
     std::set<std::string> _allowed_method;
 
-    std::vector<Server*> _location;
+    std::vector<ServerConfig*> _location;
 
     bool upload_pass;
 
 
 };
 
-static void foo();
+int getDirective(std::string const &token);
+std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec);
+std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig *> const &vec);
+void exitError(std::string const &error);
+int getDirective(std::string const &token);
+std::vector<ServerConfig *> performParsing();
 
 #endif // __PARSER_HPP__
