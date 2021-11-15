@@ -10,13 +10,13 @@
 #include <vector>
 #include <sstream>
 
+typedef enum transfer_type {
+    CHUNKED,
+    COMPLETED,
+}           transfer_type;
 
 class Request {
 private:
-    typedef enum transfer_type
-    {
-        CHUNKED, COMPLETED
-    } transfer_type;
 
     std::map<std::string, std::vector<std::string> > _RequestMap;
     std::string		_req;
@@ -28,7 +28,7 @@ private:
 public:
 
     Request();
-    Request(long long max_size = 100000);
+    Request(long long max_size);
     ~Request();
     Request(Request const& x);
     Request& operator=(Request const &x);

@@ -71,8 +71,6 @@ struct ServerConfig {
     std::vector<ServerConfig*> _location;
 
     bool upload_pass;
-
-
 };
 
 int getDirective(std::string const &token);

@@ -8,6 +8,8 @@
 
 Request::Request() {}
 
+Request::Request(long long max_size ): _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size) { }
+
 Request::~Request() {}
 
 Request::Request(const Request &x) {
@@ -69,11 +71,6 @@ void Request::_getHeader(const std::string &line) {
 
 std::map<std::string, std::vector<std::string> > const &Request::getMap() const {
     return _RequestMap;
-}
-
-
-Request::Request(long long max_size ):_size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
-{
 }
 
 std::string Request::get_req()const
