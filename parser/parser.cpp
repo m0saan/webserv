@@ -74,15 +74,14 @@ int getDirective(std::string const &token) {
 
 template<typename T>
 void fillGlobalDirectives(T &field, T const &value, std::string const& directive) {
-    if (field != "null")
+    if (field != "")
         exitError("Error: Invalid directive: " + directive);
     field = value;
 }
 
-std::vector<ServerConfig *> performParsing() {
+std::vector<ServerConfig *> performParsing(std::string const& filename) {
     std::vector<ServerConfig *> globalConfig;
     std::ifstream ifs;
-    const std::string filename("../webserv/config_files/webserv.config");
     ifs.open(filename, std::ios_base::in);
 
     std::string line;
@@ -147,8 +146,6 @@ std::vector<ServerConfig *> performParsing() {
                         fillGlobalDirectives(globalConfig[i]->_location[j]->_root, tokens[1], tokens[0]);
                     break;
                 case Directives::ALLOWED_METHODS:
-                    if (!globalConfig[i]->_location[j]->_allowed_method.empty())
-                        exitError("Erooor");
                     if (!isLocation)
                         for (int k = 1; k < tokens.size(); ++k) globalConfig[i]->_allowed_method.insert(tokens[k]);
                     else

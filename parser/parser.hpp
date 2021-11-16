@@ -47,10 +47,10 @@ typedef enum error {
 struct ServerConfig {
 
     ServerConfig() :
-    _port("null"), _host("null"), _server_name("null"),
-    _error_page("null"),_max_file_size("null"),
-    _time_out("null"), _cgi("null"), _root("null"),
-    _auto_index("null"), _auth_basic("null"), _redirect(), _index(),
+    _port(), _host(), _server_name(),
+    _error_page(),_max_file_size(),
+    _time_out(), _cgi(), _root(),
+    _auto_index(), _auth_basic(), _redirect(), _index(),
     _allowed_method(), _location(), upload_pass() {}
 
     std::string _port;
@@ -63,6 +63,7 @@ struct ServerConfig {
     std::string _root;
     std::string _auto_index;
     std::string _auth_basic;
+    bool upload_pass;
 
     std::pair<HTTP::StatusCodes, std::string> _redirect;
     std::vector<std::string> _index;
@@ -70,7 +71,6 @@ struct ServerConfig {
 
     std::vector<ServerConfig*> _location;
 
-    bool upload_pass;
 };
 
 int getDirective(std::string const &token);
@@ -78,6 +78,6 @@ std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec);
 std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig *> const &vec);
 void exitError(std::string const &error);
 int getDirective(std::string const &token);
-std::vector<ServerConfig *> performParsing();
+std::vector<ServerConfig *> performParsing(std::string const& filename);
 
 #endif // __PARSER_HPP__
