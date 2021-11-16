@@ -6,7 +6,7 @@
 #include "utility.hpp"
 #include <iostream>
 
-Request::Request() {}
+// Request::Request() {}
 
 Request::~Request() {}
 

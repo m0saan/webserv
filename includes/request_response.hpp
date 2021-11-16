@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 08:37:44 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/14 18:19:06 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/16 07:55:40 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class request_response
 	private:
 		fd_set	read_fd, tmp_read, write_fd, tmp_write;
 		int		max_fd;
-		std::map<int , request> req_fd;
+		std::map<int , Request> req_fd;
 	public:
 		request_response();
 		void			update_set();

@@ -27,7 +27,7 @@ private:
     transfer_type	transfer_encoding;
 public:
 
-    Request();
+    // Request();
     Request(long long max_size = 100000);
     ~Request();
     Request(Request const& x);

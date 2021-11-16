@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/14 18:20:51 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/16 07:55:48 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ void request_response::set_fd(int fd, bool to_read, bool is_client) // set fd to
 	{
 		FD_SET(fd, &read_fd);
 		if (is_client)
-			req_fd.insert(std::make_pair(fd, request()));
+			req_fd.insert(std::make_pair(fd, Request()));
 	}
 	else 
 		FD_SET(fd, &write_fd);
