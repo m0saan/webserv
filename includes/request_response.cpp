@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/17 10:09:00 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/17 17:09:05 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,29 @@ void		request_response::receive(int fd)
 	char buffer[BUFFER_SIZE];
 
 	bzero(buffer, BUFFER_SIZE);
+	// std::cout <<"buffer :"  << buffer << std::endl;
 	status = recv(fd, buffer, BUFFER_SIZE, 0);
+	std::cout << "[" << buffer << "]" << std::endl;
+	// TO-DO Close connection and clear socketFd from set and vector of sockets
+	if (status == 0)
+	{
+		std::cout << "recv returned 0" << std::endl;
+		close_connection(fd);
+		remove_fd(fd, true, true); // remove from read set
+		remove_fd(fd, false, true); // remove from write set
+
+		return ;
+	}
 	try 
 	{
-	req_fd[fd].append(buffer, status);
-	std::cout << buffer << std::endl;
-	}
+		// std::string tmp(buffer, status);
+		// std::cout << "[" << buffer << "]" << std::endl;
+		// std::cout << "{" << tmp << "}" << std::endl;
+		// std::cout << "sizeof : " << sizeof(buffer) << std::endl;
+		// std::cout << "return val: " << status << std::endl;
+		req_fd[fd].append(buffer, status);
+		// std::cout << buffer << std::endl;
+	}		
 	catch(std::exception &e)
 	{
 		// std::cout << e.what() << std::endl;

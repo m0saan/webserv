@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 08:37:44 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/16 07:55:40 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/17 16:50:29 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-#define BUFFER_SIZE 400
+#define BUFFER_SIZE 1024 * 100
 #include "request.hpp"
 #include <map>
 

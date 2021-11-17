@@ -24,7 +24,7 @@ private:
     long long 		_content_length;
     long long		_header_length;
     long long		_max_body_size;
-    transfer_type	transfer_encoding;
+    transfer_type	_transfer_encoding;
 public:
 
 

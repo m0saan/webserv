@@ -85,18 +85,33 @@ std::string Request::get_req()const
 
 bool	Request::is_completed() const
 {
-	std::cout << _content_length << " header " << _header_length << " size " << _size << std::endl;
-	if (_content_length == -1 || 0)
-		return _size == _header_length + 4;
-	return (_size == _content_length + _header_length);
+	if (_transfer_encoding == COMPLETED)
+	{
+		if ((_content_length == -1 || _content_length == 0))
+			return _size == _header_length + 4;
+		return (_size == _content_length + _header_length);
+	}
+	else if (_transfer_encoding == CHUNKED)
+	{
+		// std::cout << "check if completed " << std::endl;
+		// std::cout << "|" << _req << "|" << std::endl;
+		std::cout << _req.length() << std::endl;
+		if(_req.find("0\r\n\r\n") != std::string::npos)
+			return true;
+		return false;
+	}
+	return true;
 }
 
 void 	Request::append(char *content, long long size)
 {
 	std::string tmp(content, size);
+	std::cout << "{" << tmp << "}" << std::endl;
+	std::cout << "length :" << _content_length << std::endl;
 	if (_content_length == -1) // 1st time reading req
 		getReqInfo(std::string(content, size));
 	_req += tmp;
+	std::cout << "|" << _req << "|" << std::endl;
 	_size = _req.length();
 }
 
@@ -123,22 +138,22 @@ long long Request::getContentLength(std::string str)
 	long long length = -1;
 	char *ptr_end;
 
-	if ((pos = str.find("Content-Length: ")) != std::string::npos)
+	if ((pos = str.find("Content-Length: ")) != std::string::npos) // if content-Length is found
 	{
 		length = std::strtoll(&str[pos + 16], &ptr_end, 10) + 4;
 		if (ptr_end == &str[pos + 16])
 			throw std::exception();
 		std::cout << "Content-Length : " << length << std::endl;
-		this->transfer_encoding = COMPLETED;
+		this->_transfer_encoding = COMPLETED;
 		if (length > _max_body_size) // check if lenght is greater than max body size
 			throw std::exception();
-		this->transfer_encoding = COMPLETED;
+		this->_transfer_encoding = COMPLETED;
 	}
-	/*
-
-			else maybe it's a chunked req or bad request
-
-	*/
+	else if ((str.find("Transfer-Encoding: chunked")) !=  std::string::npos) // !content-Lenght && transfer-Encoding = chunked
+	{
+		this->_transfer_encoding = CHUNKED;
+		this->_content_length = 0;
+	}
 	
 	return length;
 }

@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/17 07:48:34 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/17 16:34:22 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@
 
 void Server::initConfig(ServerConfig* conf, size_t size)
 {
-	if (!conf || conf->_port == "null" || conf->_host == "null" || size == 0)
-		return ;
+	// if (!conf || conf->_port == "null" || conf->_host == "null" || size == 0)
+	// 	return ;
 	int PORT;
 	std::cout << conf->_port << std::endl;
 	std::cout << conf->_host << std::endl;
@@ -47,8 +47,11 @@ void Server::initConfig(ServerConfig* conf, size_t size)
 	// if (conf->_location.size() > 0)
 	// {
 	// 	std::cout << conf->_location.size() << std::endl;
-	// 	for(size_t i = 0; conf->_location.size(); ++i)
+	// 	for(size_t i = 0; i < conf->_location.size(); ++i)
+	// 	{
+	// 		std::cout << "location : " << i << std::endl;
 	// 		initConfig(conf->_location[i], conf->_location.size());
+	// 	}
 	// }
 	return ;
 }
