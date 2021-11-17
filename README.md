@@ -21,7 +21,7 @@
   ```
   
   - The server configuration block usually includes a listen directive to specify the IP address and port on which the server listens for requests.
-     ```
+  ```
    server {
         # Server configuration
         listen 127.0.0.1:8080
