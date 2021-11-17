@@ -6,18 +6,16 @@
 #include "utility.hpp"
 #include <iostream>
 
-// Request::Request() {}
-
 Request::~Request() {}
 
 Request::Request(const Request &x) {
     *this = x;
 }
 
-Request &Request::operator=(const Request &x) {
-//    this->_RequestMap = x._RequestMap;
-    return *this;
-}
+// Request &Request::operator=(const Request &x) {
+// //    this->_RequestMap = x._RequestMap;
+//     return *this;
+// }
 
 std::vector<std::string> const &Request::getValue(const std::string &key) {
     return _RequestMap[key];
@@ -67,14 +65,18 @@ void Request::_getHeader(const std::string &line) {
         _RequestMap[tokens[0]] = std::__1::vector<std::string>(tokens.begin() + 1, tokens.end());
 }
 
-std::map<std::string, std::vector<std::string> > const &Request::getMap() const {
-    return _RequestMap;
-}
-
+// std::map<std::string, std::vector<std::string> > const &Request::getMap() const {
+//     return _RequestMap;
+// }
 
 Request::Request(long long max_size ):_size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
 {
 }
+
+// Request::request(char *content, long long lenght, long long content_length):_req(std::string(content, lenght)), _size(lenght), _content_length(content_length)
+// {
+// }
+
 
 std::string Request::get_req()const
 {
@@ -83,6 +85,9 @@ std::string Request::get_req()const
 
 bool	Request::is_completed() const
 {
+	std::cout << _content_length << " header " << _header_length << " size " << _size << std::endl;
+	if (_content_length == -1 || 0)
+		return _size == _header_length + 4;
 	return (_size == _content_length + _header_length);
 }
 
@@ -131,7 +136,7 @@ long long Request::getContentLength(std::string str)
 	}
 	/*
 
-			else maybe it's a chunked req or bad Request
+			else maybe it's a chunked req or bad request
 
 	*/
 	

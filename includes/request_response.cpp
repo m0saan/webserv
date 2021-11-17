@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/16 07:55:48 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/17 10:09:00 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ void		request_response::receive(int fd)
 	try 
 	{
 	req_fd[fd].append(buffer, status);
-
+	std::cout << buffer << std::endl;
 	}
 	catch(std::exception &e)
 	{

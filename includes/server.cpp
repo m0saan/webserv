@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/16 10:18:22 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/17 07:48:34 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,12 +44,12 @@ void Server::initConfig(ServerConfig* conf, size_t size)
 	(server_cli.back())->bind_socket();
 	(server_cli.back())->listen_socket(size);
 	// std::cout << "------------------>Server setup PORT : " << PORT << " HOST : " << conf->_host << std::endl;
-	if (conf->_location.size() > 0)
-	{
-		std::cout << conf->_location.size() << std::endl;
-		for(size_t i = 0; conf->_location.size(); ++i)
-			initConfig(conf->_location[i], conf->_location.size());
-	}
+	// if (conf->_location.size() > 0)
+	// {
+	// 	std::cout << conf->_location.size() << std::endl;
+	// 	for(size_t i = 0; conf->_location.size(); ++i)
+	// 		initConfig(conf->_location[i], conf->_location.size());
+	// }
 	return ;
 }
 

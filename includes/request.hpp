@@ -27,11 +27,11 @@ private:
     transfer_type	transfer_encoding;
 public:
 
-    // Request();
+
     Request(long long max_size = 100000);
     ~Request();
     Request(Request const& x);
-    Request& operator=(Request const &x);
+    // Request& operator=(Request const &x);
 
     std::map<std::string, std::vector<std::string> > const& getMap() const;
 
