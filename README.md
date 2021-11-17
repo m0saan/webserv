@@ -33,7 +33,8 @@
   ```
   - If a port is omitted, the standard port is used. Likewise, if an address is omitted, the server listens on all addresses.
   - If the listen directive is not included at all, the “standard” port is 80/tcp and the “default” port is 8000/tcp, depending on superuser privileges.
-  - If there are several servers that match the IP address and port of the request, the server tests the request’s Host header field against the server_name         directives in the server blocks. 
+  - If there are several servers that match the IP address and port of the request, the server tests the request’s Host header field against the server_name         directives in the server blocks.   
+  - If the Host header field does not match a server name, should routes the request to the default server for the port on which the request arrived. The default     server is the first one listed in the config file, unless you include the default_server parameter to the listen directive to explicitly designate a server       as the default.
   - A location block lives within a server block and is used to define how Nginx should handle requests for different resources and URIs for the parent server.
 #### How Nginx Decides Which Server Block Will Handle a Request
   - 
