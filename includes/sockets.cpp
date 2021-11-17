@@ -64,17 +64,17 @@ void	sockets::create_socket()
 	//protocol should be set to 0 to indicate default protocol should be used
 	if ((this->fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		perror("Socket :");
+		perror("Socket");
 		exit (-1);
 	}
 	// Make the fd Non-Blocking
 	if (fcntl(this->fd, F_SETFL, O_NONBLOCK) < 0)
 	{
-		perror("FCNTL :");
+		perror("FCNTL ");
 		exit (-1);
 	}
 	int new_socket;
-	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &new_socket, sizeof(new_socket));
+		setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &new_socket, sizeof(new_socket));
 }
 
 void	sockets::set_addr(int PORT, std::string ip)
@@ -90,7 +90,7 @@ void	sockets::bind_socket() const
 {
 	if ((bind(this->fd, (const sockaddr *)&this->socket_add, this->addrlen)) < 0)
 	{
-		perror("Bind :");
+		perror("Bind");
 		exit (-1);
 	}
 }

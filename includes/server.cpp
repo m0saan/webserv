@@ -6,25 +6,64 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/14 17:52:27 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/16 10:18:22 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
+#include <string>
+// void server::locationConfig(ServerConfig *conf)
+// {
 
-server::server(std::vector<int> PORT)
+// }
+
+void Server::initConfig(ServerConfig* conf, size_t size)
 {
-	for(size_t i = 0; i < PORT.size(); ++i)
+	if (!conf || conf->_port == "null" || conf->_host == "null" || size == 0)
+		return ;
+	int PORT;
+	std::cout << conf->_port << std::endl;
+	std::cout << conf->_host << std::endl;
+	try
 	{
-		server_cli.push_back(new sockets());
-		server_cli[i]->create_socket();
-		server_cli[i]->set_addr(PORT[i], "0.0.0.0");
-		server_cli[i]->bind_socket();
-		server_cli[i]->listen_socket(PORT.size());
+		/* code */
+		PORT = std::stoi(conf->_port);
+		if (conf->_host.length() == 0)
+			throw std::exception();
+		else if (conf->_host == "localhost")
+			conf->_host = "127.0.0.1";
 	}
+	catch(const std::exception& e)
+	{
+		return ;
+	}
+	// std::cout << "------------------>Server setup PORT : " << PORT << " HOST : " << conf->_host << std::endl;
+	server_cli.push_back(new sockets());
+	(server_cli.back())->create_socket();
+	(server_cli.back())->set_addr(PORT, conf->_host);
+	(server_cli.back())->bind_socket();
+	(server_cli.back())->listen_socket(size);
+	// std::cout << "------------------>Server setup PORT : " << PORT << " HOST : " << conf->_host << std::endl;
+	if (conf->_location.size() > 0)
+	{
+		std::cout << conf->_location.size() << std::endl;
+		for(size_t i = 0; conf->_location.size(); ++i)
+			initConfig(conf->_location[i], conf->_location.size());
+	}
+	return ;
 }
 
-int server::is_server(int fd, bool *is_client) const
+Server::Server(std::vector<ServerConfig*> config)
+{	
+	for(size_t i = 0 ; i < config.size(); ++i)
+	{
+		std::cout << "_location : " << config[i]->_location.size() << std::endl;
+		initConfig(config[i], config.size());
+	}
+	
+}
+
+int Server::is_server(int fd, bool *is_client) const
 {
 	// returns index of fd and check if it's client or server
 	for(size_t i = 0; i < server_cli.size(); ++i)
@@ -38,8 +77,14 @@ int server::is_server(int fd, bool *is_client) const
 	return -1;
 }
 
-void	server::listen()
+void	Server::listen()
 {
+
+	if (this->server_cli.empty())
+	{
+		std::cout << "Error config " << std::endl;
+		exit(1);
+	}
 	request_response req_res;
 	int position;
 	bool is_client;
@@ -98,5 +143,5 @@ void	server::listen()
 }
 
 
-server::~server()
+Server::~Server()
 {}

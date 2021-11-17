@@ -105,7 +105,7 @@ void parseLocation(int directive, std::vector<std::string> const &tokens, std::v
 
 }
 
-std::vector<ServerConfig*>& performParsing() {
+std::vector<ServerConfig*> performParsing() {
    std::vector<ServerConfig*> globalConfig;
    std::ifstream ifs;
    const std::string filename("../webserv/config_files/webserv.config");
@@ -224,31 +224,36 @@ std::vector<ServerConfig*>& performParsing() {
    } else
        exitError("wrong config file path");
 //    std::cout << globalConfig << std::endl;
-    return globalConfig;
+     std::vector<ServerConfig*> *tmp =  new std::vector<ServerConfig*>(globalConfig);
+    //  std::cout << "tmp : " << tmp->size();
+    return (*tmp);
 }
 
 int main() {
     Request request;
     std::ifstream ifs;
 
-    performParsing();
+    // std::cout << performParsing().size() << std::endl;
+    Server serv(performParsing());
     ifs.open("./request", std::ios_base::in);
-    if (ifs.is_open()) {
-        std::stringstream ss;
-        std::string line;
-        while (std::getline(ifs, line))
-            ss << line << std::endl;
+    // if (ifs.is_open()) {
+    //     std::stringstream ss;
+    //     std::string line;
+    //     while (std::getline(ifs, line))
+    //         ss << line << std::endl;
 
-        request.parseRequest(ss);
-        auto it = request.getMap().begin();
+    //     request.parseRequest(ss);
+    //     auto it = request.getMap().begin();
 
-        for(; it != request.getMap().end(); ++it) {
-            std::cout << it->first << " ";
-            for (int i = 0; i < it->second.size(); ++i)
-                std::cout << it->second[i] << " ";
-            std::cout << std::endl;
-        }
-    }
+    //     for(; it != request.getMap().end(); ++it) {
+    //         std::cout << it->first << " ";
+    //         for (int i = 0; i < it->second.size(); ++i)
+    //             std::cout << it->second[i] << " ";
+    //         std::cout << std::endl;
+    //     }
+    // }
+    serv.listen();
+
     return EXIT_SUCCESS;
 }
 
