@@ -28,6 +28,8 @@ void Response::_default_location(std::string const& root, Location const& loc, s
 	std::vector<std::string> const	index = loc.getIndex();
 	std::ifstream					file;
 	std::string 					line;
+	std::string						tmp_resp;
+	size_t							content_counter(0);
 
 	// first lets search if the location contains the uri as one of its index names
 	if (uri.empty())
@@ -50,11 +52,31 @@ void Response::_default_location(std::string const& root, Location const& loc, s
 	while (!file.eof())
 	{
 		std::getline(file, line);
+		content_counter += line.size();
 		if (!file.eof())
+		{
 			line += '\n';
-		_response += line;
+			content_counter++;
+		}
+		tmp_resp += line;
 	}
+	_set_headers(200, "OK", content_counter);
+	_response += tmp_resp;
 	file.close();
+}
+
+void Response::_set_headers(size_t status_code, std::string const& message, size_t content_length)
+{
+	time_t rawtime;
+
+	time (&rawtime);
+	_response += "HTTP/1.1 " +  std::to_string(status_code) + " " + message + '\n';
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response += "Server: webserver\n";
+	_response += "Content-Length: " + std::to_string(content_length) + '\n';
+	_response += "Content-Type: \n";
+	_response += "Connection: close\n";
+	_response += '\n';
 }
 
 std::string const& 	Response::get_response(void) const	{ return _response; }
