@@ -71,6 +71,7 @@ struct ServerConfig {
 
     std::vector<ServerConfig*> _location;
 
+
 };
 
 int getDirective(std::string const &token);
