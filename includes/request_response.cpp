@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/17 17:09:05 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/19 17:52:47 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,38 +20,37 @@ request_response::request_response():max_fd(-1)
 	FD_ZERO(&(this->tmp_write));
 }
 
+void		request_response::reset(int fd)
+{
+	(req_fd[fd]).resetRequest();
+}
+
 void		request_response::receive(int fd)
 {
 	long long status;
 	char buffer[BUFFER_SIZE];
 
 	bzero(buffer, BUFFER_SIZE);
-	// std::cout <<"buffer :"  << buffer << std::endl;
 	status = recv(fd, buffer, BUFFER_SIZE, 0);
-	std::cout << "[" << buffer << "]" << std::endl;
-	// TO-DO Close connection and clear socketFd from set and vector of sockets
-	if (status == 0)
+	if (status == 0 || status == -1) // Closed connection or Invalid fd
 	{
-		std::cout << "recv returned 0" << std::endl;
-		close_connection(fd);
 		remove_fd(fd, true, true); // remove from read set
-		remove_fd(fd, false, true); // remove from write set
-
 		return ;
+	}
+	else if (status < 0)
+	{
+		std::cout << "recv returned -1" << std::endl;
+		throw std::exception();
 	}
 	try 
 	{
-		// std::string tmp(buffer, status);
-		// std::cout << "[" << buffer << "]" << std::endl;
-		// std::cout << "{" << tmp << "}" << std::endl;
-		// std::cout << "sizeof : " << sizeof(buffer) << std::endl;
-		// std::cout << "return val: " << status << std::endl;
 		req_fd[fd].append(buffer, status);
-		// std::cout << buffer << std::endl;
 	}		
 	catch(std::exception &e)
 	{
-		// std::cout << e.what() << std::endl;
+		std::cout << "Cannot append to req" << std::endl;
+		std::cout << e.what() << std::endl;
+		exit(1);
 	}
 	return ;
 }

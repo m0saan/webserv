@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/17 16:34:22 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/19 18:17:27 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,9 @@
 
 void Server::initConfig(ServerConfig* conf, size_t size)
 {
-	// if (!conf || conf->_port == "null" || conf->_host == "null" || size == 0)
-	// 	return ;
 	int PORT;
-	std::cout << conf->_port << std::endl;
-	std::cout << conf->_host << std::endl;
+	if (!conf || conf->_port == "null" || conf->_host == "null" || size == 0)
+		return ;
 	try
 	{
 		/* code */
@@ -37,22 +35,11 @@ void Server::initConfig(ServerConfig* conf, size_t size)
 	{
 		return ;
 	}
-	// std::cout << "------------------>Server setup PORT : " << PORT << " HOST : " << conf->_host << std::endl;
 	server_cli.push_back(new sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf->_host);
 	(server_cli.back())->bind_socket();
 	(server_cli.back())->listen_socket(size);
-	// std::cout << "------------------>Server setup PORT : " << PORT << " HOST : " << conf->_host << std::endl;
-	// if (conf->_location.size() > 0)
-	// {
-	// 	std::cout << conf->_location.size() << std::endl;
-	// 	for(size_t i = 0; i < conf->_location.size(); ++i)
-	// 	{
-	// 		std::cout << "location : " << i << std::endl;
-	// 		initConfig(conf->_location[i], conf->_location.size());
-	// 	}
-	// }
 	return ;
 }
 
@@ -60,7 +47,6 @@ Server::Server(std::vector<ServerConfig*> config)
 {	
 	for(size_t i = 0 ; i < config.size(); ++i)
 	{
-		std::cout << "_location : " << config[i]->_location.size() << std::endl;
 		initConfig(config[i], config.size());
 	}
 	
@@ -98,7 +84,7 @@ void	Server::listen()
 	while(1)
 	{
 		req_res.update_set();
-		std::cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
+		// std::cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
 		req_res.select_fd();
 		for(int i = 0; i <= req_res.get_maxfd(); ++i)
 		{
@@ -121,7 +107,14 @@ void	Server::listen()
 				else
 				{
 					//	client socket
-					req_res.receive(i);
+					std::cout << "still checking ... " << i  << std::endl;
+					try {
+						req_res.receive(i);
+					}
+					catch(std::exception &e)
+					{
+						std::cout << e.what() << std::endl;
+					}
 					// parse request
 					if (req_res.req_completed(i))
 					{
@@ -129,6 +122,7 @@ void	Server::listen()
 						req_res.set_fd(i, false, true); // add client fd to write set
 						req_res.remove_fd(i, 1, 1); // clear if from read set
 					}
+					std::cout << "req done !" << std::endl;
 				}
 			}
 			if (req_res.is_ready(i, 0)) // check if fd is ready to write
@@ -138,8 +132,16 @@ void	Server::listen()
 				req_res.send_all(i, res);
 				res = "\r\n5\r\nHello\r\n8\r\nGood bye\r\n0\r\n\r\n";
 				req_res.send_all(i, res);
+				// if (close)
+				// {
+				// req_res.remove_fd(i, 0, 0);
+				// req_res.close_connection(i);
+				// }
+				// else
+				// {
+				req_res.reset(i);
 				req_res.remove_fd(i, 0, 0);
-				req_res.close_connection(i);
+				// req_res.set_fd(i, 1, 1);
 			}
 		}
 	}

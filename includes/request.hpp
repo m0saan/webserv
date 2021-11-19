@@ -51,6 +51,8 @@ public:
 
     size_t getHeaderLength(std::string str);
 
+    void    resetRequest();
+
 private:
 
     void _getHeader(const std::string &line);

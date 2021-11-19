@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 08:37:44 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/17 16:50:29 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/19 17:36:46 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,5 +40,6 @@ class request_response
 		void			close_connection(int fd)		 const;
 		bool			req_completed(int fd);
 		std::string		get_req(int fd);
+		void			reset(int fd);
 		~request_response();
 };

@@ -235,7 +235,7 @@ int main() {
 
     // std::cout << performParsing().size() << std::endl;
     Server serv(performParsing());
-    // ifs.open("./request", std::ios_base::in);
+    ifs.open("./request", std::ios_base::in);
     // if (ifs.is_open()) {
     //     std::stringstream ss;
     //     std::string line;
