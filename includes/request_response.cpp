@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/19 17:52:47 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/20 10:05:53 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ void		request_response::reset(int fd)
 	(req_fd[fd]).resetRequest();
 }
 
-void		request_response::receive(int fd)
+bool		request_response::receive(int fd, Server &server) // return false if connection is closed 
 {
 	long long status;
 	char buffer[BUFFER_SIZE];
@@ -35,24 +35,20 @@ void		request_response::receive(int fd)
 	if (status == 0 || status == -1) // Closed connection or Invalid fd
 	{
 		remove_fd(fd, true, true); // remove from read set
-		return ;
-	}
-	else if (status < 0)
-	{
-		std::cout << "recv returned -1" << std::endl;
-		throw std::exception();
+		server.socketFree(fd);
+		return false;
 	}
 	try 
 	{
 		req_fd[fd].append(buffer, status);
-	}		
+	}
 	catch(std::exception &e)
 	{
 		std::cout << "Cannot append to req" << std::endl;
 		std::cout << e.what() << std::endl;
 		exit(1);
 	}
-	return ;
+	return true;
 }
 
 void	request_response::send_all(int fd, std::string res)
@@ -115,7 +111,10 @@ void request_response::remove_fd(int fd, bool to_read, bool is_client)
 	{
 		FD_CLR(fd, &read_fd);
 		if (is_client)
+		{
+			
 			req_fd.erase(fd);
+		}
 	}
 	else
 		FD_CLR(fd, &write_fd);

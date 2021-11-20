@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 08:37:44 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/19 17:36:46 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/20 10:06:02 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #define BUFFER_SIZE 1024 * 100
 #include "request.hpp"
 #include <map>
-
+#include "server.hpp"
 
 class request_response
 {
@@ -35,7 +35,7 @@ class request_response
 		void			select_fd();
 		int				get_maxfd() 					const;
 		int				is_ready(int fd, bool to_read);
-		void 		receive(int fd);
+		bool 			receive(int fd, Server &server);
 		void			send_all(int fd, std::string res);
 		void			close_connection(int fd)		 const;
 		bool			req_completed(int fd);

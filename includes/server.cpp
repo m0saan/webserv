@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/19 18:17:27 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/20 10:20:40 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,21 +108,27 @@ void	Server::listen()
 				{
 					//	client socket
 					std::cout << "still checking ... " << i  << std::endl;
-					try {
-						req_res.receive(i);
+					try 
+					{
+						if (!req_res.receive(i, *this)) // if connection is closed or invalid socket
+							continue;
 					}
 					catch(std::exception &e)
 					{
-						std::cout << e.what() << std::endl;
+						// std::cout << e.what() << std::endl;
+						std::cout << "bad req" << std::endl;
+						continue ;
 					}
 					// parse request
 					if (req_res.req_completed(i))
 					{
 						std::cout << req_res.get_req(i) << std::endl;
 						req_res.set_fd(i, false, true); // add client fd to write set
-						req_res.remove_fd(i, 1, 1); // clear if from read set
+						// if (close)
+						// {
+							req_res.remove_fd(i, 1, 1); // clear if from read set
+						// }
 					}
-					std::cout << "req done !" << std::endl;
 				}
 			}
 			if (req_res.is_ready(i, 0)) // check if fd is ready to write
@@ -134,19 +140,38 @@ void	Server::listen()
 				req_res.send_all(i, res);
 				// if (close)
 				// {
-				// req_res.remove_fd(i, 0, 0);
-				// req_res.close_connection(i);
+				req_res.remove_fd(i, 0, 0);
+				req_res.close_connection(i);
+				// socketFree(i);
 				// }
 				// else
 				// {
-				req_res.reset(i);
-				req_res.remove_fd(i, 0, 0);
+				// req_res.reset(i);
+				// req_res.remove_fd(i, 0, 0);
 				// req_res.set_fd(i, 1, 1);
 			}
 		}
 	}
 }
 
+
+void Server::socketFree(int fd)
+{
+	std::vector<sockets *>::iterator first(server_cli.begin());
+	std::vector<sockets *>::iterator last(server_cli.end());
+
+	for(; first != last; ++first)
+	{
+		if ((*first)->get_fd() == fd)
+		{
+			delete *first;
+			*first = NULL;
+			server_cli.erase(first);
+			std::cout << "Freed " << std::endl;
+		}
+	}
+	return ;
+}
 
 Server::~Server()
 {}

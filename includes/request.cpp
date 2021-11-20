@@ -127,7 +127,7 @@ void Request::getReqInfo(std::string str)
 	}
 	catch(std::exception &e)
 	{
-		std::cout << "here " << std::endl;
+		std::cout << "Bad Request !" << std::endl;
 	}
 }
 

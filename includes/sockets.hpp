@@ -42,7 +42,7 @@ class sockets
 		void				listen_socket(int nbr_of_ports) 		const;
 		void 				create_socket();
 		void				set_addr(int PORT, std::string ip);
-		sockets*		accept_connection(int sock_fd);
+		sockets*			accept_connection(int sock_fd);
 		bool				is_client()								const;
 		~sockets();
 };
