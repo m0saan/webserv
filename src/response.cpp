@@ -2,15 +2,26 @@
 #include "../includes/location.hpp"
 
 
-Response::Response(void): _response(""), _error(0){}
+Response::Response(void): _response(""), _loc()
+, _root(""), _uri(""), _error_pages(""){}
+
+Response::Response(std::string const& root, Location const& loc
+, std::string const& uri, std::string const& error_pages): _loc(loc), _root(root)
+, _uri(uri), _error_pages(error_pages)
+{
+	_type.insert(std::make_pair("json", "application"));
+	_type.insert(std::make_pair("html", "text"));
+}
+
 Response::Response(Response const& x) { *this = x;	}
+Response::~Response(void) { _file.close(); }
 Response& Response::operator=(Response const& x)
 {
 	_response = x._response;
-	_error = x._error;
 	return *this;
 }
-void Response::Get_request(std::string const& root, Location const& loc, std::string const& uri)
+
+void Response::Get_request(void)
 {
 	/*
 	* if the location is the @default location then we should check the type of the uri, is it a directory or a file
@@ -18,54 +29,48 @@ void Response::Get_request(std::string const& root, Location const& loc, std::st
 	* it's content, otherwise we should check if the autoindex it set to on means that we should list all the files in that directory
 	* if non of the prev condition is true then we should return an error
 	*/
-	if (loc.getPath() == "/")
-		_default_location(root, loc, uri);
+	if (_loc.getPath() == "/")
+	{
+		if (!_default_location()) // if we had an error while trying to open the file location we should return back
+			return;
+	}
+	if (_file_path.empty())
+	{
+		if (!_file_is_good())
+			return;
+	}
+	_fill_response(_file_path, 200, "OK"); // if all good than we should fill the response with 200 status code
 }
 
-void Response::_default_location(std::string const& root, Location const& loc, std::string const& uri)
+bool Response::_default_location(void)
 {
-	std::string const				full_path(root + '/' + uri);
-	std::vector<std::string> const	index = loc.getIndex();
-	std::ifstream					file;
-	std::string 					line;
-	std::string						tmp_resp;
-	size_t							content_counter(0);
+	std::vector<std::string> const	index = _loc.getIndex();
+	bool							found(false);
 
 	// first lets search if the location contains the uri as one of its index names
-	if (uri.empty())
+	if (_uri.empty())
 	{
 		for (size_t i = 0; i < index.size(); ++i)
 		{
-			file.open(root + '/' + index[i]);
-			if (file.is_open())
+			_file_path = _root + '/' + index[i];
+			if (!(found = _file_is_good()) && errno != 2)
+			{
+				_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+				return false;
+			}
+			else if (found)
 				break;
 		}
-	}
-	else
-		file.open(full_path);
-	// if the file is good we will start reading its content
-	if (!file.is_open() || !file.good())
-	{
-		_error = 404;
-		return;
-	}
-	while (!file.eof())
-	{
-		std::getline(file, line);
-		content_counter += line.size();
-		if (!file.eof())
+		if (!found)
 		{
-			line += '\n';
-			content_counter++;
+			_fill_response(_error_pages + '/' + "404.html", 404, "Not found");
+			return false;
 		}
-		tmp_resp += line;
 	}
-	_set_headers(200, "OK", content_counter);
-	_response += tmp_resp;
-	file.close();
+	return true;
 }
 
-void Response::_set_headers(size_t status_code, std::string const& message, size_t content_length)
+void Response::_set_headers(size_t status_code, std::string const& message, size_t content_length, std::string const& path)
 {
 	time_t rawtime;
 
@@ -74,10 +79,46 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response += "Server: webserver\n";
 	_response += "Content-Length: " + std::to_string(content_length) + '\n';
-	_response += "Content-Type: \n";
+	_response += "Content-Type: " + _type[path.substr(path.find_last_of(".") + 1)] + '/'
+	+ path.substr(path.find_last_of(".") + 1) + '\n';
 	_response += "Connection: close\n";
 	_response += '\n';
 }
 
+void Response::_fill_response(std::string const& path, size_t status_code, std::string const& message)
+{
+	std::string 	line;
+	std::string		tmp_resp;
+	size_t			content_counter(0);
+	
+	_file.open(path);
+	while (!_file.eof())
+	{
+		std::getline(_file, line);
+		content_counter += line.size();
+		if (!_file.eof())
+		{
+			line += '\n';
+			content_counter++;
+		}
+		tmp_resp += line;
+	}
+	// set all the needed response header
+	_set_headers(status_code, message, content_counter, path);
+	_response += tmp_resp;
+}
+
+bool Response::_file_is_good(void)
+{
+	_file_path = _root + '/' + _uri;
+	if (open(_file_path.c_str(), O_RDONLY) < 0)
+	{
+		if (errno == 2)
+			_fill_response(_error_pages + '/' + "404.html", 404, "Not Found");
+		else
+			_fill_response(_error_pages + '/' + "403.html", 403, "Forbidden");
+		return false;
+	}
+	return true;
+}
 std::string const& 	Response::get_response(void) const	{ return _response; }
-size_t				Response::get_error(void)	 const	{ return _error; 	}
