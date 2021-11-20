@@ -56,13 +56,17 @@ public:
 private:
 
     void _getHeader(const std::string &line);
+
     bool _isBody(std::string const &line, bool const& is_body) const;
 
-    void _getBody(std::string &line);
+    void _getBody(std::string &line, bool is_chunked);
 
     bool _isBodyEnd(const std::string &line) const;
 
     bool _isBodyStart(const std::string &line, bool is_body) const;
+
+    bool _isChunckStart(const std::string& line) const;
+    
 };
 
 #endif // __Request_HPP__

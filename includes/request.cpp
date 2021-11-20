@@ -23,9 +23,6 @@ Request::Request(const Request &x) {
 //     return *this;
 // }
 
-std::vector<std::string> const &Request::getValue(const std::string &key) {
-    return _RequestMap[key];
-}
 
 void Request::resetRequest()
 {
@@ -35,50 +32,67 @@ void Request::resetRequest()
 	_header_length = -1;
 }
 
-void Request::parseRequest() {
+std::vector<std::string> const &Request::getValue(const std::string &key)
+{
+	return _RequestMap[key];
+}
 
-    std::string line;
-    bool is_body(false);
-    while (std::getline(_req, line)) {
+void Request::parseRequest()
+{
+	std::string line;
+	bool is_body(false);
+	bool is_chunked(false);
+	while (std::getline(_req, line))
+	{
+		if (line.empty() || _isBodyStart(line, is_body))
+		{
+			is_body = true;
+			continue;
+		}
+		if (_isBodyEnd(line))
+		{
+			is_body = false;
+			continue;
+		};
 
-        if (line.empty()) {
-            is_body = true;
-            continue;
-        }
-        if (_isBodyEnd(line)) {
-            is_body = false;
-            continue;
-        };
-        if (_isBodyStart(line, is_body)) {
-            is_body = true;
-            continue;
-        }
-        if (!is_body) _getHeader(line);
-        else _getBody(line);
-    }
+		if (_isChunckStart(line))
+		{
+			is_chunked = true;
+			continue;
+		}
+
+		if (!is_body)
+			_getHeader(line);
+		else
+			_getBody(line, is_chunked);
+	}
+}
+
+
+bool Request::_isChunckStart(std::string const &line) const
+{
+	return (line.length() > 0 && isnumber(line[0]));
 }
 
 bool Request::_isBodyStart(const std::string &line, bool is_body) const { return is_body && line == "{"; }
 
 bool Request::_isBodyEnd(const std::string &line) const { return line == "}"; }
 
-void Request::_getBody(std::string &line) {
-    line.push_back('\n');
-    if (_RequestMap.count("Body:"))
-        _RequestMap["Body:"][0] += line;
-    else
-        _RequestMap["Body:"].push_back(line);
+void Request::_getBody(std::string &line, bool is_chunked)
+{
+	line.push_back('\n');
+	static int i = 0;
+	if (is_chunked)
+		if (i % 2 != 0)
+			return;
+	if (_RequestMap.count("body"))
+		_RequestMap["body"][0] += line;
+	else
+		_RequestMap["body"].push_back(line);
 }
 
 bool Request::_isBody(std::string const &line, bool const &is_body) const { return line == "{" && is_body; }
 
-void Request::_getHeader(const std::string &line) {
-    std::__1::vector<std::string> tokens = Utility::split(line, ' ');
-    if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
-        _RequestMap["SL"] = std::__1::vector<std::string>(tokens.begin(), tokens.end());
-    else
-        _RequestMap[tokens[0]] = std::__1::vector<std::string>(tokens.begin() + 1, tokens.end());
-}
 
 std::map<std::string, std::vector<std::string> > const &Request::getMap() const {
     return _RequestMap;
@@ -149,6 +163,18 @@ void Request::getReqInfo(const std::string& str)
 		_content_length = getContentLength(str);
 		_header_length = getHeaderLength(str);
 	
+}
+
+void Request::_getHeader(const std::string &line)
+{
+	std::__1::vector<std::string> tokens = Utility::split(line, ' ');
+	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
+		_RequestMap["SL"] = std::__1::vector<std::string>(tokens.begin(), tokens.end());
+	else
+	{
+		tokens[0].pop_back();
+		_RequestMap[tokens[0]] = std::__1::vector<std::string>(tokens.begin() + 1, tokens.end());
+	}
 }
 
 size_t Request::getHeaderLength(const std::string& str)
