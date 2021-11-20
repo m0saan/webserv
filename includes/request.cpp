@@ -9,7 +9,13 @@
 Request::~Request() {}
 
 Request::Request(const Request &x) {
-    *this = x;
+	_size = x._size;
+	_req.clear();
+	_content_length = x._content_length;
+	_header_length = x._header_length;
+	_max_body_size = x._max_body_size;
+	_transfer_encoding = x._transfer_encoding;
+
 }
 
 // Request &Request::operator=(const Request &x) {
@@ -29,10 +35,11 @@ void Request::resetRequest()
 	_header_length = -1;
 }
 
-void Request::parseRequest(std::stringstream &RequestStream) {
+void Request::parseRequest() {
+
     std::string line;
     bool is_body(false);
-    while (std::getline(RequestStream, line)) {
+    while (std::getline(_req, line)) {
 
         if (line.empty()) {
             is_body = true;
@@ -73,11 +80,11 @@ void Request::_getHeader(const std::string &line) {
         _RequestMap[tokens[0]] = std::__1::vector<std::string>(tokens.begin() + 1, tokens.end());
 }
 
-// std::map<std::string, std::vector<std::string> > const &Request::getMap() const {
-//     return _RequestMap;
-// }
+std::map<std::string, std::vector<std::string> > const &Request::getMap() const {
+    return _RequestMap;
+}
 
-Request::Request(long long max_size ):_size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
+Request::Request(long long max_size ):_req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
 {
 }
 
@@ -86,23 +93,28 @@ Request::Request(long long max_size ):_size(-1), _content_length(-1), _header_le
 // }
 
 
-std::string Request::get_req()const
+std::stringstream const & Request::get_req()
 {
 	return this->_req;
 }
 
 bool	Request::is_completed() const
 {
+	// std::cout << "size :" << _size << std::endl;
+	// std::cout << "content length :" << _content_length << std::endl;
+	// std::cout << "header :" << _header_length << std::endl;
+	// std::cout << "encoding : " << _transfer_encoding << std::endl;
 	if (_transfer_encoding == COMPLETED)
 	{
 		if ((_content_length == -1 || _content_length == 0))
 			return _size == _header_length + 4;
+		std::cout << _content_length << " " << _header_length << " " << _size << std::endl;
 		return (_size == _content_length + _header_length);
 	}
 	else if (_transfer_encoding == CHUNKED)
 	{
-		std::cout << _req.length() << std::endl;
-		if(_req.find("0\r\n\r\n") != std::string::npos)
+		// std::cout << _req.length() << std::endl;
+		if(_req.str().find("0\r\n\r\n") != std::string::npos)
 			return true;
 		return false;
 	}
@@ -112,26 +124,34 @@ bool	Request::is_completed() const
 void 	Request::append(char *content, long long size)
 {
 	std::string tmp(content, size);
+	// std::cout << "Content : " << _content_length << std::endl;
+	// std::cout << "header : " << _header_length << std::endl;
+
 	if (_content_length == -1) // 1st time reading req
-		getReqInfo(std::string(content, size));
-	_req += tmp;
-	_size = _req.length();
+		try 
+		{
+			getReqInfo(tmp);
+		}
+		catch(std::exception &e)
+		{
+			std::cout << "Bad Request !" << std::endl;
+			return ;
+		}
+	_req << content;
+	_size = _req.str().length();
+	// std::cout << "Content After : " << _content_length << std::endl;
+	// std::cout << "header After : " << _header_length << std::endl;
 }
 
-void Request::getReqInfo(std::string str)
+void Request::getReqInfo(const std::string& str)
 {
-	try 
-	{
+
 		_content_length = getContentLength(str);
 		_header_length = getHeaderLength(str);
-	}
-	catch(std::exception &e)
-	{
-		std::cout << "Bad Request !" << std::endl;
-	}
+	
 }
 
-size_t Request::getHeaderLength(std::string str)
+size_t Request::getHeaderLength(const std::string& str)
 {
 	size_t pos = 0;
 
@@ -142,7 +162,7 @@ size_t Request::getHeaderLength(std::string str)
 	return pos;
 }
 
-long long Request::getContentLength(std::string str)
+long long Request::getContentLength(const std::string& str)
 {
 	size_t pos;
 	long long length = 0;
@@ -159,5 +179,7 @@ long long Request::getContentLength(std::string str)
 	}
 	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) !=  std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
+	else // Content-Length not found && !chunked
+		throw std::exception();
 	return length;
 }

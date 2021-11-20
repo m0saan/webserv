@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/20 10:20:40 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/20 15:56:19 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ void	Server::listen()
 	int position;
 	bool is_client;
 	std::string req;
-	
+	Request request;
 	for(size_t i = 0; i < server_cli.size(); ++i)
 		req_res.set_fd((server_cli[i])->get_fd(), true, false);
 	while(1)
@@ -108,21 +108,21 @@ void	Server::listen()
 				{
 					//	client socket
 					std::cout << "still checking ... " << i  << std::endl;
-					try 
-					{
 						if (!req_res.receive(i, *this)) // if connection is closed or invalid socket
-							continue;
-					}
-					catch(std::exception &e)
-					{
-						// std::cout << e.what() << std::endl;
-						std::cout << "bad req" << std::endl;
-						continue ;
-					}
+							continue; 
 					// parse request
 					if (req_res.req_completed(i))
 					{
-						std::cout << req_res.get_req(i) << std::endl;
+						(req_res.getMap())[i].parseRequest();
+						auto it = req_res.getMap()[i].getMap().begin();
+
+					    for(; it != req_res.getMap()[i].getMap().end(); ++it) {
+					        std::cout << it->first << " ";
+					        for (int i = 0; i < it->second.size(); ++i)
+					            std::cout << it->second[i] << " ";
+					        std::cout << std::endl;
+						}
+						// std::cout << 
 						req_res.set_fd(i, false, true); // add client fd to write set
 						// if (close)
 						// {

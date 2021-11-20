@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 08:37:44 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/20 10:06:02 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/20 15:43:26 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,8 @@ class request_response
 		void			send_all(int fd, std::string res);
 		void			close_connection(int fd)		 const;
 		bool			req_completed(int fd);
-		std::string		get_req(int fd);
+		const std::stringstream&		get_req(int fd);
 		void			reset(int fd);
+		std::map<int , Request>& getMap();
 		~request_response();
 };

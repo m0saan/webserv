@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/20 10:05:53 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/20 15:43:36 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,16 +38,7 @@ bool		request_response::receive(int fd, Server &server) // return false if conne
 		server.socketFree(fd);
 		return false;
 	}
-	try 
-	{
-		req_fd[fd].append(buffer, status);
-	}
-	catch(std::exception &e)
-	{
-		std::cout << "Cannot append to req" << std::endl;
-		std::cout << e.what() << std::endl;
-		exit(1);
-	}
+	req_fd[fd].append(buffer, status);
 	return true;
 }
 
@@ -72,7 +63,7 @@ bool	request_response::req_completed(int fd)
 	return (req_fd[fd]).is_completed();
 }
 
-std::string		request_response::get_req(int fd)
+const std::stringstream&		request_response::get_req(int fd)
 {
 	return this->req_fd[fd].get_req();
 }
@@ -139,6 +130,11 @@ void request_response::close_connection(int fd) const
 {
 	shutdown(fd, 2); // Further sends and receives are disallowed
 	close(fd);
+}
+
+std::map<int , Request>& request_response::getMap()
+{
+	return this->req_fd;
 }
 
 request_response::~request_response()

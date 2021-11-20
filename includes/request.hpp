@@ -19,7 +19,7 @@ private:
     } transfer_type;
 
     std::map<std::string, std::vector<std::string> > _RequestMap;
-    std::string		_req;
+    std::stringstream		_req;
     long long 		_size;
     long long 		_content_length;
     long long		_header_length;
@@ -37,19 +37,19 @@ public:
 
     std::vector<std::string> const &getValue(std::string const & key);
 
-    void parseRequest(std::stringstream & RequestStream);
+    void parseRequest();
 
     bool is_completed() const;
 
     void append(char *content, long long size);
 
-    std::string get_req()const;
+    std::stringstream const & get_req();
 
-    void getReqInfo(std::string );
+    void getReqInfo(const std::string& );
 
-    long long getContentLength(std::string str);
+    long long getContentLength(const std::string &str);
 
-    size_t getHeaderLength(std::string str);
+    size_t getHeaderLength(const std::string &str);
 
     void    resetRequest();
 
