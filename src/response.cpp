@@ -11,6 +11,7 @@ Response::Response(std::string const& root, Location const& loc
 {
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
+	_type.insert(std::make_pair("php", "application/octet-stream"));
 }
 
 Response::Response(Response const& x) { *this = x;	}
@@ -23,16 +24,23 @@ Response& Response::operator=(Response const& x)
 
 void Response::Get_request(void)
 {
-	std::vector<std::string> allowed = _loc.getAllowedMethods();
+	std::vector<std::string> 	allowed = _loc.getAllowedMethods();
+	std::string const 			loc_path = _loc.getPath();
 
-	//lets first check for alowed methods in this location
+	// lets first check for alowed methods in this location
 	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
 	{
 		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
 		return;
 	}
+	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
+	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_first_of(".") + 1) == "php")
+	{
+		std::cout << "we have to call the cgi" << std::endl;
+		return;
+	}
 	// first we have to check if the location is a dir or just a file
-	if (_loc.getPath() == "/")
+	if (loc_path == "/")
 		_process_as_dir();
 	else if (_is_dir(_root + '/' + _loc.getPath()))
 		_process_as_dir();
@@ -108,14 +116,17 @@ bool Response::_is_dir(std::string const& path) const
 void Response::_set_headers(size_t status_code, std::string const& message, size_t content_length, std::string const& path)
 {
 	time_t rawtime;
+	std::string const extention = path.substr(path.find_last_of(".") + 1); 
 
 	time (&rawtime);
 	_response += "HTTP/1.1 " +  std::to_string(status_code) + " " + message + '\n';
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response += "Server: webserver\n";
 	_response += "Content-Length: " + std::to_string(content_length) + '\n';
-	_response += "Content-Type: " + _type[path.substr(path.find_last_of(".") + 1)] + '/'
-	+ path.substr(path.find_last_of(".") + 1) + '\n';
+	if (extention == "php")
+		_response += "Content-Type: " + _type[extention] + '\n';
+	else
+		_response += "Content-Type: " + _type[extention] + '/' + extention + '\n';
 	_response += "Connection: close\n";
 	_response += '\n';
 }

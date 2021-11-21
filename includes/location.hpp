@@ -17,4 +17,5 @@ class Location
 		std::vector<std::string> 	_index;
 		std::vector<std::string>	_allowed_methods;
 		std::string 				_autoIndex;
+		std::string					_cgi_path;
 };
