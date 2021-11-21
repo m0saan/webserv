@@ -23,19 +23,26 @@ Response& Response::operator=(Response const& x)
 
 void Response::Get_request(void)
 {
-	/*
-	* if the location is the @default location then we should check the type of the uri, is it a directory or a file
-	* and if it's a direcotry then we should check if it containes one of the names in the index directive, then we should return
-	* it's content, otherwise we should check if the autoindex it set to on means that we should list all the files in that directory
-	* if non of the prev condition is true then we should return an error
-	*/
-	if (_is_dir()) // if the uri is a dir, then we should check if we have a autoindex=on so we should list all the files and return, else we should join it whith the root
+	std::vector<std::string> allowed = _loc.getAllowedMethods();
+	// lets first check for alowed methods in this location
+	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
+	{
+		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+		return;
+	}
+	if (_is_dir())
 	{
 		if (_loc.getAutoIndex() == "on")
 			return;
 		_root += '/' + _uri;
 		_uri.clear();
 	}
+	/*
+	* if the location is the @default location then we should check the type of the uri, is it a directory or a file
+	* and if it's a direcotry then we should check if it containes one of the names in the index directive, then we should return
+	* it's content, otherwise we should check if the autoindex it set to on means that we should list all the files in that directory
+	* if non of the prev condition is true then we should return an error
+	*/
 	if (_loc.getPath() == "/")
 	{
 		if (!_default_location()) // if we had an error while trying to open the file location we should return back

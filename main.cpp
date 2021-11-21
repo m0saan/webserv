@@ -7,9 +7,11 @@
 int main()
 {
     std::vector<std::string> index;
+    std::vector<std::string> allowed;
     index.push_back("hello.html");
     index.push_back("index.html");
-    Location loc("/", index);
+    allowed.push_back("POST");
+    Location loc("/", index, allowed);
     Response res("/Users/mamoussa/Desktop/42/webserv", loc, "src", "/Users/mamoussa/Desktop/42/webserv/error_pages");
     res.Get_request();
     std::cout << res.get_response();
