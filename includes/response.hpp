@@ -5,6 +5,7 @@
 # include <ctime>
 # include <unistd.h>
 # include <fcntl.h>
+# include <sys/stat.h>
 # include <errno.h>
 # include <map>
 # include "location.hpp"
@@ -24,14 +25,15 @@ class Response
 		bool 	_default_location(void);
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
 		void	_fill_response(std::string const&, size_t, std::string const&);
-		bool	_file_is_good(void);
+		bool	_file_is_good(bool);
+		bool	_is_dir(void) const;
 	private:
 		std::string							_response;
 		std::ifstream						_file;
 		std::string 						_file_path;
 		Location							_loc;
-		std::string	const 					_root;
-		std::string	const					_uri;
-		std::string const 					_error_pages;
+		std::string							_root;
+		std::string							_uri;
+		std::string 						_error_pages;
 		std::map<std::string, std::string> 	_type;
 };

@@ -29,14 +29,21 @@ void Response::Get_request(void)
 	* it's content, otherwise we should check if the autoindex it set to on means that we should list all the files in that directory
 	* if non of the prev condition is true then we should return an error
 	*/
+	if (_is_dir()) // if the uri is a dir, then we should check if we have a autoindex=on so we should list all the files and return, else we should join it whith the root
+	{
+		if (_loc.getAutoIndex() == "on")
+			return;
+		_root += '/' + _uri;
+		_uri.clear();
+	}
 	if (_loc.getPath() == "/")
 	{
 		if (!_default_location()) // if we had an error while trying to open the file location we should return back
 			return;
 	}
-	if (_file_path.empty())
+	if (_file_path.empty()) // if we get an empty path than we didn't found the file we are searching for in the index directive or we are not in the default location
 	{
-		if (!_file_is_good())
+		if (!_file_is_good(true))
 			return;
 	}
 	_fill_response(_file_path, 200, "OK"); // if all good than we should fill the response with 200 status code
@@ -53,7 +60,7 @@ bool Response::_default_location(void)
 		for (size_t i = 0; i < index.size(); ++i)
 		{
 			_file_path = _root + '/' + index[i];
-			if (!(found = _file_is_good()) && errno != 2)
+			if (!(found = _file_is_good(false)) && errno != 2) // if the file exists but we don't have the permissions to read from it
 			{
 				_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
 				return false;
@@ -68,6 +75,20 @@ bool Response::_default_location(void)
 		}
 	}
 	return true;
+}
+
+bool Response::_is_dir(void) const
+{
+	struct stat s;
+
+	if (!lstat(_uri.c_str(), &s))
+	{
+		if (S_ISDIR(s.st_mode))
+			return true;
+		else
+			return false;
+	}
+	return false;
 }
 
 void Response::_set_headers(size_t status_code, std::string const& message, size_t content_length, std::string const& path)
@@ -108,14 +129,15 @@ void Response::_fill_response(std::string const& path, size_t status_code, std::
 	_response += tmp_resp;
 }
 
-bool Response::_file_is_good(void)
+bool Response::_file_is_good(bool fill_resp)
 {
-	_file_path = _root + '/' + _uri;
+	if (_file_path.empty())
+		_file_path = _root + '/' + _uri;
 	if (open(_file_path.c_str(), O_RDONLY) < 0)
 	{
-		if (errno == 2)
+		if (errno == 2 && fill_resp)
 			_fill_response(_error_pages + '/' + "404.html", 404, "Not Found");
-		else
+		else if (fill_resp)
 			_fill_response(_error_pages + '/' + "403.html", 403, "Forbidden");
 		return false;
 	}
