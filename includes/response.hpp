@@ -22,11 +22,12 @@ class Response
 		void 				Get_request(void);
 		std::string const& 	get_response(void) const;
 	private:
-		bool 	_default_location(void);
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
 		void	_fill_response(std::string const&, size_t, std::string const&);
 		bool	_file_is_good(bool);
-		bool	_is_dir(void) const;
+		bool	_is_dir(std::string const&) const;
+		void	_process_as_dir(void);
+		void	_process_as_file(void);
 	private:
 		std::string							_response;
 		std::ifstream						_file;

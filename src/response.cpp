@@ -24,45 +24,29 @@ Response& Response::operator=(Response const& x)
 void Response::Get_request(void)
 {
 	std::vector<std::string> allowed = _loc.getAllowedMethods();
-	// lets first check for alowed methods in this location
+
+	//lets first check for alowed methods in this location
 	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
 	{
 		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
 		return;
 	}
-	if (_is_dir())
-	{
-		if (_loc.getAutoIndex() == "on")
-			return;
-		_root += '/' + _uri;
-		_uri.clear();
-	}
-	/*
-	* if the location is the @default location then we should check the type of the uri, is it a directory or a file
-	* and if it's a direcotry then we should check if it containes one of the names in the index directive, then we should return
-	* it's content, otherwise we should check if the autoindex it set to on means that we should list all the files in that directory
-	* if non of the prev condition is true then we should return an error
-	*/
+	// first we have to check if the location is a dir or just a file
 	if (_loc.getPath() == "/")
-	{
-		if (!_default_location()) // if we had an error while trying to open the file location we should return back
-			return;
-	}
-	if (_file_path.empty()) // if we get an empty path than we didn't found the file we are searching for in the index directive or we are not in the default location
-	{
-		if (!_file_is_good(true))
-			return;
-	}
-	_fill_response(_file_path, 200, "OK"); // if all good than we should fill the response with 200 status code
+		_process_as_dir();
+	else if (_is_dir(_root + '/' + _loc.getPath()))
+		_process_as_dir();
+	else	
+		_process_as_file();
 }
 
-bool Response::_default_location(void)
+void Response::_process_as_dir(void)
 {
 	std::vector<std::string> const	index = _loc.getIndex();
 	bool							found(false);
-
-	// first lets search if the location contains the uri as one of its index names
-	if (_uri.empty())
+	
+	_root += '/' + _uri;
+	if (_uri.empty() || _is_dir(_root))
 	{
 		for (size_t i = 0; i < index.size(); ++i)
 		{
@@ -70,25 +54,48 @@ bool Response::_default_location(void)
 			if (!(found = _file_is_good(false)) && errno != 2) // if the file exists but we don't have the permissions to read from it
 			{
 				_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
-				return false;
+				return;
 			}
 			else if (found)
+			{
+				if (!_file_is_good(true))
+					return;
+				_fill_response(_file_path, 200, "OK");
 				break;
+			}
 		}
-		if (!found)
+		if (!found && _loc.getAutoIndex() != "on")
 		{
 			_fill_response(_error_pages + '/' + "404.html", 404, "Not found");
-			return false;
-		}
+			return;
+		}	
 	}
-	return true;
+	else
+	{
+		_file_path = _root;
+		if (!_file_is_good(true))
+			return;
+		_fill_response(_file_path, 200, "OK");
+		return;
+	}
+	// if we are here than we didn't found the file we are seaching on, and we have a intoindex set to on, so we should fill the template for 
+	// autoindex on to list all the files in the dir
 }
 
-bool Response::_is_dir(void) const
+void Response::_process_as_file(void)
+{
+	_file_path = _root + '/' + _uri;
+	if (!_file_is_good(true))
+		return;
+	_fill_response(_file_path, 200, "OK");
+	return;
+}
+
+bool Response::_is_dir(std::string const& path) const
 {
 	struct stat s;
 
-	if (!lstat(_uri.c_str(), &s))
+	if (!lstat(path.c_str(), &s))
 	{
 		if (S_ISDIR(s.st_mode))
 			return true;
