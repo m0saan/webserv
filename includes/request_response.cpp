@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/20 15:43:36 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/22 18:17:57 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ request_response::request_response():max_fd(-1)
 void		request_response::reset(int fd)
 {
 	(req_fd[fd]).resetRequest();
+	std::cout << fd << " has been reseted " << std::endl;
 }
 
 bool		request_response::receive(int fd, Server &server) // return false if connection is closed 
@@ -48,14 +49,19 @@ void	request_response::send_all(int fd, std::string res)
 	size_t left = res.length();
 	int sent = 0;
 
-	while(total < res.length())
-	{
+	// while(total < res.length())
+	// {
 		sent = send(fd, res.c_str(), left, 0);
-		if (sent < 0)
-			break;
-		total += sent;
-		left -= sent;
-	}
+		if (sent == 0)
+		{
+			std::cout << "here"  << std::endl;
+			// remove_fd(fd, true, true); // remove from read set
+		}
+		// if (sent < 0)
+		// 	break;
+		// total += sent;
+		// left -= sent;
+	// }
 }
 
 bool	request_response::req_completed(int fd)
@@ -96,14 +102,13 @@ void request_response::set_fd(int fd, bool to_read, bool is_client) // set fd to
 			max_fd = fd;
 }
 
-void request_response::remove_fd(int fd, bool to_read, bool is_client)
+void request_response::remove_fd(int fd, bool to_read, bool is_client, bool _close)
 {
 	if (to_read)
 	{
 		FD_CLR(fd, &read_fd);
-		if (is_client)
+		if (is_client && _close)
 		{
-			
 			req_fd.erase(fd);
 		}
 	}
@@ -112,13 +117,14 @@ void request_response::remove_fd(int fd, bool to_read, bool is_client)
 	
 }
 
-void request_response::select_fd()
+bool request_response::select_fd()
 {
 	if (select(max_fd + 1, &(this->tmp_read), &(this->tmp_write), NULL, NULL) < 0)
 	{
-		perror("Select :");
-		exit (-1);
+		std::cout << "Select Failed !" << std::endl;
+		return false;
 	}
+	return true;
 }
 
 int request_response::get_maxfd()const

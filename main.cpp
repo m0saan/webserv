@@ -19,7 +19,7 @@ int main(int ac, char **av) {
 
     // std::cout << performParsing().size() << std::endl;
     Server serv(performParsing(av[1]));
-    ifs.open("./request", std::ios_base::in);
+    // ifs.open("./request", std::ios_base::in);
     // if (ifs.is_open()) {
     //     std::stringstream ss;
     //     std::string line;

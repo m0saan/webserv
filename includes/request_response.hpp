@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 08:37:44 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/20 15:43:26 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/21 12:08:26 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,8 @@
 #define BUFFER_SIZE 1024 * 100
 #include "request.hpp"
 #include <map>
-#include "server.hpp"
+
+class Server;
 
 class request_response
 {
@@ -31,8 +32,8 @@ class request_response
 		request_response();
 		void			update_set();
 		void			set_fd(int fd, bool to_read, bool is_client);
-		void			remove_fd(int fd, bool to_read, bool is_client);
-		void			select_fd();
+		void			remove_fd(int fd, bool to_read, bool is_client, bool _close = false);
+		bool			select_fd();
 		int				get_maxfd() 					const;
 		int				is_ready(int fd, bool to_read);
 		bool 			receive(int fd, Server &server);
@@ -44,3 +45,6 @@ class request_response
 		std::map<int , Request>& getMap();
 		~request_response();
 };
+
+
+#include "server.hpp"

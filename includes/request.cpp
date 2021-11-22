@@ -27,6 +27,8 @@ Request::Request(const Request &x) {
 void Request::resetRequest()
 {
 	_req.clear();
+	_req.str("");
+	_req.clear();
 	_size = -1;
 	_content_length = -1;
 	_header_length = -1;
@@ -114,20 +116,14 @@ std::stringstream const & Request::get_req()
 
 bool	Request::is_completed() const
 {
-	// std::cout << "size :" << _size << std::endl;
-	// std::cout << "content length :" << _content_length << std::endl;
-	// std::cout << "header :" << _header_length << std::endl;
-	// std::cout << "encoding : " << _transfer_encoding << std::endl;
 	if (_transfer_encoding == COMPLETED)
 	{
 		if ((_content_length == -1 || _content_length == 0))
 			return _size == _header_length + 4;
-		std::cout << _content_length << " " << _header_length << " " << _size << std::endl;
 		return (_size == _content_length + _header_length);
 	}
 	else if (_transfer_encoding == CHUNKED)
 	{
-		// std::cout << _req.length() << std::endl;
 		if(_req.str().find("0\r\n\r\n") != std::string::npos)
 			return true;
 		return false;
@@ -138,9 +134,6 @@ bool	Request::is_completed() const
 void 	Request::append(char *content, long long size)
 {
 	std::string tmp(content, size);
-	// std::cout << "Content : " << _content_length << std::endl;
-	// std::cout << "header : " << _header_length << std::endl;
-
 	if (_content_length == -1) // 1st time reading req
 		try 
 		{
@@ -153,16 +146,12 @@ void 	Request::append(char *content, long long size)
 		}
 	_req << content;
 	_size = _req.str().length();
-	// std::cout << "Content After : " << _content_length << std::endl;
-	// std::cout << "header After : " << _header_length << std::endl;
 }
 
 void Request::getReqInfo(const std::string& str)
 {
-
-		_content_length = getContentLength(str);
-		_header_length = getHeaderLength(str);
-	
+	_content_length = getContentLength(str);
+	_header_length = getHeaderLength(str);
 }
 
 void Request::_getHeader(const std::string &line)
@@ -205,7 +194,7 @@ long long Request::getContentLength(const std::string& str)
 	}
 	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) !=  std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
-	else // Content-Length not found && !chunked
-		throw std::exception();
+	// else // Content-Length not found && !chunked  && should be POST or DELETE
+	// 	throw std::exception();
 	return length;
 }

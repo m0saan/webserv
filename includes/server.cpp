@@ -6,16 +6,11 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/20 15:56:19 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/22 18:21:07 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
-#include <string>
-// void server::locationConfig(ServerConfig *conf)
-// {
-
-// }
 
 void Server::initConfig(ServerConfig* conf, size_t size)
 {
@@ -66,6 +61,92 @@ int Server::is_server(int fd, bool *is_client) const
 	return -1;
 }
 
+void 	Server::emergencyFree()
+{
+	// std::vector<sockets *>::iterator last(server_cli.end());
+
+	// --last;
+	// int fd = (*last)->get_fd();
+	// (req_res.getMap())[fd].resetRequest();
+	// std::cout << "Req " << fd << " Reseted!" << std::endl;
+	// std::string res = "HTTP/1.1 502 Bad Gateway\r\n\r\n";
+	// req_res.send_all(fd, res);
+	// req_res.remove_fd(fd, true, true, true);
+	// req_res.remove_fd(fd, false, true, true);
+	// delete *last;
+	// *last = NULL;
+	// server_cli.erase(last);
+	// req_res.close_connection(fd);
+}
+
+bool  Server::readFromFd(int fd)
+{
+	int position;
+	bool is_client;
+	Request request;
+	position = is_server(fd, &is_client);
+	if (!is_client) // Server Socket
+		try
+		{
+			server_cli.push_back(server_cli[position]->accept_connection(fd)); // accept connections && add client to server_cli obj
+			req_res.set_fd((server_cli.back())->get_fd(), true, true); // add client fd to read set && create req_fd
+		}
+		catch(std::bad_alloc &e)
+		{
+			emergencyFree();
+			return true ;
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << "Cannot Accept New Connection" << std::endl;
+			return false ;
+		}
+	else // Client Socket
+	{
+			if (!req_res.receive(fd, *this)) // if connection is closed or invalid socket
+				return false;
+		
+		if (req_res.req_completed(fd))
+		{
+			(req_res.getMap())[fd].parseRequest(); // Parse Request
+			// auto it = req_res.getMap()[i].getMap().begin();
+			
+			// for(; it != req_res.getMap()[i].getMap().end(); ++it) {
+			// 	std::cout << it->first << " ";
+			// 	for (int i = 0; i < it->second.size(); ++i)
+			// 		std::cout << it->second[i] << " ";
+			// 	std::cout << std::endl;
+			// }
+			req_res.set_fd(fd, false, true); // add client fd to write set
+			// if (close)
+			// {
+				req_res.remove_fd(fd, 1, 1); // clear fd from read set
+			// }
+		}
+	}
+	return true;
+}
+
+void	Server::sendResponse(int fd)
+{
+	// send response
+	std::string res = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n";
+	req_res.send_all(fd, res);
+	res = "\r\n5\r\nHello\r\n8\r\nGood bye\r\n0\r\n\r\n";
+	req_res.send_all(fd, res);
+	// if (close)
+	// {
+	req_res.remove_fd(fd, 0, 0);
+	req_res.close_connection(fd);
+	socketFree(fd);
+	// }
+	// else
+	// {
+	// req_res.reset(fd);
+	// req_res.remove_fd(fd, 0, 0);
+	// req_res.set_fd(fd, 1, 1);
+}
+
 void	Server::listen()
 {
 
@@ -74,82 +155,20 @@ void	Server::listen()
 		std::cout << "Error config " << std::endl;
 		exit(1);
 	}
-	request_response req_res;
-	int position;
-	bool is_client;
-	std::string req;
-	Request request;
-	for(size_t i = 0; i < server_cli.size(); ++i)
+	for(size_t i = 0; i < server_cli.size(); ++i) // Init FD_SET
 		req_res.set_fd((server_cli[i])->get_fd(), true, false);
-	while(1)
+	while(1) // Server Loop 
 	{
 		req_res.update_set();
-		// std::cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
-		req_res.select_fd();
+		if (!req_res.select_fd())
+			continue ;
 		for(int i = 0; i <= req_res.get_maxfd(); ++i)
 		{
 			if (req_res.is_ready(i, 1)) // check if fd is ready to read 
-			{
-				position = is_server(i, &is_client);
-				if (!is_client)
-				{
-					// server socket
-					try
-					{
-						server_cli.push_back(server_cli[position]->accept_connection(i)); // accept connections && add client to server_cli obj
-						req_res.set_fd((server_cli.back())->get_fd(), true, true); // add client fd to read set && create req_fd
-					}
-					catch(const std::exception& e)
-					{
-						std::cerr << "Cannot Accept New Connection" << std::endl;;
-					}
-				}
-				else
-				{
-					//	client socket
-					std::cout << "still checking ... " << i  << std::endl;
-						if (!req_res.receive(i, *this)) // if connection is closed or invalid socket
-							continue; 
-					// parse request
-					if (req_res.req_completed(i))
-					{
-						(req_res.getMap())[i].parseRequest();
-						auto it = req_res.getMap()[i].getMap().begin();
-
-					    for(; it != req_res.getMap()[i].getMap().end(); ++it) {
-					        std::cout << it->first << " ";
-					        for (int i = 0; i < it->second.size(); ++i)
-					            std::cout << it->second[i] << " ";
-					        std::cout << std::endl;
-						}
-						// std::cout << 
-						req_res.set_fd(i, false, true); // add client fd to write set
-						// if (close)
-						// {
-							req_res.remove_fd(i, 1, 1); // clear if from read set
-						// }
-					}
-				}
-			}
+				if (!readFromFd(i))
+					continue ;
 			if (req_res.is_ready(i, 0)) // check if fd is ready to write
-			{
-				// send response
-				std::string res = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n";
-				req_res.send_all(i, res);
-				res = "\r\n5\r\nHello\r\n8\r\nGood bye\r\n0\r\n\r\n";
-				req_res.send_all(i, res);
-				// if (close)
-				// {
-				req_res.remove_fd(i, 0, 0);
-				req_res.close_connection(i);
-				// socketFree(i);
-				// }
-				// else
-				// {
-				// req_res.reset(i);
-				// req_res.remove_fd(i, 0, 0);
-				// req_res.set_fd(i, 1, 1);
-			}
+				sendResponse(i);
 		}
 	}
 }
@@ -167,7 +186,7 @@ void Server::socketFree(int fd)
 			delete *first;
 			*first = NULL;
 			server_cli.erase(first);
-			std::cout << "Freed " << std::endl;
+			// std::cout << "Freed " << std::endl;
 		}
 	}
 	return ;

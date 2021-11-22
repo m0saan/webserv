@@ -114,11 +114,6 @@ sockets* 	sockets::accept_connection(int sock_fd)
 		throw std::exception();
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) // make the fd Non-Blocking
 		throw std::exception();
-
-	/*
-					Should free Clients !!!
-	*/
-	
 	return (new sockets(client_fd, new_sock_add, new_socklen, 1));
 }
 
