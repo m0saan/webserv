@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/22 18:21:07 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/23 10:04:07 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,20 +63,16 @@ int Server::is_server(int fd, bool *is_client) const
 
 void 	Server::emergencyFree()
 {
-	// std::vector<sockets *>::iterator last(server_cli.end());
 
-	// --last;
-	// int fd = (*last)->get_fd();
-	// (req_res.getMap())[fd].resetRequest();
-	// std::cout << "Req " << fd << " Reseted!" << std::endl;
-	// std::string res = "HTTP/1.1 502 Bad Gateway\r\n\r\n";
-	// req_res.send_all(fd, res);
-	// req_res.remove_fd(fd, true, true, true);
-	// req_res.remove_fd(fd, false, true, true);
-	// delete *last;
-	// *last = NULL;
-	// server_cli.erase(last);
-	// req_res.close_connection(fd);
+	int fd = server_cli.back()->get_fd();
+	req_res.remove_fd(fd, true, true, true);
+	(req_res.getMap())[fd].resetRequest();
+	// TO-DO send 502 response
+	std::string res = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
+	req_res.send_all(fd, res);
+	req_res.remove_fd(fd, false, true, true);
+	socketFree(fd);
+	req_res.close_connection(fd);
 }
 
 bool  Server::readFromFd(int fd)

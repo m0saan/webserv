@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/07 13:00:35 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/22 18:17:57 by mbani            ###   ########.fr       */
+/*   Updated: 2021/11/23 09:05:22 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ void	request_response::send_all(int fd, std::string res)
 	// while(total < res.length())
 	// {
 		sent = send(fd, res.c_str(), left, 0);
-		if (sent == 0)
+		if (sent == 0) // connection closed
 		{
 			std::cout << "here"  << std::endl;
 			// remove_fd(fd, true, true); // remove from read set
