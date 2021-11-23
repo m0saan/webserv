@@ -12,19 +12,19 @@
 
 #include "server.hpp"
 
-void Server::initConfig(ServerConfig* conf, size_t size)
+void Server::initConfig(ServerConfig& conf, size_t size)
 {
 	int PORT;
-	if (!conf || conf->_port == "null" || conf->_host == "null" || size == 0)
+	if (conf._port == "null" || conf._host == "null" || size == 0)
 		return ;
 	try
 	{
 		/* code */
-		PORT = std::stoi(conf->_port);
-		if (conf->_host.length() == 0)
+		PORT = std::stoi(conf._port);
+		if (conf._host.length() == 0)
 			throw std::exception();
-		else if (conf->_host == "localhost")
-			conf->_host = "127.0.0.1";
+		else if (conf._host == "localhost")
+			conf._host = "127.0.0.1";
 	}
 	catch(const std::exception& e)
 	{
@@ -32,13 +32,13 @@ void Server::initConfig(ServerConfig* conf, size_t size)
 	}
 	server_cli.push_back(new sockets());
 	(server_cli.back())->create_socket();
-	(server_cli.back())->set_addr(PORT, conf->_host);
+	(server_cli.back())->set_addr(PORT, conf._host);
 	(server_cli.back())->bind_socket();
 	(server_cli.back())->listen_socket(size);
 	return ;
 }
 
-Server::Server(std::vector<ServerConfig*> config)
+Server::Server(std::vector<ServerConfig> config)
 {	
 	for(size_t i = 0 ; i < config.size(); ++i)
 	{
@@ -105,14 +105,14 @@ bool  Server::readFromFd(int fd)
 		if (req_res.req_completed(fd))
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
-			// auto it = req_res.getMap()[i].getMap().begin();
+			auto it = req_res.getMap()[fd].getMap().begin();
 			
-			// for(; it != req_res.getMap()[i].getMap().end(); ++it) {
-			// 	std::cout << it->first << " ";
-			// 	for (int i = 0; i < it->second.size(); ++i)
-			// 		std::cout << it->second[i] << " ";
-			// 	std::cout << std::endl;
-			// }
+			for(; it != req_res.getMap()[fd].getMap().end(); ++it) {
+				std::cout << it->first << " ";
+				for (int i = 0; i < it->second.size(); ++i)
+					std::cout << it->second[i] << " ";
+				std::cout << std::endl;
+			}
 			req_res.set_fd(fd, false, true); // add client fd to write set
 			// if (close)
 			// {

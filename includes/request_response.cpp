@@ -54,7 +54,6 @@ void	request_response::send_all(int fd, std::string res)
 		sent = send(fd, res.c_str(), left, 0);
 		if (sent == 0) // connection closed
 		{
-			std::cout << "here"  << std::endl;
 			// remove_fd(fd, true, true); // remove from read set
 		}
 		// if (sent < 0)

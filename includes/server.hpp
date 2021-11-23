@@ -19,10 +19,10 @@ class Server
 {
 	private:
 		std::vector<sockets *> server_cli;
-		void initConfig(ServerConfig* conf, size_t size);
+		void initConfig(ServerConfig& conf, size_t size);
 		request_response req_res;
 	public:
-		Server(std::vector<ServerConfig*> );
+		Server(std::vector<ServerConfig>);
 		void	listen();
 		int		is_server(int fd, bool *is_client) const;
 		void	socketFree(int fd);
