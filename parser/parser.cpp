@@ -9,29 +9,29 @@ std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec) 
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig *> const &vec) {
+std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec) {
     os << "[" << std::endl;
     for (int i = 0; i < vec.size(); ++i) {
         std::cout << "--------------------- ServerConfig " << i + 1 << " ---------------------" << std::endl;
 
-        os << "port: " << vec[i]->_port << std::endl;
-        os << "host: " << vec[i]->_host << std::endl;
-        os << "server_name: " << vec[i]->_server_name << std::endl;
-        os << "error_page: " << vec[i]->_error_page << std::endl;
-        os << "max_file_size: " << vec[i]->_max_file_size << std::endl;
-        os << "time_out: " << vec[i]->_time_out << std::endl;
+        os << "port: " << vec[i]._port << std::endl;
+        os << "host: " << vec[i]._host << std::endl;
+        os << "server_name: " << vec[i]._server_name << std::endl;
+        os << "error_page: " << vec[i]._error_page << std::endl;
+        os << "max_file_size: " << vec[i]._max_file_size << std::endl;
+        os << "time_out: " << vec[i]._time_out << std::endl;
 
-        for (size_t j = 0; j < vec[i]->_location.size(); j++) {
+        for (size_t j = 0; j < vec[i]._location.size(); j++) {
             os << "\tlocation" << std::endl;
-            os << "\t\troot: " << vec[i]->_location[j]->_root << std::endl;
+            os << "\t\troot: " << vec[i]._location[j]._root << std::endl;
             os << "\t\tallowed_method: ";
-            for (std::set<std::string>::iterator ut = vec[i]->_location[j]->_allowed_method.begin();
-                 ut != vec[i]->_location[j]->_allowed_method.end(); ++ut)
+            for (std::set<std::string>::iterator ut = vec[i]._location[j]._allowed_method.begin();
+                 ut != vec[i]._location[j]._allowed_method.end(); ++ut)
                 os << *ut << " ";
             os << std::endl;
-            os << "\t\tindex: " << vec[i]->_location[j]->_index << std::endl;
-            os << "\t\tauto_index: " << vec[i]->_location[j]->_auto_index << std::endl;
-            os << "\t\tauth_basic: " << vec[i]->_location[j]->_auth_basic << std::endl;
+            os << "\t\tindex: " << vec[i]._location[j]._index << std::endl;
+            os << "\t\tauto_index: " << vec[i]._location[j]._auto_index << std::endl;
+            os << "\t\tauth_basic: " << vec[i]._location[j]._auth_basic << std::endl;
         }
 
         std::cout << std::endl;
@@ -79,8 +79,8 @@ void fillGlobalDirectives(T &field, T const &value, std::string const& directive
     field = value;
 }
 
-std::vector<ServerConfig *> performParsing(std::string const& filename) {
-    std::vector<ServerConfig *> globalConfig;
+std::vector<ServerConfig> performParsing(std::string const& filename) {
+    std::vector<ServerConfig> globalConfig;
     std::ifstream ifs;
     ifs.open(filename, std::ios_base::in);
 
@@ -99,79 +99,79 @@ std::vector<ServerConfig *> performParsing(std::string const& filename) {
 
             switch (directive) {
                 case -1:
-                    globalConfig.push_back(new ServerConfig());
+                    globalConfig.push_back(ServerConfig());
                     ++i;
                     j = -1;
                     break;
                 case Directives::PORT:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_port, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._port, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_port, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._port, tokens[1], tokens[0]);
                     break;
                 case Directives::HOST:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_host, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._host, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_host, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._host, tokens[1], tokens[0]);
                     break;
                 case Directives::SERVER_NAME:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_server_name, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._server_name, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_server_name, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._server_name, tokens[1], tokens[0]);
                     break;
                 case Directives::ERROR_PAGE:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_error_page, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._error_page, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_error_page, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._error_page, tokens[1], tokens[0]);
                     break;
                 case Directives::MAX_FILE_SIZE:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_max_file_size, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._max_file_size, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_max_file_size, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._max_file_size, tokens[1], tokens[0]);
                     break;
                 case Directives::TIME_OUT:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_time_out, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._time_out, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_time_out, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._time_out, tokens[1], tokens[0]);
                     break;
                 case Directives::ROOT:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_root, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._root, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_root, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._root, tokens[1], tokens[0]);
                     break;
                 case Directives::ALLOWED_METHODS:
                     if (!isLocation)
-                        for (int k = 1; k < tokens.size(); ++k) globalConfig[i]->_allowed_method.insert(tokens[k]);
+                        for (int k = 1; k < tokens.size(); ++k) globalConfig[i]._allowed_method.insert(tokens[k]);
                     else
                         for (int k = 1; k < tokens.size(); ++k)
-                            globalConfig[i]->_location[j]->_allowed_method.insert(tokens[k]);
+                            globalConfig[i]._location[j]._allowed_method.insert(tokens[k]);
                     break;
                 case Directives::INDEX:
                     if (!isLocation)
-                        std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]->_index));
-                    else std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]->_location[j]->_index));
+                        std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]._index));
+                    else std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]._location[j]._index));
                     break;
                 case Directives::AUTO_INDEX:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_auto_index, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._auto_index, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_auto_index, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._auto_index, tokens[1], tokens[0]);
                     break;
                 case Directives::AUTH_BASIC:
                     if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]->_auth_basic, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._auth_basic, tokens[1], tokens[0]);
                     else
-                        fillGlobalDirectives(globalConfig[i]->_location[j]->_auth_basic, tokens[1], tokens[0]);
+                        fillGlobalDirectives(globalConfig[i]._location[j]._auth_basic, tokens[1], tokens[0]);
                     break;
 
                 case Directives::LOCATION:
-                    globalConfig[i]->_location.push_back(new ServerConfig());
+                    globalConfig[i]._location.push_back(ServerConfig());
                     ++j;
                     isLocation = true;
                     break;
@@ -194,5 +194,7 @@ std::vector<ServerConfig *> performParsing(std::string const& filename) {
         }
     } else
         exitError("wrong config file path");
+
+    // std::cout << globalConfig << std::endl;
     return globalConfig;
 }
