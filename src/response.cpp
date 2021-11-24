@@ -22,6 +22,64 @@ Response& Response::operator=(Response const& x)
 	return *this;
 }
 
+void Response::Post_request(void)
+{
+	std::vector<std::string> 	const	allowed = _loc.getAllowedMethods();
+	std::vector<std::string>	const 	index = _loc.getIndex();
+	std::string const 					loc_path = _loc.getPath();
+	bool								found(false);
+
+	// lets first check for alowed methods in this location
+	if (find(allowed.begin(), allowed.end(), "POST") == allowed.end())
+	{
+		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+		return;
+	}
+	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
+	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
+	{
+		std::cout << "we have to call the cgi" << std::endl;
+		return;
+	}
+	// now if we have an other file extension than php, then we should return a error
+	if (!_is_dir(_root + '/' + _uri))	
+	{
+		if (!_file_is_good(true)) // if the file doesn't exist then we should return a not found message
+			return;
+		_fill_response(_error_pages + '/' + "405.html", 405, "Not Allowed");
+		return;
+	}
+	else // if the _uri is a dir, then it behavios as get request, if the file not found we should return a 403 error
+	{
+		_root += '/' + _uri;
+		for (size_t i = 0; i < index.size(); ++i)
+		{
+			_file_path = _root + '/' + index[i];
+			if (!(found = _file_is_good(false)) && errno != 2) // if the file exists but we don't have the permissions to read from it
+			{
+				_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+				return;
+			}
+			else if (found)
+			{
+				if (loc_path == "/")
+				{
+					_fill_response(_error_pages + '/' + "405.html", 405, "Not Allowed");
+					return;
+				}
+				_fill_response(_file_path, 200, "OK");
+				break;
+			}
+		}
+		if (!found && _loc.getAutoIndex() != "on")
+		{
+			_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+			return;
+		}	
+	}
+	// if we are here then we have a dir in the _uri, and the auto index is set to on, so we should list all the files in the dir
+}
+
 void Response::Get_request(void)
 {
 	std::vector<std::string> 	allowed = _loc.getAllowedMethods();
@@ -34,7 +92,7 @@ void Response::Get_request(void)
 		return;
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
-	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_first_of(".") + 1) == "php")
+	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
 	{
 		std::cout << "we have to call the cgi" << std::endl;
 		return;

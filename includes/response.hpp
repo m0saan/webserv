@@ -3,6 +3,7 @@
 # include <fstream>
 # include <algorithm>
 # include <ctime>
+# include <cstring>
 # include <unistd.h>
 # include <fcntl.h>
 # include <sys/stat.h>
@@ -20,6 +21,7 @@ class Response
 		~Response(void);
 	public:
 		void 				Get_request(void);
+		void 				Post_request(void);
 		std::string const& 	get_response(void) const;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
