@@ -22,6 +22,7 @@ class Response
 	public:
 		void 				Get_request(void);
 		void 				Post_request(void);
+		void				Delete_request(void);
 		std::string const& 	get_response(void) const;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
@@ -30,6 +31,7 @@ class Response
 		bool	_is_dir(std::string const&) const;
 		void	_process_as_dir(void);
 		void	_process_as_file(void);
+		void	_process_post_delete(std::string const&);
 	private:
 		std::string							_response;
 		std::ifstream						_file;

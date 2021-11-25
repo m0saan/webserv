@@ -22,15 +22,17 @@ Response& Response::operator=(Response const& x)
 	return *this;
 }
 
-void Response::Post_request(void)
+void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
+
+void Response::Post_request(void)	{	_process_post_delete("POST");	}
+
+void Response::Get_request(void)
 {
-	std::vector<std::string> 	const	allowed = _loc.getAllowedMethods();
-	std::vector<std::string>	const 	index = _loc.getIndex();
-	std::string const 					loc_path = _loc.getPath();
-	bool								found(false);
+	std::vector<std::string> 	allowed = _loc.getAllowedMethods();
+	std::string const 			loc_path = _loc.getPath();
 
 	// lets first check for alowed methods in this location
-	if (find(allowed.begin(), allowed.end(), "POST") == allowed.end())
+	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
 	{
 		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
 		return;
@@ -41,7 +43,41 @@ void Response::Post_request(void)
 		std::cout << "we have to call the cgi" << std::endl;
 		return;
 	}
-	// now if we have an other file extension than php, then we should return a error
+	// first we have to check if the location is a dir or just a file
+	if (loc_path == "/")
+		_process_as_dir();
+	else if (_is_dir(_root + '/' + _loc.getPath()))
+		_process_as_dir();
+	else	
+		_process_as_file();
+}
+
+void Response::_process_post_delete(std::string const& req_method)
+{
+	std::vector<std::string> 	const	allowed = _loc.getAllowedMethods();
+	std::vector<std::string>	const 	index = _loc.getIndex();
+	std::string const 					loc_path = _loc.getPath();
+	bool								found(false);
+
+	// lets first check for alowed methods in this location
+	if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
+	{
+		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+		return;
+	}
+	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
+	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
+	{
+		std::cout << "we have to call the cgi" << std::endl;
+		return;
+	}
+	// otherwise if the request method is delete then we should return a Not Allowed message
+	if (req_method == "DELETE")
+	{
+		_fill_response(_error_pages + '/' + "405.html", 405, "Not Allowed");
+		return;
+	}
+	// now if we have an other file extension than php, then we should return an error
 	if (!_is_dir(_root + '/' + _uri))	
 	{
 		if (!_file_is_good(true)) // if the file doesn't exist then we should return a not found message
@@ -79,33 +115,6 @@ void Response::Post_request(void)
 	}
 	// if we are here then we have a dir in the _uri, and the auto index is set to on, so we should list all the files in the dir
 }
-
-void Response::Get_request(void)
-{
-	std::vector<std::string> 	allowed = _loc.getAllowedMethods();
-	std::string const 			loc_path = _loc.getPath();
-
-	// lets first check for alowed methods in this location
-	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
-	{
-		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
-		return;
-	}
-	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
-	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
-	{
-		std::cout << "we have to call the cgi" << std::endl;
-		return;
-	}
-	// first we have to check if the location is a dir or just a file
-	if (loc_path == "/")
-		_process_as_dir();
-	else if (_is_dir(_root + '/' + _loc.getPath()))
-		_process_as_dir();
-	else	
-		_process_as_file();
-}
-
 void Response::_process_as_dir(void)
 {
 	std::vector<std::string> const	index = _loc.getIndex();
