@@ -32,6 +32,8 @@ class Response
 		void	_process_as_dir(void);
 		void	_process_as_file(void);
 		void	_process_post_delete(std::string const&);
+		void	_cgi(void);
+		void	_set_cgi_meta_var(void);
 	private:
 		std::string							_response;
 		std::ifstream						_file;
@@ -40,5 +42,6 @@ class Response
 		std::string							_root;
 		std::string							_uri;
 		std::string 						_error_pages;
+		std::string							_cgi_meta_var;
 		std::map<std::string, std::string> 	_type;
 };

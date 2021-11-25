@@ -52,6 +52,74 @@ void Response::Get_request(void)
 		_process_as_file();
 }
 
+void Response::_set_cgi_meta_var(void) 
+{
+	/*
+	 * SRC = Request (we will get this info from the request headers)
+	 * The server MUST set this meta-variable if and only if the request is accompanied by a message body entity.
+	 *	The CONTENT_LENGTH value must reflect the length of the message-body
+	 */
+	_cgi_meta_var += "CONTENT_LENGHT=" + '\n';
+	/*
+	 * SRC = Request (we will get this info from the request headers)
+	 * The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
+	 */
+	_cgi_meta_var += "CONTENT_TYPE=" + '\n';
+	/*
+	 * SRC = Static (hard code it)
+	 * It MUST be set to the dialect of CGI being used by the server to communicate with the script. Example: CGI/1.1
+	 */
+	_cgi_meta_var += "GATEWAY_INTERFACE=CGI/1.1\n";
+	/*
+	 * SRC = Request (we will get this info from the request headers)
+	 * Extra "path" information. It's possible to pass extra info to your script in the URL,
+	 * after the filename of the CGI script. For example, calling the 
+	 * URL http://www.myhost.com/mypath/myscript.cgi/path/info/here will set PATH_INFO to "/path/info/here".
+	 * Commonly used for path-like data, but you can use it for anything.
+	 */
+	_cgi_meta_var += "PATH_INFO=" + '\n';
+	/*
+	 * SRC = Request/Conf (we will get this info from the request headers but we should parse it as a local uri)
+	 * he PATH_TRANSLATED variable is derived by taking the PATH_INFO value, parsing it as a local URI in its own right,
+	 * and performing any virtual-to-physical translation appropriate to map it onto the server's document repository structure
+	 */
+	_cgi_meta_var += "PATH_TRANSLATED=" + '\n';
+	/*
+	 * SRC = Request
+	 * When information is sent using a method of GET, this variable contains the information in a query that follows the "?".
+	 * The string is coded in the standard URL format of changing spaces to "+" and encoding special characters with "%xx" hexadecimal encoding.
+	 * The CGI program must decode this information.
+	 */
+	_cgi_meta_var += "QUERY_STRING=" + '\n';
+	/*
+	 * SRC = Request
+	 * Contains the method (as specified with the METHOD attribute in an HTML form) that is
+	 * used to send the request. Example: GET
+	 */
+	_cgi_meta_var += "REQUEST_METHOD=" + '\n';
+	/*
+	 * SRC = Request
+	 * The path part of the URL that points to the script being executed.
+	 * It should include the leading slash. Example: /cgi-bin/hello.pgm
+	 */
+	_cgi_meta_var += "SCRIPT_NAME=" + '\n';
+	/* 
+	 * SRC = Conf
+	 * Contains the server host name or IP address of the server. Example: 10.9.8.7
+	 */
+	_cgi_meta_var += "SERVER_NAME=" + '\n';
+	/*
+	 * Contains the port number to which the client request was sent.
+	 */
+	_cgi_meta_var += "SERVER_PORT=" + '\n';
+	_cgi_meta_var += "SERVER_PROTOCOL=HTTP/1.1\n";
+	_cgi_meta_var += "SERVER_SOFTWARE=Webserv\n";
+}
+void Response::_cgi(void)
+{
+	// lets first set the cgi meta-variables
+}
+
 void Response::_process_post_delete(std::string const& req_method)
 {
 	std::vector<std::string> 	const	allowed = _loc.getAllowedMethods();
