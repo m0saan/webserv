@@ -40,7 +40,7 @@ void Response::Get_request(void)
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
 	{
-		std::cout << "we have to call the cgi" << std::endl;
+		_cgi("GET");
 		return;
 	}
 	// first we have to check if the location is a dir or just a file
@@ -52,24 +52,30 @@ void Response::Get_request(void)
 		_process_as_file();
 }
 
-void Response::_set_cgi_meta_var(void) 
+std::vector<char const*>	cgi_meta_var(void)
 {
+	std::vector<char const*> meta_var;
+	std::string				str;
 	/*
 	 * SRC = Request (we will get this info from the request headers)
 	 * The server MUST set this meta-variable if and only if the request is accompanied by a message body entity.
 	 *	The CONTENT_LENGTH value must reflect the length of the message-body
 	 */
-	_cgi_meta_var += "CONTENT_LENGHT=" + '\n';
+	str = std::string("CONTENT_LENGHT") + '\n';
+	meta_var.push_back(str.c_str());
+	// _cgi_meta_var += "CONTENT_LENGHT=" + '\n';
 	/*
 	 * SRC = Request (we will get this info from the request headers)
 	 * The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
 	 */
-	_cgi_meta_var += "CONTENT_TYPE=" + '\n';
+	str = std::string("CONTENT_TYPE=") + '\n';
+	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Static (hard code it)
 	 * It MUST be set to the dialect of CGI being used by the server to communicate with the script. Example: CGI/1.1
 	 */
-	_cgi_meta_var += "GATEWAY_INTERFACE=CGI/1.1\n";
+	str = "GATEWAY_INTERFACE=CGI/1.1\n";
+	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request (we will get this info from the request headers)
 	 * Extra "path" information. It's possible to pass extra info to your script in the URL,
@@ -77,47 +83,139 @@ void Response::_set_cgi_meta_var(void)
 	 * URL http://www.myhost.com/mypath/myscript.cgi/path/info/here will set PATH_INFO to "/path/info/here".
 	 * Commonly used for path-like data, but you can use it for anything.
 	 */
-	_cgi_meta_var += "PATH_INFO=" + '\n';
+	str = std::string("PATH_INFO=") + '\n';
+	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request/Conf (we will get this info from the request headers but we should parse it as a local uri)
-	 * he PATH_TRANSLATED variable is derived by taking the PATH_INFO value, parsing it as a local URI in its own right,
+	 * the PATH_TRANSLATED variable is derived by taking the PATH_INFO value, parsing it as a local URI in its own right,
 	 * and performing any virtual-to-physical translation appropriate to map it onto the server's document repository structure
 	 */
-	_cgi_meta_var += "PATH_TRANSLATED=" + '\n';
+	str = std::string("PATH_TRANSLATED=") + '\n';
+	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
 	 * When information is sent using a method of GET, this variable contains the information in a query that follows the "?".
 	 * The string is coded in the standard URL format of changing spaces to "+" and encoding special characters with "%xx" hexadecimal encoding.
 	 * The CGI program must decode this information.
 	 */
-	_cgi_meta_var += "QUERY_STRING=" + '\n';
+	str = std::string("QUERY_STRING=") + '\n';
+	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
 	 * Contains the method (as specified with the METHOD attribute in an HTML form) that is
 	 * used to send the request. Example: GET
 	 */
-	_cgi_meta_var += "REQUEST_METHOD=" + '\n';
+	str = std::string("REQUEST_METHOD=") + '\n';
+	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
 	 * The path part of the URL that points to the script being executed.
 	 * It should include the leading slash. Example: /cgi-bin/hello.pgm
 	 */
-	_cgi_meta_var += "SCRIPT_NAME=" + '\n';
+	str = std::string("SCRIPT_NAME=") + '\n';
+	meta_var.push_back(str.c_str());
 	/* 
 	 * SRC = Conf
 	 * Contains the server host name or IP address of the server. Example: 10.9.8.7
 	 */
-	_cgi_meta_var += "SERVER_NAME=" + '\n';
+	str = std::string("SERVER_NAME=") + '\n';
+	meta_var.push_back(str.c_str());
 	/*
 	 * Contains the port number to which the client request was sent.
 	 */
-	_cgi_meta_var += "SERVER_PORT=" + '\n';
-	_cgi_meta_var += "SERVER_PROTOCOL=HTTP/1.1\n";
-	_cgi_meta_var += "SERVER_SOFTWARE=Webserv\n";
+	str = std::string("SERVER_PORT=") + '\n';
+	meta_var.push_back(str.c_str());
+	str = "SERVER_PROTOCOL=HTTP/1.1\n";
+	meta_var.push_back(str.c_str());
+	str = "SERVER_SOFTWARE=Webserv\n";
+	meta_var.push_back(str.c_str());
+	meta_var.push_back(NULL);
+	return meta_var;
 }
-void Response::_cgi(void)
+
+std::string	get_res(int fd)
 {
-	// lets first set the cgi meta-variables
+	std::string ans;
+	char		buff[1024];
+	int 		ret;
+
+	while ((ret = read(fd, buff, 1024)))
+		ans += buff;
+	return ans;	
+}
+
+bool Response::_check_for_red(std::string const& tmp_res)
+{
+	std::string 		substr;
+	std::string const 	string_to_search("Location");
+	size_t				index;
+
+	// lets check if we have a Location header field means that we have a redirection
+	if ((index = tmp_res.find(string_to_search)) != std::string::npos)
+	{
+		// we will take a substring from the index where we found the Location header field + the length of the Location string
+		size_t start_search = index + string_to_search.length() + 1;
+		substr = tmp_res.substr(start_search, tmp_res.find_first_of('\n', start_search) - start_search);
+		// now we should trim all the spaces and tabes we have in the substr
+		while (*substr.begin() == ' ' || *substr.begin() == '\t' || *substr.begin() == '/')
+			substr.erase(substr.begin());
+		substr.erase(substr.end() - 1);
+		// then we override the uri atter to be the new location
+		_uri = substr;
+		return true;
+	}
+	return false;
+}
+
+void Response::_fill_cgi_response(std::string const& tmp_res)
+{
+
+}
+
+void Response::_cgi(std::string const& req_method)
+{
+	int fd = open("index.php", O_RDONLY);
+	pid_t pid;
+	int pfd[2];
+	std::string	tmp_res;
+
+	pipe(pfd);
+	if(!(pid = fork()))
+	{
+		std::vector<char const*> meta_var = cgi_meta_var();
+		std::vector<char const*> args;
+		std::string path;
+
+		args.push_back("/Users/mamoussa/Desktop/brew/bin/php-cgi");
+		args.push_back(NULL);
+		path = "/Users/mamoussa/Desktop/brew/bin/php-cgi";
+		close(pfd[0]);
+		dup2(fd, 0);
+		dup2(pfd[1], 1);
+		if (execve(path.c_str(), const_cast<char *const*>(&(*args.begin()))
+		, const_cast<char *const*>(&(*meta_var.begin()))) < 0)
+		{
+			meta_var.~vector();
+			args.~vector();
+			std::cout << strerror(errno) << std::endl;
+			exit(1);
+		}
+		exit(1);
+	}
+	wait(&pid);
+	close(pfd[1]);
+	tmp_res = get_res(pfd[0]);
+	if (_check_for_red(tmp_res))
+	{
+		if (req_method == "GET")
+			this->Get_request();
+		else if (req_method == "POST")
+			this->Post_request();
+		else
+			this->Delete_request();
+	}
+	else
+		_fill_cgi_response(tmp_res);
 }
 
 void Response::_process_post_delete(std::string const& req_method)
@@ -136,7 +234,7 @@ void Response::_process_post_delete(std::string const& req_method)
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
 	{
-		std::cout << "we have to call the cgi" << std::endl;
+		_cgi(req_method);
 		return;
 	}
 	// otherwise if the request method is delete then we should return a Not Allowed message
@@ -183,6 +281,7 @@ void Response::_process_post_delete(std::string const& req_method)
 	}
 	// if we are here then we have a dir in the _uri, and the auto index is set to on, so we should list all the files in the dir
 }
+
 void Response::_process_as_dir(void)
 {
 	std::vector<std::string> const	index = _loc.getIndex();
