@@ -26,15 +26,14 @@ class Response
 		std::string const& 	get_response(void) const;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
-		bool	_check_for_red(std::string const&);
 		void	_fill_response(std::string const&, size_t, std::string const&);
 		bool	_file_is_good(bool);
 		bool	_is_dir(std::string const&) const;
 		void	_process_as_dir(void);
 		void	_process_as_file(void);
 		void	_process_post_delete(std::string const&);
-		void	_cgi(std::string const&);
-		void	_fill_cgi_response(std::string const&);
+		void	_cgi(void);
+		void	_fill_cgi_response(std::string const&, bool);
 	private:
 		std::string							_response;
 		std::ifstream						_file;

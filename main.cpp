@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <stdio.h>
 
 int main()
 {
@@ -17,5 +18,5 @@ int main()
 	// res.Post_request();
 //    res.Delete_request();
     std::cout << res.get_response();
-    return EXIT_SUCCESS;
+    return 0;
 }

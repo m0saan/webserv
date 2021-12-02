@@ -40,7 +40,7 @@ void Response::Get_request(void)
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
 	{
-		_cgi("GET");
+		_cgi();
 		return;
 	}
 	// first we have to check if the location is a dir or just a file
@@ -144,43 +144,32 @@ std::string	get_res(int fd)
 	return ans;	
 }
 
-bool Response::_check_for_red(std::string const& tmp_res)
+void Response::_fill_cgi_response(std::string const& tmp_res, bool is_red)
 {
-	std::string 		substr;
-	std::string const 	string_to_search("Location");
-	size_t				index;
+	time_t 				rawtime;
 
-	// lets check if we have a Location header field means that we have a redirection
-	if ((index = tmp_res.find(string_to_search)) != std::string::npos)
-	{
-		// we will take a substring from the index where we found the Location header field + the length of the Location string
-		size_t start_search = index + string_to_search.length() + 1;
-		substr = tmp_res.substr(start_search, tmp_res.find_first_of('\n', start_search) - start_search);
-		// now we should trim all the spaces and tabes we have in the substr
-		while (*substr.begin() == ' ' || *substr.begin() == '\t' || *substr.begin() == '/')
-			substr.erase(substr.begin());
-		substr.erase(substr.end() - 1);
-		// then we override the uri atter to be the new location
-		_uri = substr;
-		return true;
-	}
-	return false;
+	time (&rawtime);
+	if(is_red) 
+		_response += "HTTP/1.1 302 Found\r\n";
+	else
+		_response += "HTTP/1.1 200 OK\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime)) + "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Transfer-Encoding: chunked\r\n";
+	_response += "Connection: close\r\n";
+	_response += tmp_res;
 }
 
-void Response::_fill_cgi_response(std::string const& tmp_res)
-{
-
-}
-
-void Response::_cgi(std::string const& req_method)
+void Response::_cgi(void)
 {
 	int fd = open("index.php", O_RDONLY);
-	pid_t pid;
-	int pfd[2];
+	int			pfd[2];
 	std::string	tmp_res;
+	size_t 		index;
+	int			status;
 
 	pipe(pfd);
-	if(!(pid = fork()))
+	if(!(fork()))
 	{
 		std::vector<char const*> meta_var = cgi_meta_var();
 		std::vector<char const*> args;
@@ -195,27 +184,33 @@ void Response::_cgi(std::string const& req_method)
 		if (execve(path.c_str(), const_cast<char *const*>(&(*args.begin()))
 		, const_cast<char *const*>(&(*meta_var.begin()))) < 0)
 		{
+			close(pfd[1]);
 			meta_var.~vector();
 			args.~vector();
-			std::cout << strerror(errno) << std::endl;
 			exit(1);
 		}
-		exit(1);
+		exit(0);
 	}
-	wait(&pid);
+	wait(&status);
 	close(pfd[1]);
-	tmp_res = get_res(pfd[0]);
-	if (_check_for_red(tmp_res))
+	// first lets check if the cgi path is correct
+	if (WEXITSTATUS(status) == 1)
 	{
-		if (req_method == "GET")
-			this->Get_request();
-		else if (req_method == "POST")
-			this->Post_request();
-		else
-			this->Delete_request();
+		close(pfd[0]);
+		close(fd);
+		_fill_response(_error_pages + '/' + "502.html", 502, "Bad Gateway");
+		return;
 	}
+	tmp_res = get_res(pfd[0]);
+	// if the tmp_res contains the Status header field then we should erase it, because it will be added
+	if ((index = tmp_res.find("Status")) != std::string::npos)
+		tmp_res.erase(tmp_res.begin() + index, tmp_res.begin() + tmp_res.find_first_of('\n', index) + 1);
+	if (tmp_res.find("Location") != std::string::npos)
+		_fill_cgi_response(tmp_res, true);
 	else
-		_fill_cgi_response(tmp_res);
+		_fill_cgi_response(tmp_res, false);
+	close(pfd[0]);
+	close(fd);
 }
 
 void Response::_process_post_delete(std::string const& req_method)
@@ -234,7 +229,7 @@ void Response::_process_post_delete(std::string const& req_method)
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
 	{
-		_cgi(req_method);
+		_cgi();
 		return;
 	}
 	// otherwise if the request method is delete then we should return a Not Allowed message
@@ -353,16 +348,16 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 	std::string const extention = path.substr(path.find_last_of(".") + 1); 
 
 	time (&rawtime);
-	_response += "HTTP/1.1 " +  std::to_string(status_code) + " " + message + '\n';
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response += "Server: webserver\n";
-	_response += "Content-Length: " + std::to_string(content_length) + '\n';
+	_response += "HTTP/1.1 " +  std::to_string(status_code) + " " + message + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime)) + "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Content-Length: " + std::to_string(content_length) + "\r\n";
 	if (extention == "php")
-		_response += "Content-Type: " + _type[extention] + '\n';
+		_response += "Content-Type: " + _type[extention] + "\r\n";
 	else
-		_response += "Content-Type: " + _type[extention] + '/' + extention + '\n';
-	_response += "Connection: close\n";
-	_response += '\n';
+		_response += "Content-Type: " + _type[extention] + '/' + extention + "\r\n";
+	_response += "Connection: close\r\n";
+	_response += "\r\n";
 }
 
 void Response::_fill_response(std::string const& path, size_t status_code, std::string const& message)
