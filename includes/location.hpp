@@ -11,7 +11,7 @@ class Location
 		std::string const& getPath(void) const { return _path; }
 		std::vector<std::string> getIndex(void) const { return _index; }
 		std::vector<std::string> getAllowedMethods(void) const { return _allowed_methods; }
-		std::string	const& getAutoIndex(void) const { return _autoIndex;}
+		std::string	& getAutoIndex(void) { return _autoIndex;}
 	private:
 		std::string 				_path;
 		std::vector<std::string> 	_index;

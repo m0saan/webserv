@@ -224,6 +224,57 @@ void Response::_cgi(void)
 	close(fd);
 }
 
+void Response::_fill_auto_index_response(std::string* tmp_res)
+{
+	time_t 				rawtime;
+
+	time (&rawtime);
+	_response += "HTTP/1.1 200 OK\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Transfer-Encoding: chunked\r\n";
+	_response += "Connection: close\r\n";
+	_response += "\r\n";
+	_response += *tmp_res;
+}
+
+void Response::_auto_index_list(void)
+{
+	std::string 	*tmp_res = new std::string();
+	DIR*			dir;
+	struct dirent	*dir_info;
+
+	dir = opendir(_root.c_str());
+	if (!dir)
+	{
+		_fill_response(".html", 403, "Forbidden");
+		return;
+	}
+	*tmp_res += std::string("<html>\r\n<head>\r\n<title>Index of " + _uri + "</title>\r\n");
+	*tmp_res += "</head>\r\n<body>\r\n";
+	*tmp_res += std::string("<h1>Index of " + _uri + "</h1>\r\n");
+	*tmp_res += "<hr>\r\n<pre>\r\n";
+	while ((dir_info = readdir(dir)))
+	{
+		if (std::string(dir_info->d_name) == ".")
+			continue;
+		if (std::string(dir_info->d_name) == "..")
+		{
+			*tmp_res += "<a href=\"";
+			*tmp_res += std::string("../\">..</a>\r\n");
+			continue;
+		}
+		*tmp_res += std::string("<a href=\"");
+		*tmp_res += std::string(dir_info->d_name) + "\">" + std::string(dir_info->d_name) + "</a>\r\n";
+	}
+	*tmp_res += "</pre>\r\n<hr>\r\n</body>\r\n</html>\r\n";
+	_fill_auto_index_response(tmp_res);
+	delete tmp_res;
+	closedir(dir);
+}
+
 void Response::_process_post_delete(std::string const& req_method)
 {
 	std::vector<std::string> 	const	allowed = _loc.getAllowedMethods();
@@ -328,6 +379,7 @@ void Response::_process_as_dir(void)
 	}
 	// if we are here than we didn't found the file we are seaching on, and we have a intoindex set to on, so we should fill the template for 
 	// autoindex on to list all the files in the dir
+	_auto_index_list();
 }
 
 void Response::_process_as_file(void)
@@ -395,8 +447,8 @@ void Response::_fill_response(std::string const& path, size_t status_code, std::
 	}
 	else
 	{
-		std::stringstream ss;
-		std::string buff;
+		std::stringstream	ss;
+		std::string			buff;
 		ss << status_code;
 		ss >> buff;
 		delete tmp_resp;

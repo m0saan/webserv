@@ -11,6 +11,7 @@
 # include <sstream>
 # include <errno.h>
 # include <map>
+# include <dirent.h>
 # include "location.hpp"
 
 class Response
@@ -36,6 +37,8 @@ class Response
 		void	_process_post_delete(std::string const&);
 		void	_cgi(void);
 		void	_fill_cgi_response(std::string const&, bool);
+		void	_auto_index_list(void);
+		void	_fill_auto_index_response(std::string *);
 	private:
 		std::string							_response;
 		std::ifstream						_file;
