@@ -10,13 +10,14 @@ int main()
     std::vector<std::string> index;
     std::vector<std::string> allowed;
     index.push_back("hello.html");
+    index.push_back("file.html");
     index.push_back("index.html");
-    allowed.push_back("GET");
+    allowed.push_back("POST");
     Location loc("/src", index, allowed);
-    loc.getAutoIndex() = "on";
+    loc.getAutoIndex() = "off";
     Response res("/Users/mamoussa/Desktop/42/webserv", loc, "src", "/Users/mamoussa/Desktop/42/webserv/error_pages");
-    res.Get_request();
-// 	res.Post_request();
+    // res.Get_request();
+	res.Post_request();
 //    res.Delete_request();
     std::cout << res.get_response();
     // system("leaks a.out");

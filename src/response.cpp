@@ -1,7 +1,7 @@
 #include "../includes/response.hpp"
 #include "../includes/location.hpp"
 
-
+/* this is the implementation of the default, param, and copy constructors plus the operator=*/
 Response::Response(void): _response(""), _loc()
 , _root(""), _uri(""), _error_pages(""){}
 
@@ -21,21 +21,12 @@ Response& Response::operator=(Response const& x)
 	_response = x._response;
 	return *this;
 }
+/*-------------------------------------------------------------------------------*/
 
+/* those are the public methods to process the request @GET @POST @DELETE */
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
 
 void Response::Post_request(void)	{	_process_post_delete("POST");	}
-
-std::string	*error_page(std::string const& message)
-{
-	std::string *error_body = new std::string();
-
-	*error_body += std::string("<html>\r\n<head>\r\n"); 
-	*error_body += std::string("<title>") + message;
-	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
-	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
-	return error_body;
-}
 
 void Response::Get_request(void)
 {
@@ -62,7 +53,8 @@ void Response::Get_request(void)
 	else	
 		_process_as_file();
 }
-
+/*----------------------------------------------------------------------------*/
+/* this part is for the cgi (fill the meta_var and excute it) */
 std::vector<char const*>	cgi_meta_var(void)
 {
 	std::vector<char const*> meta_var;
@@ -224,7 +216,8 @@ void Response::_cgi(void)
 	close(fd);
 	delete tmp_res;
 }
-
+/*---------------------------------------------------------------------------------------------------*/
+/* this part is for the files and subdirectoreis listing e.i when we have the auto indexing */
 void Response::_fill_auto_index_response(std::string* tmp_res)
 {
 	time_t 				rawtime;
@@ -275,7 +268,17 @@ void Response::_auto_index_list(void)
 	delete tmp_res;
 	closedir(dir);
 }
+/*-----------------------------------------------------------------------------------------------------*/
+std::string	*error_page(std::string const& message)
+{
+	std::string *error_body = new std::string();
 
+	*error_body += std::string("<html>\r\n<head>\r\n"); 
+	*error_body += std::string("<title>") + message;
+	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
+	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
+	return error_body;
+}
 void Response::_process_post_delete(std::string const& req_method)
 {
 	std::vector<std::string> 	const	allowed = _loc.getAllowedMethods();
@@ -328,7 +331,7 @@ void Response::_process_post_delete(std::string const& req_method)
 					return;
 				}
 				_fill_response(_file_path, 200, "OK");
-				break;
+				return;
 			}
 		}
 		if (!found && _loc.getAutoIndex() != "on")
@@ -362,7 +365,7 @@ void Response::_process_as_dir(void)
 				if (!_file_is_good(true))
 					return;
 				_fill_response(_file_path, 200, "OK");
-				break;
+				return;
 			}
 		}
 		if (!found && _loc.getAutoIndex() != "on")
