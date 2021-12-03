@@ -1,6 +1,6 @@
 SRC = main.cpp src/response.cpp
 CMP = clang++ -std=c++98
-FLAGS = -Wall -Wextra -Werror -fsanitize=address -g3
+FLAGS = -Wall -Wextra -Werror  -g3
 NAME = a.out
 all : $(NAME) 
 

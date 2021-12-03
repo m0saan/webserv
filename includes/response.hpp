@@ -36,7 +36,7 @@ class Response
 		void	_process_as_file(void);
 		void	_process_post_delete(std::string const&);
 		void	_cgi(void);
-		void	_fill_cgi_response(std::string const&, bool);
+		void	_fill_cgi_response(std::string *, bool);
 		void	_auto_index_list(void);
 		void	_fill_auto_index_response(std::string *);
 	private:

@@ -5,7 +5,6 @@
 #include <errno.h>
 #include <iostream>
 #include <dirent.h>
-
 int main()
 {
     std::vector<std::string> index;
@@ -13,13 +12,14 @@ int main()
     index.push_back("hello.html");
     index.push_back("index.html");
     allowed.push_back("GET");
-    Location loc("/", index, allowed);
+    Location loc("/src", index, allowed);
     loc.getAutoIndex() = "on";
     Response res("/Users/mamoussa/Desktop/42/webserv", loc, "src", "/Users/mamoussa/Desktop/42/webserv/error_pages");
     res.Get_request();
 // 	res.Post_request();
 //    res.Delete_request();
     std::cout << res.get_response();
+    // system("leaks a.out");
     // struct dirent *cur_dir;
     
     // DIR* dir = opendir("/Users/mamoussa/Desktop/42/webserv/src");

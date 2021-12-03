@@ -144,18 +144,18 @@ std::vector<char const*>	cgi_meta_var(void)
 	return meta_var;
 }
 
-std::string	get_res(int fd)
+std::string	*get_res(int fd)
 {
-	std::string ans;
+	std::string *ans = new std::string();
 	char		buff[1024];
 	int 		ret;
 
 	while ((ret = read(fd, buff, 1024)))
-		ans += buff;
+		*ans += buff;
 	return ans;	
 }
 
-void Response::_fill_cgi_response(std::string const& tmp_res, bool is_red)
+void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 {
 	time_t 				rawtime;
 
@@ -168,14 +168,14 @@ void Response::_fill_cgi_response(std::string const& tmp_res, bool is_red)
 	_response += "Server: webserver\r\n";
 	_response += "Transfer-Encoding: chunked\r\n";
 	_response += "Connection: close\r\n";
-	_response += tmp_res;
+	_response += *tmp_res;
 }
 
 void Response::_cgi(void)
 {
 	int fd = open("index.php", O_RDONLY);
 	int			pfd[2];
-	std::string	tmp_res;
+	std::string	*tmp_res;
 	size_t 		index;
 	int			status;
 
@@ -196,8 +196,8 @@ void Response::_cgi(void)
 		, const_cast<char *const*>(&(*meta_var.begin()))) < 0)
 		{
 			close(pfd[1]);
-			meta_var.~vector();
 			args.~vector();
+			// delete meta_var;
 			exit(1);
 		}
 		exit(0);
@@ -214,14 +214,15 @@ void Response::_cgi(void)
 	}
 	tmp_res = get_res(pfd[0]);
 	// if the tmp_res contains the Status header field then we should erase it, because it will be added
-	if ((index = tmp_res.find("Status")) != std::string::npos)
-		tmp_res.erase(tmp_res.begin() + index, tmp_res.begin() + tmp_res.find_first_of('\n', index) + 1);
-	if (tmp_res.find("Location") != std::string::npos)
+	if ((index = tmp_res->find("Status")) != std::string::npos)
+		tmp_res->erase(tmp_res->begin() + index, tmp_res->begin() + tmp_res->find_first_of('\n', index) + 1);
+	if (tmp_res->find("Location") != std::string::npos)
 		_fill_cgi_response(tmp_res, true);
 	else
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
 	close(fd);
+	delete tmp_res;
 }
 
 void Response::_fill_auto_index_response(std::string* tmp_res)
@@ -337,6 +338,7 @@ void Response::_process_post_delete(std::string const& req_method)
 		}	
 	}
 	// if we are here then we have a dir in the _uri, and the auto index is set to on, so we should list all the files in the dir
+	_auto_index_list();
 }
 
 void Response::_process_as_dir(void)
