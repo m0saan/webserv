@@ -26,6 +26,17 @@ void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
 
 void Response::Post_request(void)	{	_process_post_delete("POST");	}
 
+std::string	*error_page(std::string const& message)
+{
+	std::string *error_body = new std::string();
+
+	*error_body += std::string("<html>\r\n<head>\r\n"); 
+	*error_body += std::string("<title>") + message;
+	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
+	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
+	return error_body;
+}
+
 void Response::Get_request(void)
 {
 	std::vector<std::string> 	allowed = _loc.getAllowedMethods();
@@ -34,7 +45,7 @@ void Response::Get_request(void)
 	// lets first check for alowed methods in this location
 	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
 	{
-		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+		_fill_response(".html", 403, "Forbiden");
 		return;
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
@@ -153,7 +164,7 @@ void Response::_fill_cgi_response(std::string const& tmp_res, bool is_red)
 		_response += "HTTP/1.1 302 Found\r\n";
 	else
 		_response += "HTTP/1.1 200 OK\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime)) + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
 	_response += "Server: webserver\r\n";
 	_response += "Transfer-Encoding: chunked\r\n";
 	_response += "Connection: close\r\n";
@@ -198,8 +209,8 @@ void Response::_cgi(void)
 	{
 		close(pfd[0]);
 		close(fd);
-		_fill_response(_error_pages + '/' + "502.html", 502, "Bad Gateway");
-		return;
+		_fill_response(".html", 502, "Bad Gateway");
+		return;	
 	}
 	tmp_res = get_res(pfd[0]);
 	// if the tmp_res contains the Status header field then we should erase it, because it will be added
@@ -223,7 +234,7 @@ void Response::_process_post_delete(std::string const& req_method)
 	// lets first check for alowed methods in this location
 	if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
 	{
-		_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+		_fill_response(".html", 403, "Forbiden");
 		return;
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
@@ -235,7 +246,7 @@ void Response::_process_post_delete(std::string const& req_method)
 	// otherwise if the request method is delete then we should return a Not Allowed message
 	if (req_method == "DELETE")
 	{
-		_fill_response(_error_pages + '/' + "405.html", 405, "Not Allowed");
+		_fill_response(".html", 405, "Not Allowed");
 		return;
 	}
 	// now if we have an other file extension than php, then we should return an error
@@ -243,7 +254,7 @@ void Response::_process_post_delete(std::string const& req_method)
 	{
 		if (!_file_is_good(true)) // if the file doesn't exist then we should return a not found message
 			return;
-		_fill_response(_error_pages + '/' + "405.html", 405, "Not Allowed");
+		_fill_response(".html", 405, "Not Allowed");
 		return;
 	}
 	else // if the _uri is a dir, then it behavios as get request, if the file not found we should return a 403 error
@@ -254,14 +265,14 @@ void Response::_process_post_delete(std::string const& req_method)
 			_file_path = _root + '/' + index[i];
 			if (!(found = _file_is_good(false)) && errno != 2) // if the file exists but we don't have the permissions to read from it
 			{
-				_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+				_fill_response(".html", 403, "Forbiden");
 				return;
 			}
 			else if (found)
 			{
 				if (loc_path == "/")
 				{
-					_fill_response(_error_pages + '/' + "405.html", 405, "Not Allowed");
+					_fill_response(".html", 405, "Not Allowed");
 					return;
 				}
 				_fill_response(_file_path, 200, "OK");
@@ -270,7 +281,7 @@ void Response::_process_post_delete(std::string const& req_method)
 		}
 		if (!found && _loc.getAutoIndex() != "on")
 		{
-			_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+			_fill_response(".html", 403, "Forbiden");
 			return;
 		}	
 	}
@@ -290,7 +301,7 @@ void Response::_process_as_dir(void)
 			_file_path = _root + '/' + index[i];
 			if (!(found = _file_is_good(false)) && errno != 2) // if the file exists but we don't have the permissions to read from it
 			{
-				_fill_response(_error_pages + '/' + "403.html", 403, "Forbiden");
+				_fill_response(".html", 403, "Forbiden");
 				return;
 			}
 			else if (found)
@@ -303,7 +314,7 @@ void Response::_process_as_dir(void)
 		}
 		if (!found && _loc.getAutoIndex() != "on")
 		{
-			_fill_response(_error_pages + '/' + "404.html", 404, "Not found");
+			_fill_response(".html", 404, "Not found");
 			return;
 		}	
 	}
@@ -346,12 +357,17 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 {
 	time_t rawtime;
 	std::string const extention = path.substr(path.find_last_of(".") + 1); 
+	std::stringstream ss, ss_content;
 
+	ss << status_code;
 	time (&rawtime);
-	_response += "HTTP/1.1 " +  std::to_string(status_code) + " " + message + "\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime)) + "\r\n";
+	_response += "HTTP/1.1 " +  ss.str() + " " + message + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
 	_response += "Server: webserver\r\n";
-	_response += "Content-Length: " + std::to_string(content_length) + "\r\n";
+	ss_content << content_length;
+	_response += "Content-Length: " + ss_content.str() + "\r\n";
 	if (extention == "php")
 		_response += "Content-Type: " + _type[extention] + "\r\n";
 	else
@@ -363,24 +379,33 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 void Response::_fill_response(std::string const& path, size_t status_code, std::string const& message)
 {
 	std::string 	line;
-	std::string		tmp_resp;
-	size_t			content_counter(0);
+	std::string		*tmp_resp = new std::string();
 	
-	_file.open(path);
-	while (!_file.eof())
+	if (status_code == 200)
 	{
-		std::getline(_file, line);
-		content_counter += line.size();
-		if (!_file.eof())
+		_file.open(path);
+		while (!_file.eof())
 		{
-			line += '\n';
-			content_counter++;
+			std::getline(_file, line);
+			if (!_file.eof())
+				line += "\r\n";
+			*tmp_resp += line;
 		}
-		tmp_resp += line;
+		*tmp_resp += "\r\n";
+	}
+	else
+	{
+		std::stringstream ss;
+		std::string buff;
+		ss << status_code;
+		ss >> buff;
+		delete tmp_resp;
+		tmp_resp = error_page(buff  + ' ' + message);
 	}
 	// set all the needed response header
-	_set_headers(status_code, message, content_counter, path);
-	_response += tmp_resp;
+	_set_headers(status_code, message, tmp_resp->length(), path);
+	_response += *tmp_resp;
+	delete tmp_resp;
 }
 
 bool Response::_file_is_good(bool fill_resp)
@@ -390,9 +415,9 @@ bool Response::_file_is_good(bool fill_resp)
 	if (open(_file_path.c_str(), O_RDONLY) < 0)
 	{
 		if (errno == 2 && fill_resp)
-			_fill_response(_error_pages + '/' + "404.html", 404, "Not Found");
+			_fill_response(".html", 404, "Not Found");
 		else if (fill_resp)
-			_fill_response(_error_pages + '/' + "403.html", 403, "Forbidden");
+			_fill_response(".html", 403, "Forbidden");
 		return false;
 	}
 	return true;

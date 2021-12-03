@@ -5,8 +5,10 @@
 # include <ctime>
 # include <cstring>
 # include <unistd.h>
+# include <cstdlib>
 # include <fcntl.h>
 # include <sys/stat.h>
+# include <sstream>
 # include <errno.h>
 # include <map>
 # include "location.hpp"
