@@ -12,6 +12,7 @@
 
 
 class Request {
+
 private:
     typedef enum transfer_type
     {
@@ -25,6 +26,7 @@ private:
     long long		_header_length;
     long long		_max_body_size;
     transfer_type	_transfer_encoding;
+    bool            _is_alive_connection;
 public:
 
 
@@ -66,7 +68,7 @@ private:
     bool _isBodyStart(const std::string &line, bool is_body) const;
 
     bool _isChunckStart(const std::string& line) const;
-    
+
 };
 
 #endif // __Request_HPP__

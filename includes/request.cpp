@@ -68,6 +68,8 @@ void Request::parseRequest()
 		else
 			_getBody(line, is_chunked);
 	}
+	if (_RequestMap.count("Connection"))
+		_is_alive_connection = _RequestMap["Connection"][0] == "keep-alive";
 }
 
 bool Request::_isChunckStart(std::string const &line) const
