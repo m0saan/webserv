@@ -5,9 +5,7 @@
 Response::Response(void): _response(""), _loc()
 , _root(""), _uri(""), _error_pages(""){}
 
-Response::Response(std::string const& root, Location const& loc
-, std::string const& uri, std::string const& error_pages): _loc(loc), _root(root)
-, _uri(uri), _error_pages(error_pages)
+Response::Response(ServerConfig & config, int index) : _server_configs(config), _index(index)
 {
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
@@ -21,6 +19,7 @@ Response& Response::operator=(Response const& x)
 	_response = x._response;
 	return *this;
 }
+
 /*-------------------------------------------------------------------------------*/
 
 /* those are the public methods to process the request @GET @POST @DELETE */

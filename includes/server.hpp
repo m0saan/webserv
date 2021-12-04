@@ -21,6 +21,7 @@ class Server
 		std::vector<sockets *> server_cli;
 		void initConfig(ServerConfig& conf, size_t size);
 		request_response req_res;
+		std::vector<ServerConfig> &_config;
 	public:
 		Server(std::vector<ServerConfig>);
 		void	listen();

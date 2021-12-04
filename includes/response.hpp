@@ -13,12 +13,13 @@
 # include <map>
 # include <dirent.h>
 # include "location.hpp"
+#include "../parser/parser.hpp"
 
 class Response
 {
 	public:
 		Response(void);
-		Response(std::string const&, Location const&, std::string const&, std::string const&);
+		Response(ServerConfig & config, int index);
 		Response(Response const&);
 		Response& operator=(Response const&);
 		~Response(void);
@@ -39,6 +40,7 @@ class Response
 		void	_fill_cgi_response(std::string *, bool);
 		void	_auto_index_list(void);
 		void	_fill_auto_index_response(std::string *);
+
 	private:
 		std::string							_response;
 		std::ifstream						_file;
@@ -48,4 +50,6 @@ class Response
 		std::string							_uri;
 		std::string 						_error_pages;
 		std::map<std::string, std::string> 	_type;
+		ServerConfig&						_server_configs;
+		int									_index;
 };

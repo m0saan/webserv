@@ -11,12 +11,13 @@
 /* ************************************************************************** */
 
 #include "server.hpp"
+#include "response.hpp"
 
-void Server::initConfig(ServerConfig& conf, size_t size)
+void Server::initConfig(ServerConfig &conf, size_t size)
 {
 	int PORT;
 	if (conf._port == "null" || conf._host == "null" || size == 0)
-		return ;
+		return;
 	try
 	{
 		/* code */
@@ -26,31 +27,30 @@ void Server::initConfig(ServerConfig& conf, size_t size)
 		else if (conf._host == "localhost")
 			conf._host = "127.0.0.1";
 	}
-	catch(const std::exception& e)
+	catch (const std::exception &e)
 	{
-		return ;
+		return;
 	}
 	server_cli.push_back(new sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
 	(server_cli.back())->bind_socket();
 	(server_cli.back())->listen_socket(size);
-	return ;
+	return;
 }
 
-Server::Server(std::vector<ServerConfig> config)
-{	
-	for(size_t i = 0 ; i < config.size(); ++i)
+Server::Server(std::vector<ServerConfig> config) : _config(config)
+{
+	for (size_t i = 0; i < config.size(); ++i)
 	{
 		initConfig(config[i], config.size());
 	}
-	
 }
 
 int Server::is_server(int fd, bool *is_client) const
 {
 	// returns index of fd and check if it's client or server
-	for(size_t i = 0; i < server_cli.size(); ++i)
+	for (size_t i = 0; i < server_cli.size(); ++i)
 	{
 		if (fd == server_cli[i]->get_fd())
 		{
@@ -61,7 +61,7 @@ int Server::is_server(int fd, bool *is_client) const
 	return -1;
 }
 
-void 	Server::emergencyFree()
+void Server::emergencyFree()
 {
 
 	int fd = server_cli.back()->get_fd();
@@ -75,7 +75,7 @@ void 	Server::emergencyFree()
 	req_res.close_connection(fd);
 }
 
-bool  Server::readFromFd(int fd)
+bool Server::readFromFd(int fd)
 {
 	int position;
 	bool is_client;
@@ -85,45 +85,43 @@ bool  Server::readFromFd(int fd)
 		try
 		{
 			server_cli.push_back(server_cli[position]->accept_connection(fd)); // accept connections && add client to server_cli obj
-			req_res.set_fd((server_cli.back())->get_fd(), true, true); // add client fd to read set && create req_fd
+			req_res.set_fd((server_cli.back())->get_fd(), true, true);		   // add client fd to read set && create req_fd
 		}
-		catch(std::bad_alloc &e)
+		catch (std::bad_alloc &e)
 		{
 			emergencyFree();
-			return true ;
+			return true;
 		}
-		catch(const std::exception& e)
+		catch (const std::exception &e)
 		{
 			std::cerr << "Cannot Accept New Connection" << std::endl;
-			return false ;
+			return false;
 		}
 	else // Client Socket
 	{
-			if (!req_res.receive(fd, *this)) // if connection is closed or invalid socket
-				return false;
-		
+		if (!req_res.receive(fd, *this)) // if connection is closed or invalid socket
+			return false;
+
 		if (req_res.req_completed(fd))
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
-			auto it = req_res.getMap()[fd].getMap().begin();
-			
-			for(; it != req_res.getMap()[fd].getMap().end(); ++it) {
-				std::cout << it->first << " ";
-				for (int i = 0; i < it->second.size(); ++i)
-					std::cout << it->second[i] << " ";
-				std::cout << std::endl;
-			}
+			// auto it = req_res.getMap()[fd].getMap().begin();
+
+			/* mosan is done right here!! */
+			// std::string const&, Location const&, std::string const&, std::string const&
+			Response res(_config)
+
 			req_res.set_fd(fd, false, true); // add client fd to write set
-			// if (close)
-			// {
-				req_res.remove_fd(fd, 1, 1); // clear fd from read set
-			// }
+											 // if (close)
+											 // {
+			req_res.remove_fd(fd, 1, 1);	 // clear fd from read set
+											 // }
 		}
 	}
 	return true;
 }
 
-void	Server::sendResponse(int fd)
+void Server::sendResponse(int fd)
 {
 	// send response
 	std::string res = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n";
@@ -143,7 +141,7 @@ void	Server::sendResponse(int fd)
 	// req_res.set_fd(fd, 1, 1);
 }
 
-void	Server::listen()
+void Server::listen()
 {
 
 	if (this->server_cli.empty())
@@ -151,31 +149,30 @@ void	Server::listen()
 		std::cout << "Error config " << std::endl;
 		exit(1);
 	}
-	for(size_t i = 0; i < server_cli.size(); ++i) // Init FD_SET
+	for (size_t i = 0; i < server_cli.size(); ++i) // Init FD_SET
 		req_res.set_fd((server_cli[i])->get_fd(), true, false);
-	while(1) // Server Loop 
+	while (1) // Server Loop
 	{
 		req_res.update_set();
 		if (!req_res.select_fd())
-			continue ;
-		for(int i = 0; i <= req_res.get_maxfd(); ++i)
+			continue;
+		for (int i = 0; i <= req_res.get_maxfd(); ++i)
 		{
-			if (req_res.is_ready(i, 1)) // check if fd is ready to read 
+			if (req_res.is_ready(i, 1)) // check if fd is ready to read
 				if (!readFromFd(i))
-					continue ;
+					continue;
 			if (req_res.is_ready(i, 0)) // check if fd is ready to write
 				sendResponse(i);
 		}
 	}
 }
 
-
 void Server::socketFree(int fd)
 {
 	std::vector<sockets *>::iterator first(server_cli.begin());
 	std::vector<sockets *>::iterator last(server_cli.end());
 
-	for(; first != last; ++first)
+	for (; first != last; ++first)
 	{
 		if ((*first)->get_fd() == fd)
 		{
@@ -185,8 +182,9 @@ void Server::socketFree(int fd)
 			// std::cout << "Freed " << std::endl;
 		}
 	}
-	return ;
+	return;
 }
 
 Server::~Server()
-{}
+{
+}
