@@ -39,3 +39,5 @@ cmake-build-debug
 # cmake stuff
 
 CMakeLists.txt
+request
+webserv

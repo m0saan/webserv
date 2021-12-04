@@ -10,14 +10,14 @@
 #include <vector>
 #include <sstream>
 
+typedef enum transfer_type {
+    CHUNKED,
+    COMPLETED,
+}           transfer_type;
 
 class Request {
 
 private:
-    typedef enum transfer_type
-    {
-        CHUNKED, COMPLETED
-    } transfer_type;
 
     std::map<std::string, std::vector<std::string> > _RequestMap;
     std::stringstream		_req;
