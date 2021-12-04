@@ -50,8 +50,8 @@ struct ServerConfig {
     _port(), _host(), _server_name(),
     _error_page(),_max_file_size(),
     _time_out(), _cgi(), _root(),
-    _auto_index(), _auth_basic(), _redirect(), _index(),
-    _allowed_method(), _location(), upload_pass() {}
+    _auto_index(), _loc_path(), _redirect(), _index(),
+    _allowed_method(), _location() {}
 
     std::string _port;
     std::string _host;
@@ -62,8 +62,7 @@ struct ServerConfig {
     std::string _cgi;
     std::string _root;
     std::string _auto_index;
-    std::string _auth_basic;
-    bool upload_pass;
+    std::string _loc_path;
 
     std::pair<HTTP::StatusCodes, std::string> _redirect;
     std::vector<std::string> _index;

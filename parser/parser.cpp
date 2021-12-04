@@ -1,45 +1,5 @@
 #include "parser.hpp"
 
-
-std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec) {
-    os << "[ ";
-    for (int i = 0; i < vec.size(); ++i)
-        os << vec[i] << " ";
-    os << ']' << std::endl;
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec) {
-    os << "[" << std::endl;
-    for (int i = 0; i < vec.size(); ++i) {
-        std::cout << "--------------------- ServerConfig " << i + 1 << " ---------------------" << std::endl;
-
-        os << "port: " << vec[i]._port << std::endl;
-        os << "host: " << vec[i]._host << std::endl;
-        os << "server_name: " << vec[i]._server_name << std::endl;
-        os << "error_page: " << vec[i]._error_page << std::endl;
-        os << "max_file_size: " << vec[i]._max_file_size << std::endl;
-        os << "time_out: " << vec[i]._time_out << std::endl;
-
-        for (size_t j = 0; j < vec[i]._location.size(); j++) {
-            os << "\tlocation" << std::endl;
-            os << "\t\troot: " << vec[i]._location[j]._root << std::endl;
-            os << "\t\tallowed_method: ";
-            for (std::set<std::string>::iterator ut = vec[i]._location[j]._allowed_method.begin();
-                 ut != vec[i]._location[j]._allowed_method.end(); ++ut)
-                os << *ut << " ";
-            os << std::endl;
-            os << "\t\tindex: " << vec[i]._location[j]._index << std::endl;
-            os << "\t\tauto_index: " << vec[i]._location[j]._auto_index << std::endl;
-            os << "\t\tauth_basic: " << vec[i]._location[j]._auth_basic << std::endl;
-        }
-
-        std::cout << std::endl;
-    }
-    os << ']' << std::endl;
-    return os;
-}
-
 void exitError(std::string const &error) {
     std::cout << error << std::endl;
     exit(EXIT_FAILURE);
@@ -163,14 +123,11 @@ std::vector<ServerConfig> performParsing(std::string const& filename) {
                     else
                         fillGlobalDirectives(globalConfig[i]._location[j]._auto_index, tokens[1], tokens[0]);
                     break;
-                case Directives::AUTH_BASIC:
-                    if (!isLocation)
-                        fillGlobalDirectives(globalConfig[i]._auth_basic, tokens[1], tokens[0]);
-                    else
-                        fillGlobalDirectives(globalConfig[i]._location[j]._auth_basic, tokens[1], tokens[0]);
-                    break;
 
                 case Directives::LOCATION:
+                    if (tokens.size() != 3 || tokens[2] != "[")
+                        exitError("erorr near token " + tokens[0]);
+                    globalConfig[i]._loc_path = tokens[1];
                     globalConfig[i]._location.push_back(ServerConfig());
                     ++j;
                     isLocation = true;
@@ -185,7 +142,7 @@ std::vector<ServerConfig> performParsing(std::string const& filename) {
                     isLocation = false;
                     break;
                 case e_error::INVALID_DIRECTIVE:
-                    exitError("Invalid Directive");
+                    exitError("Invalid Directive " + tokens[0]);
                 default:
                     break;
                     // exitError("Invalid directive found in config file");
