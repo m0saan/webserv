@@ -11,6 +11,7 @@
 # include <sstream>
 # include <errno.h>
 # include <map>
+#include <vector>
 # include <dirent.h>
 # include "location.hpp"
 #include "../parser/parser.hpp"
@@ -18,8 +19,7 @@
 class Response
 {
 	public:
-		Response(void);
-		Response(ServerConfig & config, int index);
+		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map);
 		Response(Response const&);
 		Response& operator=(Response const&);
 		~Response(void);
@@ -51,5 +51,5 @@ class Response
 		std::string 						_error_pages;
 		std::map<std::string, std::string> 	_type;
 		ServerConfig&						_server_configs;
-		int									_index;
+		std::map<std::string, std::vector<std::string> >& _request_map;
 };

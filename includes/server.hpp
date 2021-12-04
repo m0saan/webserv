@@ -23,7 +23,7 @@ class Server
 		request_response req_res;
 		std::vector<ServerConfig> &_config;
 	public:
-		Server(std::vector<ServerConfig>);
+		Server(std::vector<ServerConfig>& );
 		void	listen();
 		int		is_server(int fd, bool *is_client) const;
 		void	socketFree(int fd);

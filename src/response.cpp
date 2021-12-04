@@ -2,17 +2,23 @@
 #include "../includes/location.hpp"
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
-Response::Response(void): _response(""), _loc()
-, _root(""), _uri(""), _error_pages(""){}
 
-Response::Response(ServerConfig & config, int index) : _server_configs(config), _index(index)
+Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map ,int index)
+:
+_server_configs(config),
+_request_map(request_map),
+_index(index)
+
 {
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
+	_uri = _request_map["ST"][1];
+	_root = _server_configs._root;
+	_error_pages = _server_configs._error_page;
 }
 
-Response::Response(Response const& x) { *this = x;	}
+Response::Response(Response const& x) : _server_configs(x._server_configs) { *this = x;	}
 Response::~Response(void) { _file.close(); }
 Response& Response::operator=(Response const& x)
 {
@@ -29,10 +35,12 @@ void Response::Post_request(void)	{	_process_post_delete("POST");	}
 
 void Response::Get_request(void)
 {
-	std::vector<std::string> 	allowed = _loc.getAllowedMethods();
+	std::vector<std::string> 	allowed = _server_configs._allowed_method;
 	std::string const 			loc_path = _loc.getPath();
 
 	// lets first check for alowed methods in this location
+	// TODO: CHECK WHETHER ALLOWED METHODS ARE AVAILABLE;
+	// TODO: CHECK WHICH ONE SHOULD BE USED.
 	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
 	{
 		_fill_response(".html", 403, "Forbiden");

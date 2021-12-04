@@ -39,7 +39,7 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	return;
 }
 
-Server::Server(std::vector<ServerConfig> config) : _config(config)
+Server::Server(std::vector<ServerConfig> &config) : _config(config)
 {
 	for (size_t i = 0; i < config.size(); ++i)
 	{
@@ -105,11 +105,23 @@ bool Server::readFromFd(int fd)
 		if (req_res.req_completed(fd))
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
-			// auto it = req_res.getMap()[fd].getMap().begin();
+			auto it = req_res.getMap()[fd].getMap();
 
 			/* mosan is done right here!! */
-			// std::string const&, Location const&, std::string const&, std::string const&
-			Response res(_config)
+			// ToDo: check if the request is bad!!!!!!
+			// TODO: add a function that returns an obeject to be used inside the respone class.
+
+			Response res(_config[0], 0);
+			
+			// TODO: check for redirection.
+			if (it["ST"][0] == "GET")
+				res.Get_request();
+			else if (it["ST"][0] == "POST")
+				res.Post_request();
+			else
+				res.Delete_request();
+			
+			/* mamoussa done! */ 
 
 			req_res.set_fd(fd, false, true); // add client fd to write set
 											 // if (close)

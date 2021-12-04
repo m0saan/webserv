@@ -57,7 +57,10 @@ int main(int ac, char **av)
     if (ac != 2)
         exit(1);
 
-    Server serv(performParsing(av[1]));
+    std::vector<ServerConfig> res = performParsing(av[1]);
+    // TODO: check the config file directive non of them is empty.
+    
+    Server serv(res);
     serv.listen();
     // char value_store[100];
     // memset(value_store, 0, 100);
