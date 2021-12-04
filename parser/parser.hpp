@@ -69,8 +69,7 @@ struct ServerConfig {
     std::vector<std::string> _index;
     std::set<std::string> _allowed_method;
 
-    std::vector<ServerConfig*> _location;
-
+    std::vector<ServerConfig> _location;
 
 };
 
@@ -79,6 +78,6 @@ std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec);
 std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig *> const &vec);
 void exitError(std::string const &error);
 int getDirective(std::string const &token);
-std::vector<ServerConfig *> performParsing(std::string const& filename);
+std::vector<ServerConfig> performParsing(std::string const& filename);
 
 #endif // __PARSER_HPP__
