@@ -13,9 +13,9 @@ int main()
     index.push_back("file.html");
     index.push_back("index.html");
     allowed.push_back("POST");
-    Location loc("/src", index, allowed);
+    Location loc(".php", index, allowed);
     loc.getAutoIndex() = "off";
-    Response res("/Users/mamoussa/Desktop/42/webserv", loc, "src", "/Users/mamoussa/Desktop/42/webserv/error_pages");
+    Response res("/Users/mamoussa/Desktop/42/webserv", loc, "user_login.php", "/Users/mamoussa/Desktop/42/webserv/error_pages");
     // res.Get_request();
 	res.Post_request();
 //    res.Delete_request();
