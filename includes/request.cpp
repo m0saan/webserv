@@ -212,3 +212,7 @@ long long Request::getContentLength(const std::string &str)
 	// 	throw std::exception();
 	return length;
 }
+
+std::pair<std::vector<std::string>, std::string> &Request::getQueriesScriptName() {
+    return _url_queries_scriptName;
+}

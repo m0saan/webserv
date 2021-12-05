@@ -1,4 +1,4 @@
-/goinfre/moboustt/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G "CodeBlocks - Unix Makefiles" /Users/moboustt/goinfre/webserv
+/goinfre/moboustt/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/goinfre/moboustt/CLion.app/Contents/bin/ninja/mac/ninja -G Ninja /Users/moboustt/Desktop/webserv
 -- Configuring done
 -- Generating done
--- Build files have been written to: /Users/moboustt/goinfre/webserv/cmake-build-debug
+-- Build files have been written to: /Users/moboustt/Desktop/webserv/cmake-build-debug

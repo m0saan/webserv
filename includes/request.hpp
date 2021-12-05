@@ -38,6 +38,8 @@ public:
 
     std::map<std::string, std::vector<std::string> > const& getMap() const;
 
+    std::pair<std::vector<std::string>, std::string>& getQueriesScriptName();
+
     std::vector<std::string> const &getValue(std::string const & key);
 
     void parseRequest();

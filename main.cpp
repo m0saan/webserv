@@ -55,12 +55,59 @@ std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec)
     return os;
 }
 
+ServerConfig &getRightConfig(std::string const& port, std::string const& host, std::string const& server_name,
+                                    std::string const& url,std::vector<ServerConfig> const &config_vec)
+{
+    std::vector<ServerConfig> possible_blocks;
+    int loc_index;
+    for (size_t i = 0; i < config_vec.size(); i++)
+    {
+        if (config_vec[i]._port == port && config_vec[i]._host == host)
+            possible_blocks.push_back(config_vec[i]);
+    }
+
+
+    if (possible_blocks.size() > 1)
+    {
+        for (size_t i = 0; i < config_vec.size(); i++)
+        {
+            if (server_name.find(config_vec[i]._server_name, 0) != std::string::npos)
+                continue;
+            else
+                possible_blocks.erase(possible_blocks.begin() + i);
+        }
+    }
+
+    // request_url.starts_with(location_url)  -> right location
+    ServerConfig loc();
+    for (size_t i = 0; i < config_vec.size(); i++)
+    {
+        for (size_t j = 0; j < config_vec[i]._location.size(); ++j)
+            if (Utility::startWith(url, config_vec[i]._location[j]._loc_path))
+                loc = loc._loc_path.length() <  config_vec[i]._location[j]._loc_path.length() ? config_vec[i]._location[j] : loc;
+    }
+
+    return possible_blocks[0];
+}
+
 int main(int ac, char **av)
 {
     if (ac != 2)
         exit(1);
 
-    // std::vector<ServerConfig> res = performParsing(av[1]);
+    std::vector<ServerConfig> res = performParsing(av[1]);
+
+    Server ser(res);
+
+    ser.listen();
+
+
+    // std::cout << res << std::endl;
+    // TODO: check the config file directive non of them is empty.
+    return EXIT_SUCCESS;
+}
+
+/*
     std::string url("http://www.example.com/index234.html");
     std::vector<std::string> queries;
     std::pair<bool, int> has_queries_result;
@@ -73,8 +120,4 @@ int main(int ac, char **av)
         std::cout << queries[i] << std::endl;
     std::cout << std::endl << script_name << std::endl;
 
-
-    // std::cout << res << std::endl;
-    // TODO: check the config file directive non of them is empty.
-    return EXIT_SUCCESS;
-}
+*/
