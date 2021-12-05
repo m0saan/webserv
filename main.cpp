@@ -12,7 +12,8 @@
 #include "includes/utility.hpp"
 #include "includes/server.hpp"
 
-std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec) {
+std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec)
+{
     os << "[ ";
     for (int i = 0; i < vec.size(); ++i)
         os << vec[i] << " ";
@@ -20,9 +21,11 @@ std::ostream &operator<<(std::ostream &os, std::vector<std::string> const &vec) 
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec) {
+std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec)
+{
     os << "[" << std::endl;
-    for (int i = 0; i < vec.size(); ++i) {
+    for (int i = 0; i < vec.size(); ++i)
+    {
         std::cout << "--------------------- ServerConfig " << i + 1 << " ---------------------" << std::endl;
 
         os << "port: " << vec[i]._port << std::endl;
@@ -32,7 +35,8 @@ std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec)
         os << "max_file_size: " << vec[i]._max_file_size << std::endl;
         os << "time_out: " << vec[i]._time_out << std::endl;
 
-        for (size_t j = 0; j < vec[i]._location.size(); j++) {
+        for (size_t j = 0; j < vec[i]._location.size(); j++)
+        {
             os << "\tlocation" << std::endl;
             os << "\t\tpath: " << vec[i]._location[j]._loc_path << std::endl;
             os << "\t\troot: " << vec[i]._location[j]._root << std::endl;
@@ -51,32 +55,26 @@ std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec)
     return os;
 }
 
-
 int main(int ac, char **av)
 {
     if (ac != 2)
         exit(1);
 
-    std::vector<ServerConfig> res = performParsing(av[1]);
+    // std::vector<ServerConfig> res = performParsing(av[1]);
+    std::string url("http://www.example.com/index234.html");
+    std::vector<std::string> queries;
+    std::pair<bool, int> has_queries_result;
+    has_queries_result = Utility::hasQueries(url);
+    if (has_queries_result.first)
+        queries = Utility::getQueries(url, has_queries_result.second);
+    std::string script_name = Utility::getScriptName(url);
+
+    for (size_t i = 0; i < queries.size(); i++)
+        std::cout << queries[i] << std::endl;
+    std::cout << std::endl << script_name << std::endl;
+
+
+    // std::cout << res << std::endl;
     // TODO: check the config file directive non of them is empty.
-    
-    Server serv(res);
-    serv.listen();
-    // char value_store[100];
-    // memset(value_store, 0, 100);
-    // std::string url("http://login:password@example.com/one/more/dir/file.exe?a=sth&b=sth");
-    // sscanf(url.c_str(), "%#*/", value_store);
-    // std::cout << value_store << std::endl;
-    // std::map<std::string, std::string> queries;
-    // std::pair<bool, int> has_queries_result;
-    // has_queries_result = hasQueries(url);
-    // if (has_queries_result.first)
-    //     queries = getQueries(url, has_queries_result.second);
-
-    // for (auto const p : queries)
-    //     std::cout << p.first << ":" << p.second << std::endl;
-
-
-
     return EXIT_SUCCESS;
 }

@@ -154,11 +154,23 @@ void Request::getReqInfo(const std::string &str)
 	_header_length = getHeaderLength(str);
 }
 
+std::pair<std::vector<std::string>, std::string> _parseStartLine(std::string& url) {
+	std::vector<std::string> queries;
+    std::pair<bool, int> has_queries_result;
+    has_queries_result = Utility::hasQueries(url);
+    if (has_queries_result.first)
+        queries =  Utility::getQueries(url, has_queries_result.second);
+	std::string script_name = Utility::getScriptName(url);
+	return std::make_pair(queries, script_name);
+}
+
 void Request::_getHeader(const std::string &line)
 {
 	std::vector<std::string> tokens = Utility::split(line, ' ');
-	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
+	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE"){
 		_RequestMap["SL"] = std::vector<std::string>(tokens.begin(), tokens.end());
+		_url_queries_scriptName = _parseStartLine(tokens[1]);
+	}
 	else
 	{
 		tokens[0].pop_back();

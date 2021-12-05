@@ -27,6 +27,7 @@ private:
     long long		_max_body_size;
     transfer_type	_transfer_encoding;
     bool            _is_alive_connection;
+    std::pair<std::vector<std::string>, std::string> _url_queries_scriptName;
 public:
 
 

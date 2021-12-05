@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
+/*   By: keddib <keddib@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/11/23 10:04:07 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/05 07:24:20 by keddib           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,12 +107,15 @@ bool Server::readFromFd(int fd)
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			auto it = req_res.getMap()[fd].getMap();
 
+			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(0, ':'));
+			std::string host = (it["Host"][0]).substr(it["Host"][0].find(0, ':') + 1);
+			ServerConfig chosen_config = Utility::getRightConfig(port, host)
 			/* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
 			// TODO: add a function that returns an obeject to be used inside the respone class.
 
-			Response res(_config[0], 0);
-			
+			Response res(_config[0], it);
+
 			// TODO: check for redirection.
 			if (it["ST"][0] == "GET")
 				res.Get_request();
@@ -120,8 +123,8 @@ bool Server::readFromFd(int fd)
 				res.Post_request();
 			else
 				res.Delete_request();
-			
-			/* mamoussa done! */ 
+
+			/* mamoussa done! */
 
 			req_res.set_fd(fd, false, true); // add client fd to write set
 											 // if (close)
