@@ -3,10 +3,11 @@
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
 
-Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map)
+Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::vector<std::string>, std::string>& queries_script_name)
 :
 _server_configs(config),
-_request_map(request_map)
+_request_map(request_map),
+_queries_script_name(queries_script_name)
 
 {
 	_type.insert(std::make_pair("json", "application"));
@@ -17,7 +18,11 @@ _request_map(request_map)
 	_error_pages = _server_configs._error_page;
 }
 
-Response::Response(Response const& x) : _server_configs(x._server_configs), _request_map(x._request_map) { *this = x;	}
+Response::Response(Response const& x)
+: _server_configs(x._server_configs),
+_request_map(x._request_map),
+_queries_script_name(x._queries_script_name) { *this = x;	}
+
 Response::~Response(void) { _file.close(); }
 Response& Response::operator=(Response const& x)
 {

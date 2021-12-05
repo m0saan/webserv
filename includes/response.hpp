@@ -19,7 +19,7 @@
 class Response
 {
 	public:
-		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map);
+		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::vector<std::string>, std::string>& queries_script_name);
 		Response(Response const&);
 		Response& operator=(Response const&);
 		~Response(void);
@@ -52,4 +52,5 @@ class Response
 		std::map<std::string, std::string> 	_type;
 		ServerConfig&						_server_configs;
 		std::map<std::string, std::vector<std::string> >& _request_map;
+    std::pair<std::vector<std::string>, std::string>& _queries_script_name;
 };
