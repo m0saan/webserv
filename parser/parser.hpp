@@ -47,7 +47,7 @@ typedef enum error {
 struct ServerConfig {
 
     ServerConfig() :
-    _port(), _host(), _server_name(),
+    _port("80"), _host("0.0.0.0"), _server_name(),
     _error_page(),_max_file_size(),
     _time_out(), _cgi(), _root(),
     _auto_index(), _loc_path(), _redirect(), _index(),
@@ -69,6 +69,8 @@ struct ServerConfig {
     std::set<std::string> _allowed_method;
 
     std::vector<ServerConfig> _location;
+
+    ServerConfig getRightConfig();
 
 };
 
