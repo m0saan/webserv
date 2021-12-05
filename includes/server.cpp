@@ -109,11 +109,10 @@ bool Server::readFromFd(int fd)
 
 			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(0, ':'));
 			std::string host = (it["Host"][0]).substr(it["Host"][0].find(0, ':') + 1);
-			ServerConfig chosen_config = Utility::getRightConfig(port, host)
+			ServerConfig chosen_config = Utility::getRightConfig(port, host);
 			/* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
 			// TODO: add a function that returns an obeject to be used inside the respone class.
-
 			Response res(_config[0], it);
 
 			// TODO: check for redirection.
