@@ -66,23 +66,24 @@ void Response::Get_request(void)
 }
 /*----------------------------------------------------------------------------*/
 /* this part is for the cgi (fill the meta_var and excute it) */
-std::vector<char const*>	cgi_meta_var(void)
+std::vector<char const*>	Response::_cgi_meta_var(void)
 {
 	std::vector<char const*> meta_var;
 	std::string				str;
+
 	/*
 	 * SRC = Request (we will get this info from the request headers)
 	 * The server MUST set this meta-variable if and only if the request is accompanied by a message body entity.
 	 *	The CONTENT_LENGTH value must reflect the length of the message-body
 	 */
-	str = std::string("CONTENT_LENGHT") + '\n';
+	str = std::string("CONTENT_LENGHT=") + _request_map["Content-Length"][0] +  '\n';
 	meta_var.push_back(str.c_str());
 	// _cgi_meta_var += "CONTENT_LENGHT=" + '\n';
 	/*
 	 * SRC = Request (we will get this info from the request headers)
 	 * The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
 	 */
-	str = std::string("CONTENT_TYPE=") + '\n';
+	str = std::string("CONTENT_TYPE=") + _request_map["Content-Type"][0] + '\n';
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Static (hard code it)
@@ -119,7 +120,7 @@ std::vector<char const*>	cgi_meta_var(void)
 	 * Contains the method (as specified with the METHOD attribute in an HTML form) that is
 	 * used to send the request. Example: GET
 	 */
-	str = std::string("REQUEST_METHOD=") + '\n';
+	str = std::string("REQUEST_METHOD=") + _request_map["ST"][0] + '\n';
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
@@ -132,12 +133,12 @@ std::vector<char const*>	cgi_meta_var(void)
 	 * SRC = Conf
 	 * Contains the server host name or IP address of the server. Example: 10.9.8.7
 	 */
-	str = std::string("SERVER_NAME=") + '\n';
+	str = std::string("SERVER_NAME=") + _server_configs._host + '\n';
 	meta_var.push_back(str.c_str());
 	/*
 	 * Contains the port number to which the client request was sent.
 	 */
-	str = std::string("SERVER_PORT=") + '\n';
+	str = std::string("SERVER_PORT=") + _server_configs._port + '\n';
 	meta_var.push_back(str.c_str());
 	str = "SERVER_PROTOCOL=HTTP/1.1\n";
 	meta_var.push_back(str.c_str());
