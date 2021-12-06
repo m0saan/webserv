@@ -13,9 +13,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include "../includes/request.hpp"
 #include <array>
-#include "../includes/utility.hpp"
 #include "../includes/status_code.h"
 
 class Directives {
@@ -47,7 +45,7 @@ typedef enum error {
 struct ServerConfig {
 
     ServerConfig() :
-    _port("80"), _host("0.0.0.0"), _server_name(),
+    _port(), _host(), _server_name(),
     _error_page(),_max_file_size(),
     _time_out(), _cgi(), _root(),
     _auto_index(), _loc_path(), _redirect(), _index(),
@@ -56,7 +54,7 @@ struct ServerConfig {
     std::string _port;
     std::string _host;
     std::string _server_name;
-    std::string _error_page;
+    std::map<std::string, std::string> _error_page;
     std::string _max_file_size;
     std::string _time_out;
     std::string _cgi;
@@ -64,13 +62,12 @@ struct ServerConfig {
     std::string _auto_index;
     std::string _loc_path;
 
-    std::pair<HTTP::StatusCodes, std::string> _redirect;
+    std::pair<std::string, std::string> _redirect;
     std::vector<std::string> _index;
     std::set<std::string> _allowed_method;
 
     std::vector<ServerConfig> _location;
 
-    ServerConfig getRightConfig();
 
 };
 
