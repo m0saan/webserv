@@ -32,8 +32,8 @@ public:
         return (std::make_pair(res != std::string::npos, res));
     }
 
-    static std::vector<std::string> getQueries(std::string const &url, std::size_t querie_start) {
-        return Utility::split(url.substr(querie_start + 1), '&');
+    static std::string getQueries(std::string const &url, std::size_t querie_start) {
+        return url.substr(querie_start + 1);
     }
 
     static std::string urlDecode(std::string &SRC) {
