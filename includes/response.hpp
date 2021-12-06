@@ -40,7 +40,7 @@ class Response
 		void	_fill_cgi_response(std::string *, bool);
 		void	_auto_index_list(void);
 		void	_fill_auto_index_response(std::string *);
-		std::vector<char const*>	Response::_cgi_meta_var(void);
+		std::vector<char const*> _cgi_meta_var(void);
 
 	private:
 		std::string							_response;

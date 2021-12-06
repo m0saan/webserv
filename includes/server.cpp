@@ -12,6 +12,7 @@
 
 #include "server.hpp"
 #include "response.hpp"
+#include "utility.hpp"
 
 void Server::initConfig(ServerConfig &conf, size_t size)
 {
@@ -61,7 +62,7 @@ int Server::is_server(int fd, bool *is_client) const
 	return -1;
 }
 
-void Server::emergencyFree()
+void Server::emergencyFree() // !CALL THE POLICE.
 {
 
 	int fd = server_cli.back()->get_fd();
@@ -107,14 +108,14 @@ bool Server::readFromFd(int fd)
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			auto it = req_res.getMap()[fd].getMap();
 
-			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(0, ':'));
-			std::string host = (it["Host"][0]).substr(it["Host"][0].find(0, ':') + 1);
-			ServerConfig chosen_config = Utility::getRightConfig(port, host);
-			/* mosan is done right here!! */
-			// ToDo: check if the request is bad!!!!!!
-			// TODO: add a function that returns an obeject to be used inside the respone class.
+			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
+			std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
+			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
 
-			Response res(_config[0], it, req_res.getMap()[fd].getQueriesScriptName());
+            /* mosan is done right here!! */
+			// ToDo: check if the request is bad!!!!!!
+
+			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
 
 			// TODO: check for redirection.
 			if (it["ST"][0] == "GET")

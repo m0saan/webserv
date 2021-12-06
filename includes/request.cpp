@@ -206,7 +206,7 @@ long long Request::getContentLength(const std::string &str)
 		// 	throw std::exception();
 		this->_transfer_encoding = COMPLETED;
 	}
-	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked
+	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked 
 		this->_transfer_encoding = CHUNKED;
 	// else // Content-Length not found && !chunked  && should be POST or DELETE
 	// 	throw std::exception();

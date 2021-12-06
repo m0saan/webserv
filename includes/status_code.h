@@ -19,6 +19,8 @@ namespace HTTP {
          * For most tasks you won't encounter these much, as it's not the final response to the request.
          */
 
+        INVALID=-1,
+
         CONTINUE=100,
         SWITCHING_PROTOCOLS=101,
         PROCESSING=102,
