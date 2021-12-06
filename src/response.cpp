@@ -15,7 +15,7 @@ _queries_script_name(queries_script_name)
 	_type.insert(std::make_pair("php", "application/octet-stream"));
 	_uri = _request_map["ST"][1];
 	_root = _server_configs._root;
-	_error_pages = _server_configs._error_page;
+//	_error_pages = _server_configs._error_page;
 }
 
 Response::Response(Response const& x)
@@ -186,7 +186,7 @@ void Response::_cgi(void)
 	pipe(pfd);
 	if(!(fork()))
 	{
-		std::vector<char const*> meta_var = cgi_meta_var();
+		std::vector<char const*> meta_var = _cgi_meta_var();
 		std::vector<char const*> args;
 		std::string path;
 
