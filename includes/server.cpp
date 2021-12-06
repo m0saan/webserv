@@ -118,7 +118,9 @@ bool Server::readFromFd(int fd)
 			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
 
 			// TODO: check for redirection.
-			if (it["ST"][0] == "GET")
+			if (!chosen_config._location[0]._redirect.first.empty())
+				res.Redirection();
+			else if (it["ST"][0] == "GET")
 				res.Get_request();
 			else if (it["ST"][0] == "POST")
 				res.Post_request();

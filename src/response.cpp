@@ -3,7 +3,7 @@
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
 
-Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::vector<std::string>, std::string>& queries_script_name)
+Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name)
 :
 _server_configs(config),
 _request_map(request_map),
@@ -14,8 +14,11 @@ _queries_script_name(queries_script_name)
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
 	_uri = _request_map["ST"][1];
+	if (*_uri.begin() == '/')
+		_uri.erase(_uri.begin());
 	_root = _server_configs._root;
-//	_error_pages = _server_configs._error_page;
+	_error_pages = _server_configs._error_page;
+	_fill_status_codes();
 }
 
 Response::Response(Response const& x)
@@ -30,9 +33,180 @@ Response& Response::operator=(Response const& x)
 	return *this;
 }
 
+void Response::_fill_status_codes(void)
+{
+	_status_codes = new std::map<std::string, std::string>();
+	/*----------------- 1xx status codes -------------*/
+	_status_codes->insert(std::make_pair("100", ""));
+	_status_codes->insert(std::make_pair("101", ""));
+	_status_codes->insert(std::make_pair("102", ""));
+	_status_codes->insert(std::make_pair("103", ""));
+	/*-----------------------------------------------*/
+	/*----------------- 2xx status codes -------------*/
+	// 	HTTP/1.1 200 OK
+	// < Server: nginx/1.21.4
+	// < Date: Mon, 06 Dec 2021 02:52:37 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	// < 
+	// * Connection #0 to host localhost left intact
+	// http://google.com
+	_status_codes->insert(std::make_pair("200", "OK"));
+	// 	HTTP/1.1 201 Created
+	_status_codes->insert(std::make_pair("201", "Created"));
+	// < HTTP/1.1 202 Accepted
+	_status_codes->insert(std::make_pair("202", "Accepted"));
+	// < HTTP/1.1 203 
+	_status_codes->insert(std::make_pair("203", ""));
+	// 	< HTTP/1.1 204 No Content
+	// < Server: nginx/1.21.4
+	// < Date: Mon, 06 Dec 2021 02:55:50 GMT
+	// < Connection: keep-alive
+	_status_codes->insert(std::make_pair("204", "No Content"));
+	// < HTTP/1.1 205 
+	_status_codes->insert(std::make_pair("205", ""));
+	// < HTTP/1.1 206 Partial Content
+	_status_codes->insert(std::make_pair("206", "Partial Content"));
+	// < HTTP/1.1 207 
+	_status_codes->insert(std::make_pair("207", ""));
+	// < HTTP/1.1 208 
+	_status_codes->insert(std::make_pair("208", ""));
+	// < HTTP/1.1 226 
+	_status_codes->insert(std::make_pair("226", ""));
+	/*-----------------------------------------------*/
+	/*----------------- 4xx status codes -------------*/
+	// 	 HTTP/1.1 400 Bad Request
+	// < Server: nginx/1.21.4
+	// < Date: Mon, 06 Dec 2021 03:08:13 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	// < 
+	// * Connection #0 to host localhost left intact
+	// http://google.com%
+	_status_codes->insert(std::make_pair("400", "Bad Request"));
+	// < HTTP/1.1 401 Unauthorized
+	_status_codes->insert(std::make_pair("401", "Unauthorized"));
+	// < HTTP/1.1 402 Payment Required
+	_status_codes->insert(std::make_pair("402", "Payment Required"));
+	// < HTTP/1.1 403 Forbidden
+	_status_codes->insert(std::make_pair("403", "Forbidden"));
+	// < HTTP/1.1 404 Not Found
+	_status_codes->insert(std::make_pair("404", "Not Found"));
+	// < HTTP/1.1 405 Not Allowed
+	_status_codes->insert(std::make_pair("405", "Not Allowed"));
+	// < HTTP/1.1 406 Not Acceptable
+	_status_codes->insert(std::make_pair("406", "Not Acceptable"));
+	// < HTTP/1.1 407 
+	_status_codes->insert(std::make_pair("407", ""));
+	// < HTTP/1.1 408 Request Time-out
+	_status_codes->insert(std::make_pair("408", "Request Time-out"));
+	// < HTTP/1.1 409 Conflict
+	_status_codes->insert(std::make_pair("409", "Conflict"));
+	// < HTTP/1.1 410 Gone
+	_status_codes->insert(std::make_pair("410", "Gone"));
+	// < HTTP/1.1 411 Length Required
+	_status_codes->insert(std::make_pair("411", "Length Required"));
+	// < HTTP/1.1 412 Precondition Failed
+	_status_codes->insert(std::make_pair("412", "Precondition Failed"));
+	// < HTTP/1.1 413 Request Entity Too Large
+	_status_codes->insert(std::make_pair("413", "Request Entity Too Large"));
+	// < HTTP/1.1 414 Request-URI Too Large
+	_status_codes->insert(std::make_pair("414", "Request-URI Too Large"));
+	// < HTTP/1.1 415 Unsupported Media Type
+	_status_codes->insert(std::make_pair("415", "Unsupported Media Type"));
+	// < HTTP/1.1 416 Requested Range Not Satisfiable
+	_status_codes->insert(std::make_pair("416", "Requested Range Not Satisfiable"));
+	// < HTTP/1.1 417 
+	_status_codes->insert(std::make_pair("417", ""));
+	// < HTTP/1.1 418 
+	_status_codes->insert(std::make_pair("418", ""));
+	// < HTTP/1.1 421 Misdirected Request
+	_status_codes->insert(std::make_pair("421", "Misdirected Request"));
+	// < HTTP/1.1 422 
+	_status_codes->insert(std::make_pair("422", ""));
+	// < HTTP/1.1 423 
+	_status_codes->insert(std::make_pair("423", ""));
+	// < HTTP/1.1 424 
+	_status_codes->insert(std::make_pair("424", ""));
+	// < HTTP/1.1 426 
+	_status_codes->insert(std::make_pair("426", ""));
+	// < HTTP/1.1 428 
+	_status_codes->insert(std::make_pair("428", ""));
+	// < HTTP/1.1 429 Too Many Requests
+	_status_codes->insert(std::make_pair("429", "Too Many Requests"));
+	// < HTTP/1.1 431 
+	_status_codes->insert(std::make_pair("431", ""));
+	// < HTTP/1.1 444 
+	_status_codes->insert(std::make_pair("444", ""));
+	// < HTTP/1.1 451 
+	_status_codes->insert(std::make_pair("451", ""));
+	// < HTTP/1.1 499 
+	_status_codes->insert(std::make_pair("499", ""));
+	/*-----------------------------------------------*/
+	/*----------------- 4xx status codes -------------*/
+	// 	< HTTP/1.1 500 Internal Server Error
+	// < Server: nginx/1.21.4
+	// < Date: Mon, 06 Dec 2021 03:42:54 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	// < 
+	// * Connection #0 to host localhost left intact
+	// http://google.com%
+	_status_codes->insert(std::make_pair("500", "Internal Server Error"));
+	// < HTTP/1.1 501 Not Implemented
+	_status_codes->insert(std::make_pair("501", "Not Implemented"));
+	// < HTTP/1.1 502 Bad Gateway
+	_status_codes->insert(std::make_pair("502", "Bad Gateway"));
+	// < HTTP/1.1 503 Service Temporarily Unavailable
+	_status_codes->insert(std::make_pair("503", "Service Temporarily Unavailable"));
+	// < HTTP/1.1 504 Gateway Time-out
+	_status_codes->insert(std::make_pair("504", "Gateway Time-out"));
+	// < HTTP/1.1 505 HTTP Version Not Supported
+	_status_codes->insert(std::make_pair("505", "HTTP Version Not Supported"));
+	// < HTTP/1.1 506 
+	_status_codes->insert(std::make_pair("506", ""));
+	// < HTTP/1.1 507 Insufficient Storage
+	_status_codes->insert(std::make_pair("507", "Insufficient Storage"));
+	// < HTTP/1.1 508 
+	_status_codes->insert(std::make_pair("508", ""));
+	// < HTTP/1.1 510 
+	_status_codes->insert(std::make_pair("510", ""));
+	// < HTTP/1.1 511 
+	_status_codes->insert(std::make_pair("511", ""));
+	// < HTTP/1.1 599 
+	_status_codes->insert(std::make_pair("599", ""));
+	/*------------------------------------------------*/
+
+}
+
 /*-------------------------------------------------------------------------------*/
 
-/* those are the public methods to process the request @GET @POST @DELETE */
+/* those are the public methods to process the request @GET @POST @DELETE  and Redirection*/
+
+void Response::Redirection(void)
+{
+	std::string *tmp_res = error_page("301 Moved Permanently");
+	time_t 				rawtime;
+	std::stringstream	ss;
+
+	time (&rawtime);
+	_response += "HTTP/1.1  301 Moved Permanently\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Content-Type: text/html\r\n";
+	ss << tmp_res->length();
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Connection: keep-alive\r\n";
+	_response += "Location: \r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
 
 void Response::Post_request(void)	{	_process_post_delete("POST");	}
@@ -40,7 +214,7 @@ void Response::Post_request(void)	{	_process_post_delete("POST");	}
 void Response::Get_request(void)
 {
 	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string const 			loc_path = _loc.getPath();
+	std::string const 			loc_path = _server_configs._location[0]._loc_path;
 
 	// lets first check for alowed methods in this location
 	// TODO: CHECK WHETHER ALLOWED METHODS ARE AVAILABLE;
@@ -98,7 +272,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * URL http://www.myhost.com/mypath/myscript.cgi/path/info/here will set PATH_INFO to "/path/info/here".
 	 * Commonly used for path-like data, but you can use it for anything.
 	 */
-	str = std::string("PATH_INFO=") + '\n';
+	str = std::string("PATH_INFO=") + _queries_script_name.second + '\n';
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request/Conf (we will get this info from the request headers but we should parse it as a local uri)
@@ -113,7 +287,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * The string is coded in the standard URL format of changing spaces to "+" and encoding special characters with "%xx" hexadecimal encoding.
 	 * The CGI program must decode this information.
 	 */
-	str = std::string("QUERY_STRING=") + '\n';
+	str = std::string("QUERY_STRING=") + _queries_script_name.first + '\n';
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
@@ -127,7 +301,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * The path part of the URL that points to the script being executed.
 	 * It should include the leading slash. Example: /cgi-bin/hello.pgm
 	 */
-	str = std::string("SCRIPT_NAME=") + '\n';
+	str = std::string("SCRIPT_NAME=") + _queries_script_name.second + '\n';
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Conf
@@ -169,9 +343,10 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 	else
 		_response += "HTTP/1.1 200 OK\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
-	_response += "Server: webserver\r\n";
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
 	_response += "Transfer-Encoding: chunked\r\n";
-	_response += "Connection: close\r\n";
+	_response += "Connection: close\r\n\r\n";
 	_response += *tmp_res;
 }
 
@@ -190,9 +365,9 @@ void Response::_cgi(void)
 		std::vector<char const*> args;
 		std::string path;
 
-		args.push_back("/Users/mamoussa/Desktop/brew/bin/php-cgi");
+		args.push_back(_server_configs._location[0]._cgi.c_str());
 		args.push_back(NULL);
-		path = "/Users/mamoussa/Desktop/brew/bin/php-cgi";
+		path = _server_configs._location[0]._cgi;
 		close(pfd[0]);
 		dup2(fd, 0);
 		dup2(pfd[1], 1);
@@ -201,7 +376,7 @@ void Response::_cgi(void)
 		{
 			close(pfd[1]);
 			args.~vector();
-			// delete meta_var;
+			meta_var.~vector();
 			exit(1);
 		}
 		exit(0);
@@ -241,8 +416,7 @@ void Response::_fill_auto_index_response(std::string* tmp_res)
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
 	_response += "Transfer-Encoding: chunked\r\n";
-	_response += "Connection: close\r\n";
-	_response += "\r\n";
+	_response += "Connection: close\r\n\r\n";
 	_response += *tmp_res;
 }
 
@@ -293,9 +467,9 @@ std::string	*error_page(std::string const& message)
 }
 void Response::_process_post_delete(std::string const& req_method)
 {
-	std::vector<std::string> 	const	allowed = _loc.getAllowedMethods();
-	std::vector<std::string>	const 	index = _loc.getIndex();
-	std::string const 					loc_path = _loc.getPath();
+	std::vector<std::string> const 		allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
+	std::string const 					loc_path = _server_configs._location[0]._loc_path;
+	std::vector<std::string>	const 	index = _server_configs._location[0]._index;
 	bool								found(false);
 
 	// lets first check for alowed methods in this location
@@ -358,8 +532,8 @@ void Response::_process_post_delete(std::string const& req_method)
 
 void Response::_process_as_dir(void)
 {
-	std::vector<std::string> const	index = _loc.getIndex();
-	bool							found(false);
+	std::vector<std::string>	const 	index = _server_configs._location[0]._index;
+	bool								found(false);
 
 	_root += '/' + _uri;
 	if (_uri.empty() || _is_dir(_root))
@@ -441,8 +615,7 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 		_response += "Content-Type: " + _type[extention] + "\r\n";
 	else
 		_response += "Content-Type: " + _type[extention] + '/' + extention + "\r\n";
-	_response += "Connection: close\r\n";
-	_response += "\r\n";
+	_response += "Connection: close\r\n\r\n";
 }
 
 void Response::_fill_response(std::string const& path, size_t status_code, std::string const& message)

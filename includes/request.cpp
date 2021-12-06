@@ -154,8 +154,8 @@ void Request::getReqInfo(const std::string &str)
 	_header_length = getHeaderLength(str);
 }
 
-std::pair<std::vector<std::string>, std::string> _parseStartLine(std::string& url) {
-	std::vector<std::string> queries;
+std::pair<std::string, std::string> _parseStartLine(std::string& url) {
+	std::string queries;
     std::pair<bool, int> has_queries_result;
     has_queries_result = Utility::hasQueries(url);
     if (has_queries_result.first)

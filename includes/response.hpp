@@ -19,12 +19,13 @@
 class Response
 {
 	public:
-		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::vector<std::string>, std::string>& queries_script_name);
+		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name);
 		Response(Response const&);
 		Response& operator=(Response const&);
 		~Response(void);
 	public:
 		void 				Get_request(void);
+		void				Redirection(void);
 		void 				Post_request(void);
 		void				Delete_request(void);
 		std::string const& 	get_response(void) const;
@@ -40,7 +41,8 @@ class Response
 		void	_fill_cgi_response(std::string *, bool);
 		void	_auto_index_list(void);
 		void	_fill_auto_index_response(std::string *);
-		std::vector<char const*> _cgi_meta_var(void);
+		void	_fill_status_codes(void);
+		std::vector<char const*>	_cgi_meta_var(void);
 
 	private:
 		std::string							_response;
@@ -53,5 +55,6 @@ class Response
 		std::map<std::string, std::string> 	_type;
 		ServerConfig&						_server_configs;
 		std::map<std::string, std::vector<std::string> >& _request_map;
-    std::pair<std::vector<std::string>, std::string>& _queries_script_name;
+		std::pair<std::string, std::string>& _queries_script_name;
+		std::map<std::string, std::string>*	_status_codes;
 };
