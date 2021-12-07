@@ -32,7 +32,7 @@ int getDirective(std::string const &token)
     for (int i = 0; i < globalDirectives.size(); ++i)
         if (token == globalDirectives[i].first)
             return globalDirectives[i].second;
-    return e_error::INVALID_DIRECTIVE;
+    return INVALID_DIRECTIVE;
 }
 
 template <typename T>
@@ -69,7 +69,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 if (tokens[0] == "server")
                 {
                     if (tokens.size() != 2 || tokens[1] != "{")
-                        exitError("error near token: <" + tokens[0] + ">");
+                        exitError("error near directive: <" + tokens[0] + ">");
                     directive = -1;
                     ++N_curly_braces_open;
                 }
@@ -85,7 +85,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 break;
             case Directives::PORT:
                 if (tokens.size() != 2)
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._port, tokens[1], tokens[0]);
                 else
@@ -93,7 +93,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 break;
             case Directives::HOST:
                 if (tokens.size() != 2)
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._host, tokens[1], tokens[0]);
                 else
@@ -101,7 +101,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 break;
             case Directives::SERVER_NAME:
                 if (tokens.size() != 2)
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._server_name, tokens[1], tokens[0]);
                 else
@@ -109,21 +109,23 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 break;
             case Directives::ERROR_PAGE:
                 if (tokens.size() <= 2 || tokens[1] != "<" || tokens[tokens.size() - 1] != ">")
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 for (int k = 2; k < tokens.size(); ++k)
                 {
                     if (tokens[k] == ">")
                         break;
                     std::vector<std::string> res = Utility::split(tokens[k], ':');
                     if (res.size() != 2)
-                        exitError("error near token: <" + tokens[0] + ">");
+                        exitError("error near directive: <" + tokens[0] + ">");
+                    if (res[1].back() != ';')
+                        exitError("<;> delimiter is expected.");
                     res[1].pop_back();
                     globalConfig[i]._error_page[res[0]] = res[1];
                 }
                 break;
             case Directives::MAX_FILE_SIZE:
                 if (tokens.size() != 2)
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._max_file_size, tokens[1], tokens[0]);
                 else
@@ -132,7 +134,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
 
             case Directives::TIME_OUT:
                 if (tokens.size() != 2)
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._time_out, tokens[1], tokens[0]);
                 else
@@ -141,7 +143,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
 
             case Directives::ROOT:
                 if (tokens.size() != 2)
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._root, tokens[1], tokens[0]);
                 else
@@ -159,14 +161,14 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
 
             case Directives::REDIRECT: // Handle the redirection directive.
                 if (tokens.size() != 3)
-                    exitError("error near token: <redirect>");
+                    exitError("error near directive: <redirect>");
                 globalConfig[i]._location[j]._redirect.first = tokens[1];
                 globalConfig[i]._location[j]._redirect.second = tokens[2];
                 break;
 
             case Directives::CGI: // Handle the cgi directive.
                 if (tokens.size() != 2)
-                    exitError("error near token: <cgi>");
+                    exitError("error near directive: <cgi>");
                 globalConfig[i]._location[j]._cgi = tokens[1];
                 break;
 
@@ -180,7 +182,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
 
             case Directives::AUTO_INDEX:
                 if (tokens.size() != 2)
-                    exitError("error near token: <" + tokens[0] + ">");
+                    exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._auto_index, tokens[1], tokens[0]);
                 else
@@ -196,12 +198,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 ++N_square_bracket_open;
                 isLocation = true;
                 break;
-                //                    if (tokens.size() == 3) globalConfig[tokens[0]] = tokens[1];
-                //                    else if (tokens.size() == 4) std::cout << "size is 3" << std::endl;
-                //                    else exitError("SYNTAX ERROR.");
 
-                //                case Directives::INVALID:
-                //                    exitError("SYNTAX ERROR.");
             case Directives::LOCATION_END:
                 isLocation = false;
                 ++N_square_bracket_close;
