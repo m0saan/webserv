@@ -61,7 +61,7 @@ namespace HTTP {
          * A redirect means that the request was received successfully, but that the resource was found elsewhere.
          * If a webpage has changed path and you try to access it through the old path, your CMS will often redirect the user to the new path.
          * Ultimately the request will end in a 2xx success, but first it must go through the 3xx redirection.
-         *
+         */
 
         MULTIPLE_CHOICES=300,
         MOVED_PERMANENTLY=301,
@@ -72,7 +72,7 @@ namespace HTTP {
         TEMPORARY_REDIRECT=307,
         PERMANENT_REDIRECT=308,
 
-         / * 4xx Client Error status code */
+         /* 4xx Client Error status code */
 
         /*
          *

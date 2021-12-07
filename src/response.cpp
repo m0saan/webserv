@@ -17,7 +17,7 @@ _queries_script_name(queries_script_name)
 	if (*_uri.begin() == '/')
 		_uri.erase(_uri.begin());
 	_root = _server_configs._root;
-	_error_pages = _server_configs._error_page;
+	// _error_pages = _server_configs._error_page;
 	_fill_status_codes();
 }
 
@@ -37,6 +37,15 @@ void Response::_fill_status_codes(void)
 {
 	_status_codes = new std::map<std::string, std::string>();
 	/*----------------- 1xx status codes -------------*/
+	// 	< HTTP/1.1 100 
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:55:30 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	// * Excess found in a non pipelined read: excess = 17, size = 17, maxdownload = 17, bytecount = 17
+	// * Connection #0 to host localhost left intact
+	// http://google.com
 	_status_codes->insert(std::make_pair("100", ""));
 	_status_codes->insert(std::make_pair("101", ""));
 	_status_codes->insert(std::make_pair("102", ""));
@@ -74,6 +83,125 @@ void Response::_fill_status_codes(void)
 	_status_codes->insert(std::make_pair("208", ""));
 	// < HTTP/1.1 226 
 	_status_codes->insert(std::make_pair("226", ""));
+	/*-----------------------------------------------*/
+	/*----------------- 3xx status codes -------------*/
+	// 	< HTTP/1.1 300 
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:45:07 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	// < 
+	// * Connection #0 to host localhost left intact
+	// http://google.com
+	_status_codes->insert(std::make_pair("300", ""));
+	// 	< HTTP/1.1 301 Moved Permanently
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:45:43 GMT
+	// < Content-Type: text/html
+	// < Content-Length: 169
+	// < Connection: keep-alive
+	// < Location: http://google.com
+	// < 
+	// <html>
+	// <head><title>301 Moved Permanently</title></head>
+	// <body>
+	// <center><h1>301 Moved Permanently</h1></center>
+	// <hr><center>nginx/1.21.4</center>
+	// </body>
+	// </html>
+	_status_codes->insert(std::make_pair("301", ""));
+	// 	< HTTP/1.1 302 Moved Temporarily
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:46:11 GMT
+	// < Content-Type: text/html
+	// < Content-Length: 145
+	// < Connection: keep-alive
+	// < Location: http://google.com
+	// < 
+	// <html>
+	// <head><title>302 Found</title></head>
+	// <body>
+	// <center><h1>302 Found</h1></center>
+	// <hr><center>nginx/1.21.4</center>
+	// </body>
+	// </html>
+	_status_codes->insert(std::make_pair("302", ""));
+	// 	< HTTP/1.1 303 See Other
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:46:50 GMT
+	// < Content-Type: text/html
+	// < Content-Length: 153
+	// < Connection: keep-alive
+	// < Location: http://google.com
+	// < 
+	// <html>
+	// <head><title>303 See Other</title></head>
+	// <body>
+	// <center><h1>303 See Other</h1></center>
+	// <hr><center>nginx/1.21.4</center>
+	// </body>
+	// </html>
+	_status_codes->insert(std::make_pair("303", ""));
+	// 	< HTTP/1.1 304 Not Modified
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:47:14 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	_status_codes->insert(std::make_pair("304", ""));
+	// 	< HTTP/1.1 305 
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:47:40 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	// < 
+	// * Connection #0 to host localhost left intact
+	// http://google.com
+	_status_codes->insert(std::make_pair("305", ""));
+	// 	< HTTP/1.1 306 
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:47:59 GMT
+	// < Content-Type: application/octet-stream
+	// < Content-Length: 17
+	// < Connection: keep-alive
+	// < 
+	// * Connection #0 to host localhost left intact
+	// http://google.com%
+	_status_codes->insert(std::make_pair("306", ""));
+	// 	< HTTP/1.1 307 Temporary Redirect
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:48:22 GMT
+	// < Content-Type: text/html
+	// < Content-Length: 171
+	// < Connection: keep-alive
+	// < Location: http://google.com
+	// < 
+	// <html>
+	// <head><title>307 Temporary Redirect</title></head>
+	// <body>
+	// <center><h1>307 Temporary Redirect</h1></center>
+	// <hr><center>nginx/1.21.4</center>
+	// </body>
+	// </html>
+	_status_codes->insert(std::make_pair("307", ""));
+	// 	< HTTP/1.1 308 Permanent Redirect
+	// < Server: nginx/1.21.4
+	// < Date: Tue, 07 Dec 2021 10:48:46 GMT
+	// < Content-Type: text/html
+	// < Content-Length: 171
+	// < Connection: keep-alive
+	// < Location: http://google.com
+	// < 
+	// <html>
+	// <head><title>308 Permanent Redirect</title></head>
+	// <body>
+	// <center><h1>308 Permanent Redirect</h1></center>
+	// <hr><center>nginx/1.21.4</center>
+	// </body>
+	// </html>
+	_status_codes->insert(std::make_pair("308", ""));
 	/*-----------------------------------------------*/
 	/*----------------- 4xx status codes -------------*/
 	// 	 HTTP/1.1 400 Bad Request
@@ -188,23 +316,11 @@ void Response::_fill_status_codes(void)
 
 void Response::Redirection(void)
 {
-	std::string *tmp_res = error_page("301 Moved Permanently");
-	time_t 				rawtime;
+	size_t				status_code;
 	std::stringstream	ss;
 
-	time (&rawtime);
-	_response += "HTTP/1.1  301 Moved Permanently\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\n";
-	_response += "Content-Type: text/html\r\n";
-	ss << tmp_res->length();
-	_response += "Content-Length: " + ss.str() + "\r\n";
-	_response += "Server: webserver\r\n";
-	_response += "Connection: keep-alive\r\n";
-	_response += "Location: \r\n\r\n";
-	_response += *tmp_res;
-	delete tmp_res;
+	ss << _server_configs._location[0]._redirect.first;
+	ss >> status_code;
 }
 
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
