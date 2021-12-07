@@ -26,7 +26,7 @@ Response::Response(Response const& x)
 _request_map(x._request_map),
 _queries_script_name(x._queries_script_name) { *this = x;	}
 
-Response::~Response(void) { _file.close(); }
+Response::~Response(void) { _file.close(); delete _status_codes; }
 Response& Response::operator=(Response const& x)
 {
 	_response = x._response;
@@ -273,7 +273,7 @@ void Response::_fill_status_codes(void)
 	// < HTTP/1.1 499 
 	_status_codes->insert(std::make_pair("499", ""));
 	/*-----------------------------------------------*/
-	/*----------------- 4xx status codes -------------*/
+	/*----------------- 5xx status codes -------------*/
 	// 	< HTTP/1.1 500 Internal Server Error
 	// < Server: nginx/1.21.4
 	// < Date: Mon, 06 Dec 2021 03:42:54 GMT
@@ -314,6 +314,99 @@ void Response::_fill_status_codes(void)
 
 /* those are the public methods to process the request @GET @POST @DELETE  and Redirection*/
 
+// this is the response for redirection with location header field
+// 	< HTTP/1.1 301 Moved Permanently
+// < Server: nginx/1.21.4
+// < Date: Tue, 07 Dec 2021 10:45:43 GMT
+// < Content-Type: text/html
+// < Content-Length: 169
+// < Connection: keep-alive
+// < Location: http://google.com
+// < 
+// <html>
+// <head><title>301 Moved Permanently</title></head>
+// <body>
+// <center><h1>301 Moved Permanently</h1></center>
+// <hr><center>nginx/1.21.4</center>
+// </body>
+// </html>
+void Response::_redirect_with_location(size_t status_code)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::string status = _server_configs._location[0]._redirect.first;
+	std::string	message =	_status_codes->operator[](status);
+	std::stringstream ss;
+
+	time (&rawtime);
+	if (status_code != 302)
+		tmp_res = error_page(status + ' ' + message);
+	else
+		tmp_res = error_page(status + ' ' + "302 Found");
+	ss << tmp_res->length();
+	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: keep-alive\r\n";
+	_response += "Location: " + _server_configs._location[0]._redirect.second + "\r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+// this is the response for redirections without location header field
+// 	< HTTP/1.1 500 Internal Server Error
+// < Server: nginx/1.21.4
+// < Date: Mon, 06 Dec 2021 03:42:54 GMT
+// < Content-Type: application/octet-stream
+// < Content-Length: 17
+// < Connection: keep-alive
+// < 
+// * Connection #0 to host localhost left intact
+// http://google.com%
+/*---------------------------------------------*/
+// redirect for 204 status_code
+// < HTTP/1.1 204 No Content
+// < Server: nginx/1.21.4
+// < Date: Mon, 06 Dec 2021 02:55:50 GMT
+// < Connection: keep-alive
+/*---------------------------------------------*/
+// 	< HTTP/1.1 304 Not Modified
+// < Server: nginx/1.21.4
+// < Date: Tue, 07 Dec 2021 10:47:14 GMT
+// < Content-Type: application/octet-stream
+// < Content-Length: 17
+// < Connection: keep-alive
+void Response::_redirect_without_location(size_t status_code)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::string status = _server_configs._location[0]._redirect.first;
+	std::string	message =	_status_codes->operator[](status);
+	std::stringstream ss;
+
+	time (&rawtime);
+	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Connection: keep-alive\r\n";
+	if (status_code == 204)
+		return;
+	if (status_code != 304)
+		tmp_res = error_page(status + ' ' + message);
+	else
+		*tmp_res =  _server_configs._location[0]._redirect.second + "\r\n";
+	ss << tmp_res->length();
+	_response += "Content-Type: application/octet-stream\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	if (status_code != 304)
+	{
+		_response += *tmp_res;
+		delete tmp_res;
+	}
+}
 void Response::Redirection(void)
 {
 	size_t				status_code;
@@ -321,6 +414,11 @@ void Response::Redirection(void)
 
 	ss << _server_configs._location[0]._redirect.first;
 	ss >> status_code;
+	if ((status_code >= 301 && status_code <= 303)
+	|| (status_code == 307 || status_code == 308))
+		_redirect_with_location();
+	else
+		_redirect_without_location();
 }
 
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
