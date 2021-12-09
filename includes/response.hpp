@@ -11,7 +11,7 @@
 # include <sstream>
 # include <errno.h>
 # include <map>
-#include <vector>
+# include <vector>
 # include <dirent.h>
 # include "location.hpp"
 # include "../parser/parser.hpp"
@@ -28,6 +28,8 @@ class Response
 		void				Redirection(void);
 		void 				Post_request(void);
 		void				Delete_request(void);
+		void				bad_allocation(void);
+		void				internal_error(void);
 		std::string const& 	get_response(void) const;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);

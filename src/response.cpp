@@ -315,6 +315,89 @@ void Response::_fill_status_codes(void)
 }
 
 /*-------------------------------------------------------------------------------*/
+/* public methods to hand bad_allocation and iternal_errors response */
+void	Response::bad_allocation(void)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::stringstream ss;
+	std::string		line;
+
+	time (&rawtime);
+	if (_error_pages.count("507"))
+	{
+		_file_path = _error_pages["507"];
+		if (_file_path[0] == '/')
+			_file_path.erase(_file_path.begin());
+		_file_path = _root + '/' + _file_path;
+		if (!_file_is_good(true))
+			return;
+		tmp_res = new std::string();
+		_file.open(_file_path);
+		while (!_file.eof())
+		{
+			std::getline(_file, line);
+			if (!_file.eof())
+				line += "\r\n";
+			*tmp_res += line;
+		}
+		*tmp_res += "\r\n";
+	}
+	else
+		tmp_res = error_page("507 Insufficient Storage");
+	ss << tmp_res->length();
+	_response += "HTTP/1.1 507 Insufficient Storage\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+// "500", "Internal Server Error"
+void	Response::internal_error(void)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::stringstream ss;
+	std::string		line;
+
+	time (&rawtime);
+	if (_error_pages.count("500"))
+	{
+		_file_path = _error_pages["500"];
+		if (_file_path[0] == '/')
+			_file_path.erase(_file_path.begin());
+		_file_path = _root + '/' + _file_path;
+		if (!_file_is_good(true))
+			return;
+		tmp_res = new std::string();
+		_file.open(_file_path);
+		while (!_file.eof())
+		{
+			std::getline(_file, line);
+			if (!_file.eof())
+				line += "\r\n";
+			*tmp_res += line;
+		}
+		*tmp_res += "\r\n";
+	}
+	else
+		tmp_res = error_page("500 Internal Server Error");
+	ss << tmp_res->length();
+	_response += "HTTP/1.1 500 Internal Server Error\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+/*-------------------------------------------------------------------*/
 
 /* those are the public methods to process the request @GET @POST @DELETE  and Redirection*/
 

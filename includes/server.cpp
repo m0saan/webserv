@@ -114,19 +114,29 @@ bool Server::readFromFd(int fd)
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
-
 			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
-
-			// TODO: check for redirection.
-			if (!chosen_config._location[0]._redirect.first.empty())
-				res.Redirection();
-			else if (it["ST"][0] == "GET")
-				res.Get_request();
-			else if (it["ST"][0] == "POST")
-				res.Post_request();
-			else
-				res.Delete_request();
-
+			try
+			{
+				// TODO: check for redirection.
+				if (!chosen_config._redirect.first.empty())
+					res.Redirection();
+				else if (it["ST"][0] == "GET")
+					res.Get_request();
+				else if (it["ST"][0] == "POST")
+					res.Post_request();
+				else
+					res.Delete_request();
+			}
+			catch(std::bad_alloc const& e)
+			{
+				(void)e;
+				res.bad_allocation();
+			}
+			catch(std::exception const& e)
+			{
+				(void)e;
+				res.internal_error();
+			}
 			/* mamoussa done! */
 
 			req_res.set_fd(fd, false, true); // add client fd to write set
