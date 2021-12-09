@@ -338,7 +338,7 @@ void Response::_redirect_with_location(size_t status_code)
 {
 	time_t 		rawtime;
 	std::string	*tmp_res;
-	std::string status = _server_configs._location[0]._redirect.first;
+	std::string status = _server_configs._redirect.first;
 	std::string	message =	_status_codes->operator[](status);
 	std::stringstream ss;
 
@@ -355,7 +355,7 @@ void Response::_redirect_with_location(size_t status_code)
 	_response += "Content-Type: text/html\r\n";
 	_response += "Content-Length: " + ss.str() + "\r\n";
 	_response += "Connection: keep-alive\r\n";
-	_response += "Location: " + _server_configs._location[0]._redirect.second + "\r\n\r\n";
+	_response += "Location: " + _server_configs._redirect.second + "\r\n\r\n";
 	_response += *tmp_res;
 	delete tmp_res;
 }
@@ -386,7 +386,7 @@ void Response::_redirect_without_location(size_t status_code)
 {
 	time_t 		rawtime;
 	std::string	*tmp_res;
-	std::string status = _server_configs._location[0]._redirect.first;
+	std::string status = _server_configs._redirect.first;
 	std::string	message =	_status_codes->operator[](status);
 	std::stringstream ss;
 
@@ -401,7 +401,7 @@ void Response::_redirect_without_location(size_t status_code)
 	if (status_code != 304)
 		tmp_res = error_page(status + ' ' + message);
 	else
-		*tmp_res =  _server_configs._location[0]._redirect.second + "\r\n";
+		*tmp_res =  _server_configs._redirect.second + "\r\n";
 	ss << tmp_res->length();
 	_response += "Content-Type: application/octet-stream\r\n";
 	_response += "Content-Length: " + ss.str() + "\r\n";
@@ -416,7 +416,7 @@ void Response::Redirection(void)
 	size_t				status_code;
 	std::stringstream	ss;
 
-	ss << _server_configs._location[0]._redirect.first;
+	ss << _server_configs._redirect.first;
 	ss >> status_code;
 	if ((status_code >= 301 && status_code <= 303)
 	|| (status_code == 307 || status_code == 308))
@@ -432,7 +432,7 @@ void Response::Post_request(void)	{	_process_post_delete("POST");	}
 void Response::Get_request(void)
 {
 	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string 				loc_path = _server_configs._location[0]._loc_path;
+	std::string 				loc_path = _server_configs._loc_path;
 
 	// lets first check for alowed methods in this location
 	if (loc_path[0] == '/')
@@ -586,9 +586,9 @@ void Response::_cgi(void)
 		std::vector<char const*> args;
 		std::string path;
 
-		args.push_back(_server_configs._location[0]._cgi.c_str());
+		args.push_back(_server_configs._cgi.c_str());
 		args.push_back(NULL);
-		path = _server_configs._location[0]._cgi;
+		path = _server_configs._cgi;
 		close(pfd[0]);
 		dup2(fd, 0);
 		dup2(pfd[1], 1);
@@ -689,8 +689,8 @@ std::string	*error_page(std::string const& message)
 void Response::_process_post_delete(std::string const& req_method)
 {
 	std::vector<std::string> const 		allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string 	 					loc_path = _server_configs._location[0]._loc_path;
-	std::vector<std::string>	const 	index = _server_configs._location[0]._index;
+	std::string 	 					loc_path = _server_configs._loc_path;
+	std::vector<std::string>	const 	index = _server_configs._index;
 	bool								found(false);
 
 	// lets first check for alowed methods in this location
@@ -759,7 +759,7 @@ void Response::_process_post_delete(std::string const& req_method)
 
 void Response::_process_as_dir(void)
 {
-	std::vector<std::string>	const 	index = _server_configs._location[0]._index;
+	std::vector<std::string>	const 	index = _server_configs._index;
 	bool								found(false);
 
 	_root += '/' + _uri;
