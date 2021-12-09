@@ -35,8 +35,6 @@ Response& Response::operator=(Response const& x)
 	return *this;
 }
 
-// TODO: catch memory exceptions, and return 507
-// TODO: check for internal server errors
 void Response::_fill_status_codes(void)
 {
 	_status_codes = new std::map<std::string, std::string>();
@@ -853,7 +851,6 @@ void Response::_process_post_delete(std::string const& req_method)
 				return;
 			}
 		}
-		// TODO: use the valid autoindex
 		if (!found && _server_configs._auto_index != "on")
 		{
 			_fill_response(".html", 403, "Forbiden");
@@ -888,7 +885,6 @@ void Response::_process_as_dir(void)
 				return;
 			}
 		}
-		// TODO: use the valid autoindex
 		if (!found && _server_configs._auto_index != "on")
 		{
 			_fill_response(".html", 404, "Not found");
