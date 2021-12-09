@@ -681,11 +681,12 @@ void Response::_cgi(void)
 	int fd = open("user_login.php", O_RDONLY);
 	int			pfd[2];
 	std::string	*tmp_res;
+	pid_t		pid;
 	size_t 		index;
 	int			status;
 
 	pipe(pfd);
-	if(!(fork()))
+	if(!(pid = fork()))
 	{
 		std::vector<char const*> meta_var = _cgi_meta_var();
 		std::vector<char const*> args;
@@ -706,6 +707,13 @@ void Response::_cgi(void)
 			exit(1);
 		}
 		exit(0);
+	}
+	else if (pid < 0)
+	{
+		close(fd);
+		close(pfd[0]);
+		close(pfd[1]);
+		throw std::exception();
 	}
 	wait(&status);
 	close(pfd[1]);
