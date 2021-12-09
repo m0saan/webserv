@@ -762,6 +762,7 @@ void Response::_auto_index_list(void)
 	*tmp_res += "</head>\r\n<body>\r\n";
 	*tmp_res += std::string("<h1>Index of " + _uri + "</h1>\r\n");
 	*tmp_res += "<hr>\r\n<pre>\r\n";
+	errno = 0;
 	while ((dir_info = readdir(dir)))
 	{
 		if (std::string(dir_info->d_name) == ".")
@@ -774,6 +775,12 @@ void Response::_auto_index_list(void)
 		}
 		*tmp_res += std::string("<a href=\"");
 		*tmp_res += std::string(dir_info->d_name) + "\">" + std::string(dir_info->d_name) + "</a>\r\n";
+	}
+	if (errno)
+	{
+		delete tmp_res;
+		_response.clear();
+		throw std::exception();
 	}
 	*tmp_res += "</pre>\r\n<hr>\r\n</body>\r\n</html>\r\n";
 	_fill_auto_index_response(tmp_res);
