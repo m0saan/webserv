@@ -5,10 +5,10 @@
 
 Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name)
 :
+_error_pages(_server_configs._error_page),
 _server_configs(config),
 _request_map(request_map),
 _queries_script_name(queries_script_name)
-
 {
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
@@ -17,14 +17,16 @@ _queries_script_name(queries_script_name)
 	if (*_uri.begin() == '/')
 		_uri.erase(_uri.begin());
 	_root = _server_configs._root;
-	// _error_pages = _server_configs._error_page;
 	_fill_status_codes();
 }
 
 Response::Response(Response const& x)
-: _server_configs(x._server_configs),
+: 
+_error_pages(x._error_pages),
+_server_configs(x._server_configs),
 _request_map(x._request_map),
-_queries_script_name(x._queries_script_name) { *this = x;	}
+_queries_script_name(x._queries_script_name)
+{ *this = x;	}
 
 Response::~Response(void) { _file.close(); delete _status_codes; }
 Response& Response::operator=(Response const& x)
@@ -418,9 +420,9 @@ void Response::Redirection(void)
 	ss >> status_code;
 	if ((status_code >= 301 && status_code <= 303)
 	|| (status_code == 307 || status_code == 308))
-		_redirect_with_location();
+		_redirect_with_location(status_code);
 	else
-		_redirect_without_location();
+		_redirect_without_location(status_code);
 }
 
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
@@ -430,15 +432,18 @@ void Response::Post_request(void)	{	_process_post_delete("POST");	}
 void Response::Get_request(void)
 {
 	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string const 			loc_path = _server_configs._location[0]._loc_path;
+	std::string 				loc_path = _server_configs._location[0]._loc_path;
 
 	// lets first check for alowed methods in this location
-	// TODO: CHECK WHETHER ALLOWED METHODS ARE AVAILABLE;
-	// TODO: CHECK WHICH ONE SHOULD BE USED.
-	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
+	if (loc_path[0] == '/')
+		loc_path.erase(loc_path.begin());
+	if (!allowed.empty())
 	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
+		if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
+		{
+			_fill_response(".html", 403, "Forbiden");
+			return;
+		}
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
@@ -449,7 +454,7 @@ void Response::Get_request(void)
 	// first we have to check if the location is a dir or just a file
 	if (loc_path == "/")
 		_process_as_dir();
-	else if (_is_dir(_root + '/' + _loc.getPath()))
+	else if (_is_dir(_root + '/' + loc_path))
 		_process_as_dir();
 	else
 		_process_as_file();
@@ -684,15 +689,20 @@ std::string	*error_page(std::string const& message)
 void Response::_process_post_delete(std::string const& req_method)
 {
 	std::vector<std::string> const 		allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string const 					loc_path = _server_configs._location[0]._loc_path;
+	std::string 	 					loc_path = _server_configs._location[0]._loc_path;
 	std::vector<std::string>	const 	index = _server_configs._location[0]._index;
 	bool								found(false);
 
 	// lets first check for alowed methods in this location
-	if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
+	if (loc_path[0] == '/')
+		loc_path.erase(loc_path.begin());
+	if (!allowed.empty())
 	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
+		if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
+		{
+			_fill_response(".html", 403, "Forbiden");
+			return;
+		}
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
@@ -736,7 +746,8 @@ void Response::_process_post_delete(std::string const& req_method)
 				return;
 			}
 		}
-		if (!found && _loc.getAutoIndex() != "on")
+		// TODO: use the valid autoindex
+		if (!found && _server_configs._auto_index != "on")
 		{
 			_fill_response(".html", 403, "Forbiden");
 			return;
@@ -770,7 +781,8 @@ void Response::_process_as_dir(void)
 				return;
 			}
 		}
-		if (!found && _loc.getAutoIndex() != "on")
+		// TODO: use the valid autoindex
+		if (!found && _server_configs._auto_index != "on")
 		{
 			_fill_response(".html", 404, "Not found");
 			return;
@@ -834,13 +846,28 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 	_response += "Connection: close\r\n\r\n";
 }
 
-void Response::_fill_response(std::string const& path, size_t status_code, std::string const& message)
+void Response::_fill_response(std::string const& tmp_path, size_t status_code, std::string const& message)
 {
-	std::string 	line;
-	std::string		*tmp_resp = new std::string();
+	std::string 		line;
+	std::string			*tmp_resp = new std::string();
+	std::stringstream	ss;
+	std::string			path;	
 
-	if (status_code == 200)
+	path = tmp_path;
+	ss << status_code;
+	if (status_code == 200 || _error_pages.count(ss.str())) // check if this status_code has a error_page
 	{
+		// now if status_code is not 200 then we should change the path to be the error_page path
+		if (status_code != 200)	
+		{
+			path = _error_pages[ss.str()];
+			if (path[0] == '/')
+				path.erase(path.begin());
+			path = _root + '/' + path; // here we join the error_page with the root
+			_file_path = path;
+			if (!_file_is_good(true))
+				return;
+		}
 		_file.open(path);
 		while (!_file.eof())
 		{

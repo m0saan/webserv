@@ -14,7 +14,7 @@
 #include <vector>
 # include <dirent.h>
 # include "location.hpp"
-#include "../parser/parser.hpp"
+# include "../parser/parser.hpp"
 
 class Response
 {
@@ -50,10 +50,9 @@ class Response
 		std::string							_response;
 		std::ifstream						_file;
 		std::string 						_file_path;
-		Location							_loc;
 		std::string							_root;
 		std::string							_uri;
-		std::string 						_error_pages;
+		std::map<std::string, std::string>& _error_pages;
 		std::map<std::string, std::string> 	_type;
 		ServerConfig&						_server_configs;
 		std::map<std::string, std::vector<std::string> >& _request_map;
