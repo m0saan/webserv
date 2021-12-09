@@ -341,12 +341,36 @@ void Response::_redirect_with_location(size_t status_code)
 	std::string status = _server_configs._redirect.first;
 	std::string	message =	_status_codes->operator[](status);
 	std::stringstream ss;
+	std::string		str_status_code;
+	std::string		line;
 
 	time (&rawtime);
-	if (status_code != 302)
+	ss << status_code;
+	ss >> str_status_code;
+	if (_error_pages.count(str_status_code))
+	{
+		_file_path = _error_pages[str_status_code];
+		if (_file_path[0] == '/')
+			_file_path.erase(_file_path.begin());
+		_file_path = _root + '/' + _file_path;
+		if (!_file_is_good(true))
+			return;
+		tmp_res = new std::string();
+		_file.open(_file_path);
+		while (!_file.eof())
+		{
+			std::getline(_file, line);
+			if (!_file.eof())
+				line += "\r\n";
+			*tmp_res += line;
+		}
+		*tmp_res += "\r\n";
+	}
+	else if (status_code != 302)
 		tmp_res = error_page(status + ' ' + message);
 	else
 		tmp_res = error_page(status + ' ' + "302 Found");
+	ss.clear();
 	ss << tmp_res->length();
 	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
