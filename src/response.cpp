@@ -3,6 +3,16 @@
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
 
+std::string	*error_page(std::string const& message)
+{
+	std::string *error_body = new std::string();
+
+	*error_body += std::string("<html>\r\n<head>\r\n");
+	*error_body += std::string("<title>") + message;
+	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
+	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
+	return error_body;
+}
 Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name)
 :
 _error_pages(_server_configs._error_page),
@@ -341,8 +351,8 @@ void	Response::bad_allocation(void)
 		}
 		*tmp_res += "\r\n";
 	}
-	// else
-	// 	tmp_res = error_page("507 Insufficient Storage");
+	else
+		tmp_res = error_page("507 Insufficient Storage");
 	ss << tmp_res->length();
 	_response += "HTTP/1.1 507 Insufficient Storage\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
@@ -382,8 +392,8 @@ void	Response::internal_error(void)
 		}
 		*tmp_res += "\r\n";
 	}
-	// else
-	// 	tmp_res = error_page("500 Internal Server Error");
+	else
+		tmp_res = error_page("500 Internal Server Error");
 	ss << tmp_res->length();
 	_response += "HTTP/1.1 500 Internal Server Error\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
@@ -447,10 +457,10 @@ void Response::_redirect_with_location(size_t status_code)
 		}
 		*tmp_res += "\r\n";
 	}
-	// else if (status_code != 302)
-	// 	tmp_res = error_page(status + ' ' + message);
-	// else
-	// 	tmp_res = error_page(status + ' ' + "302 Found");
+	else if (status_code != 302)
+		tmp_res = error_page(status + ' ' + message);
+	else
+		tmp_res = error_page(status + ' ' + "302 Found");
 	ss.clear();
 	ss << tmp_res->length();
 	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
@@ -503,10 +513,10 @@ void Response::_redirect_without_location(size_t status_code)
 	_response += "Connection: keep-alive\r\n";
 	if (status_code == 204)
 		return;
-	// if (status_code != 304)
-	// 	tmp_res = error_page(status + ' ' + message);
-	// else
-	// 	*tmp_res =  _server_configs._redirect.second + "\r\n";
+	if (status_code != 304)
+		tmp_res = error_page(status + ' ' + message);
+	else
+		*tmp_res =  _server_configs._redirect.second + "\r\n";
 	ss << tmp_res->length();
 	_response += "Content-Type: application/octet-stream\r\n";
 	_response += "Content-Length: " + ss.str() + "\r\n";
@@ -796,16 +806,7 @@ void Response::_auto_index_list(void)
 	closedir(dir);
 }
 /*-----------------------------------------------------------------------------------------------------*/
-std::string	*error_page(std::string const& message)
-{
-	std::string *error_body = new std::string();
 
-	*error_body += std::string("<html>\r\n<head>\r\n");
-	*error_body += std::string("<title>") + message;
-	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
-	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
-	return error_body;
-}
 void Response::_process_post_delete(std::string const& req_method)
 {
 	std::vector<std::string> const 		allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
