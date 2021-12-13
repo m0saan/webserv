@@ -45,7 +45,8 @@ void Request::parseRequest()
 	bool is_chunked(false);
 	while (std::getline(_req, line))
 	{
-		line.pop_back();
+		if (!line.empty())
+			line.pop_back();
 		if (line.empty() || _isBodyStart(line, is_body))
 		{
 			is_body = true;

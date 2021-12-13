@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/13 15:58:13 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/13 16:59:56 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,36 +105,36 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			// (req_res.getMap())[fd].parseRequest(); // Parse Request
-			// auto it = req_res.getMap()[fd].getMap();
-			// std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
-			// std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
-			// ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
+			(req_res.getMap())[fd].parseRequest(); // Parse Request
+			auto it = req_res.getMap()[fd].getMap();
+			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
+			std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
+			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
 
-            // /* mosan is done right here!! */
-			// // ToDo: check if the request is bad!!!!!!
-			// Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
-			// try
-			// {
-			// 	if (!chosen_config._redirect.first.empty())
-			// 		res.Redirection();
-			// 	else if (it["ST"][0] == "GET")
-			// 		res.Get_request();
-			// 	else if (it["ST"][0] == "POST")
-			// 		res.Post_request();
-			// 	else
-			// 		res.Delete_request();
-			// }
-			// catch(std::bad_alloc const& e)
-			// {
-			// 	(void)e;
-			// 	res.bad_allocation();
-			// }
-			// catch(std::exception const& e)
-			// {
-			// 	(void)e;
-			// 	res.internal_error();
-			// }
+            /* mosan is done right here!! */
+			// ToDo: check if the request is bad!!!!!!
+			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
+			try
+			{
+				if (!chosen_config._redirect.first.empty())
+					res.Redirection();
+				else if (it["ST"][0] == "GET")
+					res.Get_request();
+				else if (it["ST"][0] == "POST")
+					res.Post_request();
+				else
+					res.Delete_request();
+			}
+			catch(std::bad_alloc const& e)
+			{
+				(void)e;
+				res.bad_allocation();
+			}
+			catch(std::exception const& e)
+			{
+				(void)e;
+				res.internal_error();
+			}
 			/* mamoussa done! */
 			req_res.remove_fd(fd, 1, 1);
 			req_res.set_fd(fd, false, true); // add client fd to write set
