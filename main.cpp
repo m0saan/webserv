@@ -57,42 +57,13 @@ std::ostream &operator<<(std::ostream &os, std::vector<ServerConfig> const &vec)
     return os;
 }
 
-
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     if (ac != 2)
         exit(1);
 
-    std::vector<ServerConfig> res = performParsing(av[1]);
+    std::vector<ServerConfig> vect = performParsing(av[1]);
+    Server serv(vect);
+    serv.listen();
 
-    std::cout << res << std::endl;
-
-    // ServerConfig serverConfig = Utility::getRightConfig("8080", "localhost", "localhost:80", "/localhost", res);
-
-    // std::cout << 1 << std::endl;
-//    std::cout << res << std::endl;
-
-//    Server ser(res);
-
-//    ser.listen();
-
-
-    // std::cout << res << std::endl;
-    // TODO: check the config file directive non of them is empty.
     return EXIT_SUCCESS;
 }
-
-/*
-    std::string url("http://www.example.com/index234.html");
-    std::vector<std::string> queries;
-    std::pair<bool, int> has_queries_result;
-    has_queries_result = Utility::hasQueries(url);
-    if (has_queries_result.first)
-        queries = Utility::getQueries(url, has_queries_result.second);
-    std::string script_name = Utility::getScriptName(url);
-
-    for (size_t i = 0; i < queries.size(); i++)
-        std::cout << queries[i] << std::endl;
-    std::cout << std::endl << script_name << std::endl;
-
-*/

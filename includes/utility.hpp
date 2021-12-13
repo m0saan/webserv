@@ -83,11 +83,12 @@ public:
         return true;
     }
 
-    static ServerConfig &
+    static ServerConfig 
     getRightConfig(std::string const &port, std::string const &host, std::string const &server_name,
                    std::string const &url, std::vector<ServerConfig> const &config_vec)
     {
         std::vector<ServerConfig> possible_blocks;
+
         for (size_t i = 0; i < config_vec.size(); i++)
         {
             if (config_vec[i]._port == port && config_vec[i]._host == host)
@@ -106,6 +107,8 @@ public:
         }
 
         // request_url.starts_with(location_url)  -> right location
+        if (possible_blocks.empty())
+            exitError("error: could not find server block.");
         ServerConfig loc;
         for (size_t j = 0; j < possible_blocks[0]._location.size(); ++j)
             if (Utility::startWith(url, possible_blocks[0]._location[j]._loc_path))

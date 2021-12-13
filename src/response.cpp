@@ -15,7 +15,7 @@ std::string	*error_page(std::string const& message)
 }
 Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name)
 :
-_error_pages(_server_configs._error_page),
+_error_pages(config._error_page),
 _server_configs(config),
 _request_map(request_map),
 _queries_script_name(queries_script_name)
@@ -23,11 +23,18 @@ _queries_script_name(queries_script_name)
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
-	_uri = _request_map["ST"][1];
+	_uri = _request_map["SL"][1];
 	if (*_uri.begin() == '/')
 		_uri.erase(_uri.begin());
 	_root = _server_configs._root;
 	_fill_status_codes();
+
+
+//    std::cout << "-----------------------------------------------" << std::endl;
+//    std::cout << "root: " << _root << std::endl;
+//    std::cout << "uri: " << _uri << std::endl;
+//    std::cout << "-----------------------------------------------" << std::endl;
+
 }
 
 Response::Response(Response const& x)
@@ -567,9 +574,10 @@ void Response::Get_request(void)
 		return;
 	}
 	// first we have to check if the location is a dir or just a file
-	if (loc_path == "/")
+    _root += '/' + loc_path;
+    if (loc_path == "/")
 		_process_as_dir();
-	else if (_is_dir(_root + '/' + loc_path))
+	else if (_is_dir(_root))
 		_process_as_dir();
 	else
 		_process_as_file();
@@ -630,7 +638,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * Contains the method (as specified with the METHOD attribute in an HTML form) that is
 	 * used to send the request. Example: GET
 	 */
-	str = std::string("REQUEST_METHOD=") + _request_map["ST"][0] + '\n';
+	str = std::string("REQUEST_METHOD=") + _request_map["SL"][0] + '\n';
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
@@ -883,7 +891,7 @@ void Response::_process_as_dir(void)
 	bool								found(false);
 
 	_root += '/' + _uri;
-	if (_uri.empty() || _is_dir(_root))
+    if (_uri.empty() || _is_dir(_root))
 	{
 		for (size_t i = 0; i < index.size(); ++i)
 		{
@@ -974,7 +982,7 @@ void Response::_fill_response(std::string const& tmp_path, size_t status_code, s
 
 	path = tmp_path;
 	ss << status_code;
-	if (status_code == 200 || _error_pages.count(ss.str())) // check if this status_code has a error_page
+	if (status_code == 200 || (!_error_pages.empty() && _error_pages.count(ss.str())) ) // check if this status_code has a error_page
 	{
 		// now if status_code is not 200 then we should change the path to be the error_page path
 		if (status_code != 200)	

@@ -14,6 +14,18 @@
 #include "response.hpp"
 #include "utility.hpp"
 
+std::ostream &operator<<(std::ostream &os, ServerConfig const &conf) {
+    std::cout << "cgi path: " << conf._cgi << std::endl;
+    std::cout << "redirect: " << conf._redirect.first << ' ' << conf._redirect.second << std::endl;
+    std::cout << "auto index: " << conf._auto_index  << std::endl;
+    std::cout << " location path: " << conf._loc_path  << std::endl;
+    // std::cout << " location path" << conf._allowed_method  << std::endl;
+    std::cout << " root: " << conf._root  << std::endl;
+    std::cout << " port: " << conf._port  << std::endl;
+    std::cout << " host: " << conf._host  << std::endl;
+    return os;
+}
+
 void Server::initConfig(ServerConfig &conf, size_t size)
 {
 	int PORT;
@@ -107,9 +119,11 @@ bool Server::readFromFd(int fd)
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			auto it = req_res.getMap()[fd].getMap();
-			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
-			std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
-			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
+			std::string host = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
+			std::string port = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
+			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["SL"][1], _config);
+
+            std::cout << chosen_config << std::endl;
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
@@ -118,9 +132,9 @@ bool Server::readFromFd(int fd)
 			{
 				if (!chosen_config._redirect.first.empty())
 					res.Redirection();
-				else if (it["ST"][0] == "GET")
+				else if (it["SL"][0] == "GET")
 					res.Get_request();
-				else if (it["ST"][0] == "POST")
+				else if (it["SL"][0] == "POST")
 					res.Post_request();
 				else
 					res.Delete_request();
@@ -135,6 +149,7 @@ bool Server::readFromFd(int fd)
 				(void)e;
 				res.internal_error();
 			}
+            std::cout << res.get_response() << std::endl;
 			/* mamoussa done! */
 			req_res.remove_fd(fd, 1, 1);
 			req_res.set_fd(fd, false, true); // add client fd to write set
