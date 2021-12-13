@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/13 08:18:42 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/13 13:22:47 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,12 +102,10 @@ bool Server::readFromFd(int fd)
 	{
 		if (!req_res.receive(fd, *this)) // if connection is closed or invalid socket
 			return false;
-
 		if (req_res.req_completed(fd))
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			auto it = req_res.getMap()[fd].getMap();
-
 			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
 			std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
@@ -170,10 +168,9 @@ void Server::sendResponse(int fd)
 
 void Server::listen()
 {
-
-	if (this->server_cli.empty())
+	if (this->server_cli.empty()) // config isn't provided
 	{
-		std::cout << "Error config " << std::endl;
+		std::cerr << "Error config " << std::endl;
 		exit(1);
 	}
 	for (size_t i = 0; i < server_cli.size(); ++i) // Init FD_SET
@@ -186,7 +183,7 @@ void Server::listen()
 		for (int i = 0; i <= req_res.get_maxfd(); ++i)
 		{
 			if (req_res.is_ready(i, 1)) // check if fd is ready to read
-				if (!readFromFd(i))
+				if (!readFromFd(i)) // return false in case of connection closed
 					continue;
 			if (req_res.is_ready(i, 0)) // check if fd is ready to write
 				sendResponse(i);

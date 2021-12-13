@@ -23,7 +23,6 @@ RequestResponse::RequestResponse():max_fd(-1)
 void		RequestResponse::reset(int fd)
 {
 	(req_fd[fd]).resetRequest();
-	std::cout << fd << " has been reseted " << std::endl;
 }
 
 bool		RequestResponse::receive(int fd, Server &server) // return false if connection is closed 

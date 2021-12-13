@@ -109,10 +109,13 @@ Sockets* 	Sockets::accept_connection(int sock_fd)
 	int client_fd;
 	struct sockaddr_in new_sock_add;
 	socklen_t new_socklen;
+	int option_value = 1 ;// to activate socket option (NOSIGPIPE)
 
 	if ((client_fd = accept(sock_fd, (sockaddr *)&new_sock_add, &new_socklen)) < 0) // accept new connection
 		throw std::exception();
-	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) // make the fd Non-Blocking
+	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) // make the fd Non-Blocking (to get similar result in different OS)
+		throw std::exception();
+	if (setsockopt(client_fd, SOL_SOCKET, SO_NOSIGPIPE, &option_value, sizeof(option_value)) < 0) // to pervent SIGPIPE while sending data to client
 		throw std::exception();
 	return (new Sockets(client_fd, new_sock_add, new_socklen, 1));
 }

@@ -341,8 +341,8 @@ void	Response::bad_allocation(void)
 		}
 		*tmp_res += "\r\n";
 	}
-	else
-		tmp_res = error_page("507 Insufficient Storage");
+	// else
+	// 	tmp_res = error_page("507 Insufficient Storage");
 	ss << tmp_res->length();
 	_response += "HTTP/1.1 507 Insufficient Storage\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
@@ -382,8 +382,8 @@ void	Response::internal_error(void)
 		}
 		*tmp_res += "\r\n";
 	}
-	else
-		tmp_res = error_page("500 Internal Server Error");
+	// else
+	// 	tmp_res = error_page("500 Internal Server Error");
 	ss << tmp_res->length();
 	_response += "HTTP/1.1 500 Internal Server Error\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
@@ -447,10 +447,10 @@ void Response::_redirect_with_location(size_t status_code)
 		}
 		*tmp_res += "\r\n";
 	}
-	else if (status_code != 302)
-		tmp_res = error_page(status + ' ' + message);
-	else
-		tmp_res = error_page(status + ' ' + "302 Found");
+	// else if (status_code != 302)
+	// 	tmp_res = error_page(status + ' ' + message);
+	// else
+	// 	tmp_res = error_page(status + ' ' + "302 Found");
 	ss.clear();
 	ss << tmp_res->length();
 	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
@@ -503,10 +503,10 @@ void Response::_redirect_without_location(size_t status_code)
 	_response += "Connection: keep-alive\r\n";
 	if (status_code == 204)
 		return;
-	if (status_code != 304)
-		tmp_res = error_page(status + ' ' + message);
-	else
-		*tmp_res =  _server_configs._redirect.second + "\r\n";
+	// if (status_code != 304)
+	// 	tmp_res = error_page(status + ' ' + message);
+	// else
+	// 	*tmp_res =  _server_configs._redirect.second + "\r\n";
 	ss << tmp_res->length();
 	_response += "Content-Type: application/octet-stream\r\n";
 	_response += "Content-Length: " + ss.str() + "\r\n";
