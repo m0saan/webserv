@@ -39,7 +39,7 @@ class Sockets
 		struct sockaddr_in	get_sockaddr()							const;
 		socklen_t 			get_addrlen()							const;
 		void				bind_socket() 							const;
-		void				listen_socket(int nbr_of_ports) 		const;
+		void				listen_socket()					 		const;
 		void 				create_socket();
 		void				set_addr(int PORT, std::string ip);
 		Sockets*			accept_connection(int sock_fd);

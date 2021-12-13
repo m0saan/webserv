@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "sockets.hpp"
+#define MAX_CLIENTS 1017
 
 Sockets::Sockets(): fd(-1), PORT(-1), addrlen(-1), _is_client(0)
 {
@@ -95,9 +96,9 @@ void	Sockets::bind_socket() const
 	}
 }
 
-void	Sockets::listen_socket(int nbr_of_ports) const
+void	Sockets::listen_socket() const
 {
-	if ((listen(this->fd, nbr_of_ports)) < 0)
+	if ((listen(this->fd, MAX_CLIENTS)) < 0)
 	{
 		perror("listen");
 		exit(-1);
@@ -117,6 +118,7 @@ Sockets* 	Sockets::accept_connection(int sock_fd)
 		throw std::exception();
 	if (setsockopt(client_fd, SOL_SOCKET, SO_NOSIGPIPE, &option_value, sizeof(option_value)) < 0) // to pervent SIGPIPE while sending data to client
 		throw std::exception();
+	std::cout << "connection accpeted : " << client_fd << std::endl;
 	return (new Sockets(client_fd, new_sock_add, new_socklen, 1));
 }
 

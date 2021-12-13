@@ -1,5 +1,5 @@
 #include "../includes/response.hpp"
-#include "../includes/location.hpp"
+// #include "../includes/location.hpp"
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
 

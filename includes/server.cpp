@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/13 15:13:55 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/13 15:58:13 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
 	(server_cli.back())->bind_socket();
-	(server_cli.back())->listen_socket(size);
+	(server_cli.back())->listen_socket();
 	return;
 }
 
@@ -87,6 +87,7 @@ bool Server::readFromFd(int fd)
 		{
 			server_cli.push_back(server_cli[position]->accept_connection(fd)); // accept connections && add client to server_cli obj
 			req_res.set_fd((server_cli.back())->get_fd(), true, true);		   // add client fd to read set && create req_fd
+			
 		}
 		catch (std::bad_alloc &e)
 		{
@@ -104,42 +105,42 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			(req_res.getMap())[fd].parseRequest(); // Parse Request
-			auto it = req_res.getMap()[fd].getMap();
-			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
-			std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
-			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
+			// (req_res.getMap())[fd].parseRequest(); // Parse Request
+			// auto it = req_res.getMap()[fd].getMap();
+			// std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
+			// std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
+			// ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
 
-            /* mosan is done right here!! */
-			// ToDo: check if the request is bad!!!!!!
-			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
-			try
-			{
-				if (!chosen_config._redirect.first.empty())
-					res.Redirection();
-				else if (it["ST"][0] == "GET")
-					res.Get_request();
-				else if (it["ST"][0] == "POST")
-					res.Post_request();
-				else
-					res.Delete_request();
-			}
-			catch(std::bad_alloc const& e)
-			{
-				(void)e;
-				res.bad_allocation();
-			}
-			catch(std::exception const& e)
-			{
-				(void)e;
-				res.internal_error();
-			}
+            // /* mosan is done right here!! */
+			// // ToDo: check if the request is bad!!!!!!
+			// Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
+			// try
+			// {
+			// 	if (!chosen_config._redirect.first.empty())
+			// 		res.Redirection();
+			// 	else if (it["ST"][0] == "GET")
+			// 		res.Get_request();
+			// 	else if (it["ST"][0] == "POST")
+			// 		res.Post_request();
+			// 	else
+			// 		res.Delete_request();
+			// }
+			// catch(std::bad_alloc const& e)
+			// {
+			// 	(void)e;
+			// 	res.bad_allocation();
+			// }
+			// catch(std::exception const& e)
+			// {
+			// 	(void)e;
+			// 	res.internal_error();
+			// }
 			/* mamoussa done! */
-
+			req_res.remove_fd(fd, 1, 1);
 			req_res.set_fd(fd, false, true); // add client fd to write set
 											 // if (close)
 											 // {
-			req_res.remove_fd(fd, 1, 1);	 // clear fd from read set
+				 // clear fd from read set
 											 // }
 		}
 	}
