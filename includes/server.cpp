@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: keddib <keddib@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/05 07:24:20 by keddib           ###   ########.fr       */
+/*   Updated: 2021/12/13 08:18:42 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	{
 		return;
 	}
-	server_cli.push_back(new sockets());
+	server_cli.push_back(new Sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
 	(server_cli.back())->bind_socket();
@@ -196,8 +196,8 @@ void Server::listen()
 
 void Server::socketFree(int fd)
 {
-	std::vector<sockets *>::iterator first(server_cli.begin());
-	std::vector<sockets *>::iterator last(server_cli.end());
+	std::vector<Sockets *>::iterator first(server_cli.begin());
+	std::vector<Sockets *>::iterator last(server_cli.end());
 
 	for (; first != last; ++first)
 	{

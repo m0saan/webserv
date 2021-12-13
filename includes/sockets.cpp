@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   sockets.cpp                                  :+:      :+:    :+:   */
+/*   Sockets.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,20 +12,20 @@
 
 #include "sockets.hpp"
 
-sockets::sockets(): fd(-1), PORT(-1), addrlen(-1), _is_client(0)
+Sockets::Sockets(): fd(-1), PORT(-1), addrlen(-1), _is_client(0)
 {
 }
 
-sockets::sockets(int fd, struct sockaddr_in socket_add, socklen_t 
+Sockets::Sockets(int fd, struct sockaddr_in socket_add, socklen_t 
 socklen, bool is_client):fd(fd), socket_add(socket_add), addrlen(socklen), _is_client(is_client)
 {}
 
-sockets::sockets(const sockets &obj)
+Sockets::Sockets(const Sockets &obj)
 {
 	*this = obj;
 }
 
-sockets& sockets::operator=(const sockets &obj)
+Sockets& Sockets::operator=(const Sockets &obj)
 {
 	this->fd = obj.fd;
 	this->PORT = obj.PORT;
@@ -37,27 +37,27 @@ sockets& sockets::operator=(const sockets &obj)
 	return *this;
 }
 
-int sockets::get_fd() const
+int Sockets::get_fd() const
 {
 	return this->fd;
 }
 
-int sockets::get_PORT() const
+int Sockets::get_PORT() const
 {
 	return this->PORT;
 }
 
-struct sockaddr_in sockets::get_sockaddr() const
+struct sockaddr_in Sockets::get_sockaddr() const
 {
 	return this->socket_add;
 }
 
-socklen_t sockets::get_addrlen() const
+socklen_t Sockets::get_addrlen() const
 {
 	return this->addrlen;
 }
 
-void	sockets::create_socket()
+void	Sockets::create_socket()
 {
 	//domain should be set to AF_INET for (IPv4) OR AF_INET6 for (IPv6)
 	//type should be set to SOCK_STREAM for (TCP/IP) OR SOCK_DGRAM for (UDP/IP)
@@ -77,7 +77,7 @@ void	sockets::create_socket()
 		setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &new_socket, sizeof(new_socket));
 }
 
-void	sockets::set_addr(int PORT, std::string ip)
+void	Sockets::set_addr(int PORT, std::string ip)
 {
 	bzero((char *)& this->socket_add, sizeof(this->socket_add)); // intialize the struct
 	this->socket_add.sin_family = AF_INET; // internet Family
@@ -86,7 +86,7 @@ void	sockets::set_addr(int PORT, std::string ip)
 	this->addrlen = sizeof(this->socket_add);
 }
 
-void	sockets::bind_socket() const
+void	Sockets::bind_socket() const
 {
 	if ((bind(this->fd, (const sockaddr *)&this->socket_add, this->addrlen)) < 0)
 	{
@@ -95,7 +95,7 @@ void	sockets::bind_socket() const
 	}
 }
 
-void	sockets::listen_socket(int nbr_of_ports) const
+void	Sockets::listen_socket(int nbr_of_ports) const
 {
 	if ((listen(this->fd, nbr_of_ports)) < 0)
 	{
@@ -104,7 +104,7 @@ void	sockets::listen_socket(int nbr_of_ports) const
 	}
 }
 
-sockets* 	sockets::accept_connection(int sock_fd)
+Sockets* 	Sockets::accept_connection(int sock_fd)
 {
 	int client_fd;
 	struct sockaddr_in new_sock_add;
@@ -114,13 +114,13 @@ sockets* 	sockets::accept_connection(int sock_fd)
 		throw std::exception();
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) // make the fd Non-Blocking
 		throw std::exception();
-	return (new sockets(client_fd, new_sock_add, new_socklen, 1));
+	return (new Sockets(client_fd, new_sock_add, new_socklen, 1));
 }
 
-bool	sockets::is_client()const
+bool	Sockets::is_client()const
 {
 	return this->_is_client;
 }
 
-sockets::~sockets()
+Sockets::~Sockets()
 {}
