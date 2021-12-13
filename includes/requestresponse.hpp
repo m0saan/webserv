@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   request_response.hpp                               :+:      :+:    :+:   */
+/*   RequestResponse.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -22,14 +22,14 @@
 
 class Server;
 
-class request_response
+class RequestResponse
 {
 	private:
 		fd_set	read_fd, tmp_read, write_fd, tmp_write;
 		int		max_fd;
 		std::map<int , Request> req_fd;
 	public:
-		request_response();
+		RequestResponse();
 		void			update_set();
 		void			set_fd(int fd, bool to_read, bool is_client);
 		void			remove_fd(int fd, bool to_read, bool is_client, bool _close = false);
@@ -43,7 +43,7 @@ class request_response
 		const std::stringstream&		get_req(int fd);
 		void			reset(int fd);
 		std::map<int , Request>& getMap();
-		~request_response();
+		~RequestResponse();
 };
 
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: keddib <keddib@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/05 07:24:20 by keddib           ###   ########.fr       */
+/*   Updated: 2021/12/13 16:59:56 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,11 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	{
 		return;
 	}
-	server_cli.push_back(new sockets());
+	server_cli.push_back(new Sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
 	(server_cli.back())->bind_socket();
-	(server_cli.back())->listen_socket(size);
+	(server_cli.back())->listen_socket();
 	return;
 }
 
@@ -87,6 +87,7 @@ bool Server::readFromFd(int fd)
 		{
 			server_cli.push_back(server_cli[position]->accept_connection(fd)); // accept connections && add client to server_cli obj
 			req_res.set_fd((server_cli.back())->get_fd(), true, true);		   // add client fd to read set && create req_fd
+			
 		}
 		catch (std::bad_alloc &e)
 		{
@@ -102,37 +103,44 @@ bool Server::readFromFd(int fd)
 	{
 		if (!req_res.receive(fd, *this)) // if connection is closed or invalid socket
 			return false;
-
 		if (req_res.req_completed(fd))
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			auto it = req_res.getMap()[fd].getMap();
-
 			std::string port = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
 			std::string host = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["ST"][1], _config);
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
-
 			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
-
-			// TODO: check for redirection.
-			if (!chosen_config._location[0]._redirect.first.empty())
-				res.Redirection();
-			else if (it["ST"][0] == "GET")
-				res.Get_request();
-			else if (it["ST"][0] == "POST")
-				res.Post_request();
-			else
-				res.Delete_request();
-
+			try
+			{
+				if (!chosen_config._redirect.first.empty())
+					res.Redirection();
+				else if (it["ST"][0] == "GET")
+					res.Get_request();
+				else if (it["ST"][0] == "POST")
+					res.Post_request();
+				else
+					res.Delete_request();
+			}
+			catch(std::bad_alloc const& e)
+			{
+				(void)e;
+				res.bad_allocation();
+			}
+			catch(std::exception const& e)
+			{
+				(void)e;
+				res.internal_error();
+			}
 			/* mamoussa done! */
-
+			req_res.remove_fd(fd, 1, 1);
 			req_res.set_fd(fd, false, true); // add client fd to write set
 											 // if (close)
 											 // {
-			req_res.remove_fd(fd, 1, 1);	 // clear fd from read set
+				 // clear fd from read set
 											 // }
 		}
 	}
@@ -161,10 +169,9 @@ void Server::sendResponse(int fd)
 
 void Server::listen()
 {
-
-	if (this->server_cli.empty())
+	if (this->server_cli.empty()) // config isn't provided
 	{
-		std::cout << "Error config " << std::endl;
+		std::cerr << "Error config " << std::endl;
 		exit(1);
 	}
 	for (size_t i = 0; i < server_cli.size(); ++i) // Init FD_SET
@@ -177,7 +184,7 @@ void Server::listen()
 		for (int i = 0; i <= req_res.get_maxfd(); ++i)
 		{
 			if (req_res.is_ready(i, 1)) // check if fd is ready to read
-				if (!readFromFd(i))
+				if (!readFromFd(i)) // return false in case of connection closed
 					continue;
 			if (req_res.is_ready(i, 0)) // check if fd is ready to write
 				sendResponse(i);
@@ -187,8 +194,8 @@ void Server::listen()
 
 void Server::socketFree(int fd)
 {
-	std::vector<sockets *>::iterator first(server_cli.begin());
-	std::vector<sockets *>::iterator last(server_cli.end());
+	std::vector<Sockets *>::iterator first(server_cli.begin());
+	std::vector<Sockets *>::iterator last(server_cli.end());
 
 	for (; first != last; ++first)
 	{

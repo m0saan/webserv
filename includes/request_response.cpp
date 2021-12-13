@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   request_response.cpp                               :+:      :+:    :+:   */
+/*   RequestResponse.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,9 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "request_response.hpp"
+#include "requestresponse.hpp"
 
-request_response::request_response():max_fd(-1)
+RequestResponse::RequestResponse():max_fd(-1)
 {
 	FD_ZERO(&(this->read_fd));
 	FD_ZERO(&(this->write_fd));
@@ -20,13 +20,12 @@ request_response::request_response():max_fd(-1)
 	FD_ZERO(&(this->tmp_write));
 }
 
-void		request_response::reset(int fd)
+void		RequestResponse::reset(int fd)
 {
 	(req_fd[fd]).resetRequest();
-	std::cout << fd << " has been reseted " << std::endl;
 }
 
-bool		request_response::receive(int fd, Server &server) // return false if connection is closed 
+bool		RequestResponse::receive(int fd, Server &server) // return false if connection is closed 
 {
 	long long status;
 	char buffer[BUFFER_SIZE];
@@ -43,7 +42,7 @@ bool		request_response::receive(int fd, Server &server) // return false if conne
 	return true;
 }
 
-void	request_response::send_all(int fd, std::string res)
+void	RequestResponse::send_all(int fd, std::string res)
 {
 	size_t total = 0;
 	size_t left = res.length();
@@ -63,17 +62,17 @@ void	request_response::send_all(int fd, std::string res)
 	// }
 }
 
-bool	request_response::req_completed(int fd)
+bool	RequestResponse::req_completed(int fd)
 {
 	return (req_fd[fd]).is_completed();
 }
 
-const std::stringstream&		request_response::get_req(int fd)
+const std::stringstream&		RequestResponse::get_req(int fd)
 {
 	return this->req_fd[fd].get_req();
 }
 
-int 	request_response::is_ready(int fd, bool to_read)
+int 	RequestResponse::is_ready(int fd, bool to_read)
 {
 	if (to_read)
 		return FD_ISSET(fd, &(this->tmp_read));
@@ -81,13 +80,13 @@ int 	request_response::is_ready(int fd, bool to_read)
 		return FD_ISSET(fd, &(this->tmp_write));
 }
 
-void	request_response::update_set()
+void	RequestResponse::update_set()
 {
 	this->tmp_read = this->read_fd;
 	this->tmp_write = this->write_fd;
 }
 
-void request_response::set_fd(int fd, bool to_read, bool is_client) // set fd to read or write sets (1 for read 0 for write) && update max_fd
+void RequestResponse::set_fd(int fd, bool to_read, bool is_client) // set fd to read or write sets (1 for read 0 for write) && update max_fd
 {
 	if (to_read)
 	{
@@ -101,7 +100,7 @@ void request_response::set_fd(int fd, bool to_read, bool is_client) // set fd to
 			max_fd = fd;
 }
 
-void request_response::remove_fd(int fd, bool to_read, bool is_client, bool _close)
+void RequestResponse::remove_fd(int fd, bool to_read, bool is_client, bool _close)
 {
 	if (to_read)
 	{
@@ -116,31 +115,32 @@ void request_response::remove_fd(int fd, bool to_read, bool is_client, bool _clo
 	
 }
 
-bool request_response::select_fd()
+bool RequestResponse::select_fd()
 {
 	if (select(max_fd + 1, &(this->tmp_read), &(this->tmp_write), NULL, NULL) < 0)
 	{
-		std::cout << "Select Failed !" << std::endl;
+		// std::cout << "Select Failed !" << std::endl;
+		// perror("select");
 		return false;
 	}
 	return true;
 }
 
-int request_response::get_maxfd()const
+int RequestResponse::get_maxfd()const
 {
 	return this->max_fd;
 }
 
-void request_response::close_connection(int fd) const
+void RequestResponse::close_connection(int fd) const
 {
 	shutdown(fd, 2); // Further sends and receives are disallowed
 	close(fd);
 }
 
-std::map<int , Request>& request_response::getMap()
+std::map<int , Request>& RequestResponse::getMap()
 {
 	return this->req_fd;
 }
 
-request_response::~request_response()
+RequestResponse::~RequestResponse()
 {}

@@ -70,7 +70,9 @@ public:
     static std::string getScriptName(std::string &url)
     {
         std::vector<std::string> res = Utility::split(url, '/');
-        return res[res.size() - 1];
+        if (!res.empty())
+            return res[res.size() - 1];
+        return std::string("");
     }
 
     static bool startWith(std::string const &haystack, std::string const &needle)

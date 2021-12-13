@@ -45,7 +45,8 @@ void Request::parseRequest()
 	bool is_chunked(false);
 	while (std::getline(_req, line))
 	{
-		line.pop_back();
+		if (!line.empty())
+			line.pop_back();
 		if (line.empty() || _isBodyStart(line, is_body))
 		{
 			is_body = true;
@@ -114,7 +115,7 @@ std::stringstream const &Request::get_req()
 	return this->_req;
 }
 
-bool Request::is_completed() const
+bool	Request::is_completed() const
 {
 	if (_transfer_encoding == COMPLETED)
 	{
@@ -124,7 +125,9 @@ bool Request::is_completed() const
 	}
 	else if (_transfer_encoding == CHUNKED)
 	{
-		if (_req.str().find("0\r\n\r\n") != std::string::npos)
+		if(_req.str().find("0\r\n\r\n") != std::string::npos)
+			return true;
+		else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
 			return true;
 		return false;
 	}
@@ -191,7 +194,7 @@ size_t Request::getHeaderLength(const std::string &str)
 	return pos;
 }
 
-long long Request::getContentLength(const std::string &str)
+long long Request::getContentLength(const std::string& str)
 {
 	size_t pos;
 	long long length = 0;
@@ -206,7 +209,7 @@ long long Request::getContentLength(const std::string &str)
 		// 	throw std::exception();
 		this->_transfer_encoding = COMPLETED;
 	}
-	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked 
+	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) !=  std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
 	// else // Content-Length not found && !chunked  && should be POST or DELETE
 	// 	throw std::exception();

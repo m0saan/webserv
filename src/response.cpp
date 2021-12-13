@@ -1,14 +1,24 @@
 #include "../includes/response.hpp"
-#include "../includes/location.hpp"
+// #include "../includes/location.hpp"
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
 
+std::string	*error_page(std::string const& message)
+{
+	std::string *error_body = new std::string();
+
+	*error_body += std::string("<html>\r\n<head>\r\n");
+	*error_body += std::string("<title>") + message;
+	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
+	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
+	return error_body;
+}
 Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name)
 :
+_error_pages(_server_configs._error_page),
 _server_configs(config),
 _request_map(request_map),
 _queries_script_name(queries_script_name)
-
 {
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
@@ -17,16 +27,18 @@ _queries_script_name(queries_script_name)
 	if (*_uri.begin() == '/')
 		_uri.erase(_uri.begin());
 	_root = _server_configs._root;
-	// _error_pages = _server_configs._error_page;
 	_fill_status_codes();
 }
 
 Response::Response(Response const& x)
-: _server_configs(x._server_configs),
+: 
+_error_pages(x._error_pages),
+_server_configs(x._server_configs),
 _request_map(x._request_map),
-_queries_script_name(x._queries_script_name) { *this = x;	}
+_queries_script_name(x._queries_script_name)
+{ *this = x;	}
 
-Response::~Response(void) { _file.close(); }
+Response::~Response(void) { _file.close(); delete _status_codes; }
 Response& Response::operator=(Response const& x)
 {
 	_response = x._response;
@@ -273,7 +285,7 @@ void Response::_fill_status_codes(void)
 	// < HTTP/1.1 499 
 	_status_codes->insert(std::make_pair("499", ""));
 	/*-----------------------------------------------*/
-	/*----------------- 4xx status codes -------------*/
+	/*----------------- 5xx status codes -------------*/
 	// 	< HTTP/1.1 500 Internal Server Error
 	// < Server: nginx/1.21.4
 	// < Date: Mon, 06 Dec 2021 03:42:54 GMT
@@ -311,16 +323,221 @@ void Response::_fill_status_codes(void)
 }
 
 /*-------------------------------------------------------------------------------*/
+/* public methods to hand bad_allocation and iternal_errors response */
+void	Response::bad_allocation(void)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::stringstream ss;
+	std::string		line;
+
+	time (&rawtime);
+	if (_error_pages.count("507"))
+	{
+		_file_path = _error_pages["507"];
+		if (_file_path[0] == '/')
+			_file_path.erase(_file_path.begin());
+		_file_path = _root + '/' + _file_path;
+		if (!_file_is_good(true))
+			return;
+		tmp_res = new std::string();
+		_file.open(_file_path);
+		while (!_file.eof())
+		{
+			std::getline(_file, line);
+			if (!_file.eof())
+				line += "\r\n";
+			*tmp_res += line;
+		}
+		*tmp_res += "\r\n";
+	}
+	else
+		tmp_res = error_page("507 Insufficient Storage");
+	ss << tmp_res->length();
+	_response += "HTTP/1.1 507 Insufficient Storage\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+// "500", "Internal Server Error"
+void	Response::internal_error(void)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::stringstream ss;
+	std::string		line;
+
+	time (&rawtime);
+	if (_error_pages.count("500"))
+	{
+		_file_path = _error_pages["500"];
+		if (_file_path[0] == '/')
+			_file_path.erase(_file_path.begin());
+		_file_path = _root + '/' + _file_path;
+		if (!_file_is_good(true))
+			return;
+		tmp_res = new std::string();
+		_file.open(_file_path);
+		while (!_file.eof())
+		{
+			std::getline(_file, line);
+			if (!_file.eof())
+				line += "\r\n";
+			*tmp_res += line;
+		}
+		*tmp_res += "\r\n";
+	}
+	else
+		tmp_res = error_page("500 Internal Server Error");
+	ss << tmp_res->length();
+	_response += "HTTP/1.1 500 Internal Server Error\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+/*-------------------------------------------------------------------*/
 
 /* those are the public methods to process the request @GET @POST @DELETE  and Redirection*/
 
+// this is the response for redirection with location header field
+// 	< HTTP/1.1 301 Moved Permanently
+// < Server: nginx/1.21.4
+// < Date: Tue, 07 Dec 2021 10:45:43 GMT
+// < Content-Type: text/html
+// < Content-Length: 169
+// < Connection: keep-alive
+// < Location: http://google.com
+// < 
+// <html>
+// <head><title>301 Moved Permanently</title></head>
+// <body>
+// <center><h1>301 Moved Permanently</h1></center>
+// <hr><center>nginx/1.21.4</center>
+// </body>
+// </html>
+void Response::_redirect_with_location(size_t status_code)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::string status = _server_configs._redirect.first;
+	std::string	message =	_status_codes->operator[](status);
+	std::stringstream ss;
+	std::string		str_status_code;
+	std::string		line;
+
+	time (&rawtime);
+	ss << status_code;
+	ss >> str_status_code;
+	if (_error_pages.count(str_status_code))
+	{
+		_file_path = _error_pages[str_status_code];
+		if (_file_path[0] == '/')
+			_file_path.erase(_file_path.begin());
+		_file_path = _root + '/' + _file_path;
+		if (!_file_is_good(true))
+			return;
+		tmp_res = new std::string();
+		_file.open(_file_path);
+		while (!_file.eof())
+		{
+			std::getline(_file, line);
+			if (!_file.eof())
+				line += "\r\n";
+			*tmp_res += line;
+		}
+		*tmp_res += "\r\n";
+	}
+	else if (status_code != 302)
+		tmp_res = error_page(status + ' ' + message);
+	else
+		tmp_res = error_page(status + ' ' + "302 Found");
+	ss.clear();
+	ss << tmp_res->length();
+	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: keep-alive\r\n";
+	_response += "Location: " + _server_configs._redirect.second + "\r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+// this is the response for redirections without location header field
+// 	< HTTP/1.1 500 Internal Server Error
+// < Server: nginx/1.21.4
+// < Date: Mon, 06 Dec 2021 03:42:54 GMT
+// < Content-Type: application/octet-stream
+// < Content-Length: 17
+// < Connection: keep-alive
+// < 
+// * Connection #0 to host localhost left intact
+// http://google.com%
+/*---------------------------------------------*/
+// redirect for 204 status_code
+// < HTTP/1.1 204 No Content
+// < Server: nginx/1.21.4
+// < Date: Mon, 06 Dec 2021 02:55:50 GMT
+// < Connection: keep-alive
+/*---------------------------------------------*/
+// 	< HTTP/1.1 304 Not Modified
+// < Server: nginx/1.21.4
+// < Date: Tue, 07 Dec 2021 10:47:14 GMT
+// < Content-Type: application/octet-stream
+// < Content-Length: 17
+// < Connection: keep-alive
+void Response::_redirect_without_location(size_t status_code)
+{
+	time_t 		rawtime;
+	std::string	*tmp_res;
+	std::string status = _server_configs._redirect.first;
+	std::string	message =	_status_codes->operator[](status);
+	std::stringstream ss;
+
+	time (&rawtime);
+	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Connection: keep-alive\r\n";
+	if (status_code == 204)
+		return;
+	if (status_code != 304)
+		tmp_res = error_page(status + ' ' + message);
+	else
+		*tmp_res =  _server_configs._redirect.second + "\r\n";
+	ss << tmp_res->length();
+	_response += "Content-Type: application/octet-stream\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	if (status_code != 304)
+	{
+		_response += *tmp_res;
+		delete tmp_res;
+	}
+}
 void Response::Redirection(void)
 {
 	size_t				status_code;
 	std::stringstream	ss;
 
-	ss << _server_configs._location[0]._redirect.first;
+	ss << _server_configs._redirect.first;
 	ss >> status_code;
+	if ((status_code >= 301 && status_code <= 303)
+	|| (status_code == 307 || status_code == 308))
+		_redirect_with_location(status_code);
+	else
+		_redirect_without_location(status_code);
 }
 
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
@@ -330,15 +547,18 @@ void Response::Post_request(void)	{	_process_post_delete("POST");	}
 void Response::Get_request(void)
 {
 	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string const 			loc_path = _server_configs._location[0]._loc_path;
+	std::string 				loc_path = _server_configs._loc_path;
 
 	// lets first check for alowed methods in this location
-	// TODO: CHECK WHETHER ALLOWED METHODS ARE AVAILABLE;
-	// TODO: CHECK WHICH ONE SHOULD BE USED.
-	if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
+	if (loc_path[0] == '/')
+		loc_path.erase(loc_path.begin());
+	if (!allowed.empty())
 	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
+		if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
+		{
+			_fill_response(".html", 403, "Forbiden");
+			return;
+		}
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
@@ -349,7 +569,7 @@ void Response::Get_request(void)
 	// first we have to check if the location is a dir or just a file
 	if (loc_path == "/")
 		_process_as_dir();
-	else if (_is_dir(_root + '/' + _loc.getPath()))
+	else if (_is_dir(_root + '/' + loc_path))
 		_process_as_dir();
 	else
 		_process_as_file();
@@ -471,19 +691,20 @@ void Response::_cgi(void)
 	int fd = open("user_login.php", O_RDONLY);
 	int			pfd[2];
 	std::string	*tmp_res;
+	pid_t		pid;
 	size_t 		index;
 	int			status;
 
 	pipe(pfd);
-	if(!(fork()))
+	if(!(pid = fork()))
 	{
 		std::vector<char const*> meta_var = _cgi_meta_var();
 		std::vector<char const*> args;
 		std::string path;
 
-		args.push_back(_server_configs._location[0]._cgi.c_str());
+		args.push_back(_server_configs._cgi.c_str());
 		args.push_back(NULL);
-		path = _server_configs._location[0]._cgi;
+		path = _server_configs._cgi;
 		close(pfd[0]);
 		dup2(fd, 0);
 		dup2(pfd[1], 1);
@@ -496,6 +717,13 @@ void Response::_cgi(void)
 			exit(1);
 		}
 		exit(0);
+	}
+	else if (pid < 0)
+	{
+		close(fd);
+		close(pfd[0]);
+		close(pfd[1]);
+		throw std::exception();
 	}
 	wait(&status);
 	close(pfd[1]);
@@ -552,6 +780,7 @@ void Response::_auto_index_list(void)
 	*tmp_res += "</head>\r\n<body>\r\n";
 	*tmp_res += std::string("<h1>Index of " + _uri + "</h1>\r\n");
 	*tmp_res += "<hr>\r\n<pre>\r\n";
+	errno = 0;
 	while ((dir_info = readdir(dir)))
 	{
 		if (std::string(dir_info->d_name) == ".")
@@ -565,34 +794,36 @@ void Response::_auto_index_list(void)
 		*tmp_res += std::string("<a href=\"");
 		*tmp_res += std::string(dir_info->d_name) + "\">" + std::string(dir_info->d_name) + "</a>\r\n";
 	}
+	if (errno)
+	{
+		delete tmp_res;
+		_response.clear();
+		throw std::exception();
+	}
 	*tmp_res += "</pre>\r\n<hr>\r\n</body>\r\n</html>\r\n";
 	_fill_auto_index_response(tmp_res);
 	delete tmp_res;
 	closedir(dir);
 }
 /*-----------------------------------------------------------------------------------------------------*/
-std::string	*error_page(std::string const& message)
-{
-	std::string *error_body = new std::string();
 
-	*error_body += std::string("<html>\r\n<head>\r\n");
-	*error_body += std::string("<title>") + message;
-	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
-	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
-	return error_body;
-}
 void Response::_process_post_delete(std::string const& req_method)
 {
 	std::vector<std::string> const 		allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string const 					loc_path = _server_configs._location[0]._loc_path;
-	std::vector<std::string>	const 	index = _server_configs._location[0]._index;
+	std::string 	 					loc_path = _server_configs._loc_path;
+	std::vector<std::string>	const 	index = _server_configs._index;
 	bool								found(false);
 
 	// lets first check for alowed methods in this location
-	if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
+	if (loc_path[0] == '/')
+		loc_path.erase(loc_path.begin());
+	if (!allowed.empty())
 	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
+		if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
+		{
+			_fill_response(".html", 403, "Forbiden");
+			return;
+		}
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
@@ -636,7 +867,7 @@ void Response::_process_post_delete(std::string const& req_method)
 				return;
 			}
 		}
-		if (!found && _loc.getAutoIndex() != "on")
+		if (!found && _server_configs._auto_index != "on")
 		{
 			_fill_response(".html", 403, "Forbiden");
 			return;
@@ -648,7 +879,7 @@ void Response::_process_post_delete(std::string const& req_method)
 
 void Response::_process_as_dir(void)
 {
-	std::vector<std::string>	const 	index = _server_configs._location[0]._index;
+	std::vector<std::string>	const 	index = _server_configs._index;
 	bool								found(false);
 
 	_root += '/' + _uri;
@@ -670,7 +901,7 @@ void Response::_process_as_dir(void)
 				return;
 			}
 		}
-		if (!found && _loc.getAutoIndex() != "on")
+		if (!found && _server_configs._auto_index != "on")
 		{
 			_fill_response(".html", 404, "Not found");
 			return;
@@ -734,13 +965,28 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 	_response += "Connection: close\r\n\r\n";
 }
 
-void Response::_fill_response(std::string const& path, size_t status_code, std::string const& message)
+void Response::_fill_response(std::string const& tmp_path, size_t status_code, std::string const& message)
 {
-	std::string 	line;
-	std::string		*tmp_resp = new std::string();
+	std::string 		line;
+	std::string			*tmp_resp = new std::string();
+	std::stringstream	ss;
+	std::string			path;	
 
-	if (status_code == 200)
+	path = tmp_path;
+	ss << status_code;
+	if (status_code == 200 || _error_pages.count(ss.str())) // check if this status_code has a error_page
 	{
+		// now if status_code is not 200 then we should change the path to be the error_page path
+		if (status_code != 200)	
+		{
+			path = _error_pages[ss.str()];
+			if (path[0] == '/')
+				path.erase(path.begin());
+			path = _root + '/' + path; // here we join the error_page with the root
+			_file_path = path;
+			if (!_file_is_good(true))
+				return;
+		}
 		_file.open(path);
 		while (!_file.eof())
 		{

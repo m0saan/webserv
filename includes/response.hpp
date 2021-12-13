@@ -11,10 +11,10 @@
 # include <sstream>
 # include <errno.h>
 # include <map>
-#include <vector>
+# include <vector>
 # include <dirent.h>
-# include "location.hpp"
-#include "../parser/parser.hpp"
+// # include "location.hpp"
+# include "../parser/parser.hpp"
 
 class Response
 {
@@ -28,6 +28,8 @@ class Response
 		void				Redirection(void);
 		void 				Post_request(void);
 		void				Delete_request(void);
+		void				bad_allocation(void);
+		void				internal_error(void);
 		std::string const& 	get_response(void) const;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
@@ -42,16 +44,17 @@ class Response
 		void	_auto_index_list(void);
 		void	_fill_auto_index_response(std::string *);
 		void	_fill_status_codes(void);
+		void	_redirect_with_location(size_t);
+		void	_redirect_without_location(size_t);
 		std::vector<char const*>	_cgi_meta_var(void);
 
 	private:
 		std::string							_response;
 		std::ifstream						_file;
 		std::string 						_file_path;
-		Location							_loc;
 		std::string							_root;
 		std::string							_uri;
-		std::string 						_error_pages;
+		std::map<std::string, std::string>& _error_pages;
 		std::map<std::string, std::string> 	_type;
 		ServerConfig&						_server_configs;
 		std::map<std::string, std::vector<std::string> >& _request_map;

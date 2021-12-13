@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   sockets.hpp                                  :+:      :+:    :+:   */
+/*   Sockets.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 
-class sockets
+class Sockets
 {
 	private:
 		int 				fd;
@@ -29,20 +29,20 @@ class sockets
 		socklen_t 			addrlen;
 		bool				_is_client;
 	public:
-		sockets();
+		Sockets();
 		friend class server;
-		sockets(const sockets &);
-		sockets(int fd, struct sockaddr_in socket_add, socklen_t, bool is_client);
-		sockets&		operator=(const sockets &);
+		Sockets(const Sockets &);
+		Sockets(int fd, struct sockaddr_in socket_add, socklen_t, bool is_client);
+		Sockets&		operator=(const Sockets &);
 		int 				get_fd()								const;
 		int 				get_PORT()								const;
 		struct sockaddr_in	get_sockaddr()							const;
 		socklen_t 			get_addrlen()							const;
 		void				bind_socket() 							const;
-		void				listen_socket(int nbr_of_ports) 		const;
+		void				listen_socket()					 		const;
 		void 				create_socket();
 		void				set_addr(int PORT, std::string ip);
-		sockets*			accept_connection(int sock_fd);
+		Sockets*			accept_connection(int sock_fd);
 		bool				is_client()								const;
-		~sockets();
+		~Sockets();
 };
