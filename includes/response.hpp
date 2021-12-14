@@ -31,6 +31,8 @@ class Response
 		void				bad_allocation(void);
 		void				internal_error(void);
 		std::string const& 	get_response(void) const;
+		ssize_t				getResponseLength()const;
+		ssize_t _size;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
 		void	_fill_response(std::string const&, size_t, std::string const&);

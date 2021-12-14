@@ -118,7 +118,6 @@ Sockets* 	Sockets::accept_connection(int sock_fd)
 		throw std::exception();
 	if (setsockopt(client_fd, SOL_SOCKET, SO_NOSIGPIPE, &option_value, sizeof(option_value)) < 0) // to pervent SIGPIPE while sending data to client
 		throw std::exception();
-	std::cout << "connection accpeted : " << client_fd << std::endl;
 	return (new Sockets(client_fd, new_sock_add, new_socklen, 1));
 }
 

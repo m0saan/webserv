@@ -2,6 +2,10 @@
 // #include "../includes/location.hpp"
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
+ssize_t Response::getResponseLength() const
+{
+	return _size;
+}
 
 std::string	*error_page(std::string const& message)
 {
@@ -45,10 +49,16 @@ _request_map(x._request_map),
 _queries_script_name(x._queries_script_name)
 { *this = x;	}
 
-Response::~Response(void) { _file.close(); delete _status_codes; }
+Response::~Response(void) {
+	 _file.close();
+	 delete _status_codes;
+	 }
 Response& Response::operator=(Response const& x)
 {
 	_response = x._response;
+	_status_codes = new std::map<std::string, std::string>();
+	*_status_codes = *(x._status_codes);
+	_size = x._size;
 	return *this;
 }
 

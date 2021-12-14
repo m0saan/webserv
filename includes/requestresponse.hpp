@@ -19,6 +19,7 @@
 #define BUFFER_SIZE 1024 * 100
 #include "request.hpp"
 #include <map>
+#include "response.hpp"
 
 class Server;
 
@@ -28,6 +29,7 @@ class RequestResponse
 		fd_set	read_fd, tmp_read, write_fd, tmp_write;
 		int		max_fd;
 		std::map<int , Request> req_fd;
+		std::map<int, Response> res_fd;
 	public:
 		RequestResponse();
 		void			update_set();
@@ -43,6 +45,9 @@ class RequestResponse
 		const std::stringstream&		get_req(int fd);
 		void			reset(int fd);
 		std::map<int , Request>& getMap();
+		void			add_response(int fd, Response res);
+		void 			update_sent_bytes(int fd, int nbrOfBytes);
+		ssize_t				get_bytes_sent(int fd);
 		~RequestResponse();
 };
 

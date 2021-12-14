@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/14 12:36:25 by moboustt         ###   ########.fr       */
+/*   Updated: 2021/12/14 14:45:00 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,7 @@ bool Server::readFromFd(int fd)
 			host = host == "localhost" ? "127.0.0.1" : host;
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["SL"][1], _config);
 
-            std::cout << chosen_config << std::endl;
+            // std::cout << chosen_config << std::endl;
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
@@ -150,7 +150,8 @@ bool Server::readFromFd(int fd)
 				(void)e;
 				res.internal_error();
 			}
-            std::cout << res.get_response() << std::endl;
+			res._size = res.get_response().length();
+            req_res.add_response(fd, res);
 			/* mamoussa done! */
 			req_res.remove_fd(fd, 1, 1);
 			req_res.set_fd(fd, false, true); // add client fd to write set

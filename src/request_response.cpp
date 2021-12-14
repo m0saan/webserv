@@ -111,8 +111,11 @@ void RequestResponse::remove_fd(int fd, bool to_read, bool is_client, bool _clos
 		}
 	}
 	else
+	{
 		FD_CLR(fd, &write_fd);
-	
+		res_fd.erase(fd);
+		std::cout << "Freed" << std::endl;
+	}
 }
 
 bool RequestResponse::select_fd()
@@ -142,5 +145,25 @@ std::map<int , Request>& RequestResponse::getMap()
 	return this->req_fd;
 }
 
+
+void RequestResponse::add_response(int fd, Response res)
+{
+	this->res_fd.insert(std::make_pair(fd, res));
+}
+
+ssize_t	RequestResponse::get_bytes_sent(int fd)
+{
+	std::map<int, Response>::iterator iter =  this->res_fd.find(fd);
+	if (iter != res_fd.end())
+		return iter->second.getResponseLength();
+	return -1;
+}
+
+void RequestResponse::update_sent_bytes(int fd, int nbrOfBytes)
+{
+	// this->res_fd[fd] = nbrOfBytes;
+}
+
 RequestResponse::~RequestResponse()
-{}
+{
+}
