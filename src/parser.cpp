@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "../includes/parser.hpp"
 #include "../includes/utility.hpp"
 
 void exitError(std::string const &error)

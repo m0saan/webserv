@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "sockets.hpp"
+#include "../includes/sockets.hpp"
 #define MAX_CLIENTS 1017
 
 Sockets::Sockets(): fd(-1), PORT(-1), addrlen(-1), _is_client(0)

@@ -10,9 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.hpp"
-#include "response.hpp"
-#include "utility.hpp"
+#include "../includes/server.hpp"
+#include "../includes/response.hpp"
+#include "../includes/utility.hpp"
 
 std::ostream &operator<<(std::ostream &os, ServerConfig const &conf) {
     std::cout << "cgi path: " << conf._cgi << std::endl;
