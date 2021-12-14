@@ -221,3 +221,7 @@ long long Request::getContentLength(const std::string& str)
 std::pair<std::string, std::string> &Request::getQueriesScriptName() {
     return _url_queries_scriptName;
 }
+
+const std::fstream &Request::getBodyStream() const {
+    return _body_stream;
+}

@@ -44,6 +44,8 @@ public:
 
     std::vector<std::string> const &getValue(std::string const & key);
 
+    const std::fstream &getBodyStream() const;
+
     void parseRequest();
 
     bool is_completed() const;

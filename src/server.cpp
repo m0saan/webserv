@@ -129,7 +129,7 @@ bool Server::readFromFd(int fd)
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
-			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
+			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName(), request.getBodyStream());
 			try
 			{
 				if (!chosen_config._redirect.first.empty())
