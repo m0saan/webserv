@@ -559,6 +559,11 @@ void Response::Get_request(void)
 	// lets first check for alowed methods in this location
 	if (loc_path[0] == '/')
 		loc_path.erase(loc_path.begin());
+	// first lets check if the loc path is valid
+	_file_path = _root + '/' + loc_path;
+	if (!_file_is_good(true))
+		return;
+	_file_path.clear();
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
@@ -568,16 +573,15 @@ void Response::Get_request(void)
 		}
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
-	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
+	if (!_server_configs._cgi.empty())
 	{
 		_cgi();
 		return;
 	}
 	// first we have to check if the location is a dir or just a file
-    _root += '/' + loc_path;
     if (loc_path == "/")
 		_process_as_dir();
-	else if (_is_dir(_root))
+	else if (_is_dir(_root + '/' + loc_path))
 		_process_as_dir();
 	else
 		_process_as_file();
@@ -825,6 +829,11 @@ void Response::_process_post_delete(std::string const& req_method)
 	// lets first check for alowed methods in this location
 	if (loc_path[0] == '/')
 		loc_path.erase(loc_path.begin());
+	// first lets check if the loc path is valid
+	_file_path = _root + '/' + loc_path;
+	if (!_file_is_good(true))
+		return;
+	_file_path.clear();
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
@@ -834,7 +843,7 @@ void Response::_process_post_delete(std::string const& req_method)
 		}
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
-	if (_uri.substr(_uri.find_last_of(".") + 1) == "php" && loc_path.substr(loc_path.find_last_of(".") + 1) == "php")
+	if (!_server_configs._cgi.empty())
 	{
 		_cgi();
 		return;
