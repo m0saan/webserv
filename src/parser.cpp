@@ -94,7 +94,9 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
             case Directives::HOST:
                 if (tokens.size() != 2)
                     exitError("error near directive: <" + tokens[0] + ">");
-                if (!isLocation)
+                if (tokens[1] == "localhost")
+					tokens[1] = "127.0.0.1";
+				if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._host, tokens[1], tokens[0]);
                 else
                     fillGlobalDirectives(globalConfig[i]._location[j]._host, tokens[1], tokens[0]);

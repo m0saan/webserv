@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/13 16:59:56 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/14 12:36:25 by moboustt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,6 +121,7 @@ bool Server::readFromFd(int fd)
 			auto it = req_res.getMap()[fd].getMap();
 			std::string host = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
 			std::string port = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
+			host = host == "localhost" ? "127.0.0.1" : host;
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["SL"][1], _config);
 
             std::cout << chosen_config << std::endl;
