@@ -44,22 +44,7 @@ bool		RequestResponse::receive(int fd, Server &server) // return false if connec
 
 void	RequestResponse::send_all(int fd, std::string res)
 {
-	size_t total = 0;
-	size_t left = res.length();
-	int sent = 0;
 
-	// while(total < res.length())
-	// {
-		sent = send(fd, res.c_str(), left, 0);
-		if (sent == 0) // connection closed
-		{
-			// remove_fd(fd, true, true); // remove from read set
-		}
-		// if (sent < 0)
-		// 	break;
-		// total += sent;
-		// left -= sent;
-	// }
 }
 
 bool	RequestResponse::req_completed(int fd)
@@ -106,15 +91,15 @@ void RequestResponse::remove_fd(int fd, bool to_read, bool is_client, bool _clos
 	{
 		FD_CLR(fd, &read_fd);
 		if (is_client && _close)
-		{
 			req_fd.erase(fd);
-		}
 	}
 	else
 	{
 		FD_CLR(fd, &write_fd);
-		res_fd.erase(fd);
-		std::cout << "Freed" << std::endl;
+		if (is_client && _close)
+		{
+			res_fd.erase(fd);
+		}
 	}
 }
 
@@ -151,7 +136,17 @@ void RequestResponse::add_response(int fd, Response res)
 	this->res_fd.insert(std::make_pair(fd, res));
 }
 
-ssize_t	RequestResponse::get_bytes_sent(int fd)
+const std::string &RequestResponse::getResponse(int fd)
+{
+	return this->res_fd.find(fd)->second.get_response();
+}
+
+size_t	RequestResponse::get_res_bytes_sent(int fd)
+{
+	return this->res_fd.find(fd)->second._bytes_sent;
+}
+
+ssize_t	RequestResponse::get_response_length(int fd)
 {
 	std::map<int, Response>::iterator iter =  this->res_fd.find(fd);
 	if (iter != res_fd.end())
@@ -161,7 +156,7 @@ ssize_t	RequestResponse::get_bytes_sent(int fd)
 
 void RequestResponse::update_sent_bytes(int fd, int nbrOfBytes)
 {
-	// this->res_fd[fd] = nbrOfBytes;
+	this->res_fd.find(fd)->second._bytes_sent += nbrOfBytes;
 }
 
 RequestResponse::~RequestResponse()
