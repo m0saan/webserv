@@ -110,11 +110,15 @@ public:
         if (possible_blocks.empty())
             exitError("error: could not find server block.");
         ServerConfig loc;
-        for (size_t j = 0; j < possible_blocks[0]._location.size(); ++j)
+        ServerConfig default_loc;
+        for (size_t j = 0; j < possible_blocks[0]._location.size(); ++j) {
+			if (possible_blocks[0]._location[j]._loc_path == "/")
+				default_loc = possible_blocks[0]._location[j];
             if (Utility::startWith(url, possible_blocks[0]._location[j]._loc_path))
                 loc = loc._loc_path.length() < possible_blocks[0]._location[j]._loc_path.length()
                           ? possible_blocks[0]._location[j]
                           : loc;
+		}
 
         /*
 
@@ -126,6 +130,9 @@ public:
          * - redirect
 
          */
+
+        if (url == "/")
+            loc = default_loc;
 
         possible_blocks[0]._cgi = loc._cgi;
         possible_blocks[0]._redirect = loc._redirect;
