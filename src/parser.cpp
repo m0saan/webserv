@@ -208,7 +208,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
             case Directives::SERVER_END:
                 ++N_curly_braces_close;
                 break;
-            case e_error::INVALID_DIRECTIVE:
+            case INVALID_DIRECTIVE:
                 exitError("Invalid Directive " + tokens[0]);
             default:
                 break;
