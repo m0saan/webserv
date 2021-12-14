@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <fstream>
 
 typedef enum transfer_type {
     CHUNKED,
@@ -28,6 +29,7 @@ private:
     transfer_type	_transfer_encoding;
     bool            _is_alive_connection;
     std::pair<std::string, std::string> _url_queries_scriptName;
+    std::fstream            _body_stream;
 public:
 
 

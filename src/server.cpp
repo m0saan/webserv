@@ -118,6 +118,7 @@ bool Server::readFromFd(int fd)
 		if (req_res.req_completed(fd))
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
+
 			auto it = req_res.getMap()[fd].getMap();
 			std::string host = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
 			std::string port = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);

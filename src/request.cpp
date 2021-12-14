@@ -43,6 +43,8 @@ void Request::parseRequest()
 	std::string line;
 	bool is_body(false);
 	bool is_chunked(false);
+   _body_stream.open("body", std::fstream::in | std::fstream::out | std::fstream::app);
+
 	while (std::getline(_req, line))
 	{
 		if (!line.empty())
@@ -71,6 +73,8 @@ void Request::parseRequest()
 	}
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] == "keep-alive";
+    _body_stream.close();
+    std::cout << "printing file content: " << std::endl << _body_stream.rdbuf() << std::endl;
 }
 
 bool Request::_isChunckStart(std::string const &line) const
@@ -84,15 +88,13 @@ bool Request::_isBodyEnd(const std::string &line) const { return line == "}"; }
 
 void Request::_getBody(std::string &line, bool is_chunked)
 {
+    std::cout << "in get body." << std::endl;
 	line.push_back('\n');
 	static int i = 0;
 	if (is_chunked)
 		if (i % 2 != 0)
 			return;
-	if (_RequestMap.count("body"))
-		_RequestMap["body"][0] += line;
-	else
-		_RequestMap["body"].push_back(line);
+    _body_stream << line << std::endl;
 }
 
 bool Request::_isBody(std::string const &line, bool const &is_body) const { return line == "{" && is_body; }
