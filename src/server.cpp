@@ -119,24 +119,24 @@ bool Server::readFromFd(int fd)
 		{
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 
-			auto it = req_res.getMap()[fd].getMap();
-			std::string host = (it["Host"][0]).substr(0, it["Host"][0].find(":"));
-			std::string port = (it["Host"][0]).substr(it["Host"][0].find(":") + 1);
+			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
+			std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
+			std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
 			host = host == "localhost" ? "127.0.0.1" : host;
-			ServerConfig chosen_config = Utility::getRightConfig(port, host, it["Host"][0], it["SL"][1], _config);
+			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
             // std::cout << chosen_config << std::endl;
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
-			Response res(chosen_config, it, req_res.getMap()[fd].getQueriesScriptName());
+			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), request.getBodyStream());
 			try
 			{
 				if (!chosen_config._redirect.first.empty())
 					res.Redirection();
-				else if (it["SL"][0] == "GET")
+				else if (_request_map["SL"][0] == "GET")
 					res.Get_request();
-				else if (it["SL"][0] == "POST")
+				else if (_request_map["SL"][0] == "POST")
 					res.Post_request();
 				else
 					res.Delete_request();
