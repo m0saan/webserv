@@ -17,13 +17,15 @@ std::string	*error_page(std::string const& message)
 	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
 	return error_body;
 }
-Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name)
+Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name, std::fstream const & body_stream)
 :
 _error_pages(config._error_page),
 _server_configs(config),
 _request_map(request_map),
-_queries_script_name(queries_script_name)
+_queries_script_name(queries_script_name),
+_body_stream(body_stream)
 {
+	std::cout << "Another object created " << std::endl;
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
@@ -46,7 +48,8 @@ Response::Response(Response const& x)
 _error_pages(x._error_pages),
 _server_configs(x._server_configs),
 _request_map(x._request_map),
-_queries_script_name(x._queries_script_name)
+_queries_script_name(x._queries_script_name),
+_body_stream(x._body_stream)
 { *this = x;	}
 
 Response::~Response(void) {
@@ -59,6 +62,7 @@ Response& Response::operator=(Response const& x)
 	_status_codes = new std::map<std::string, std::string>();
 	*_status_codes = *(x._status_codes);
 	_size = x._size;
+	_bytes_sent = x._bytes_sent;
 	return *this;
 }
 
@@ -937,6 +941,7 @@ void Response::_process_as_dir(void)
 	else
 	{
 		_file_path = _root;
+		std::cout << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_fill_response(_file_path, 200, "OK");
@@ -1045,7 +1050,8 @@ bool Response::_file_is_good(bool fill_resp)
 		_file_path = _root + '/' + _uri;
 	if (open(_file_path.c_str(), O_RDONLY) < 0)
 	{
-		if (errno == 2 && fill_resp)
+		std::cout << "Errno : " << errno << std::endl;
+		if ((errno == 2 || errno == 13) && fill_resp)
 			_fill_response(".html", 404, "Not Found");
 		else if (fill_resp)
 			_fill_response(".html", 403, "Forbidden");

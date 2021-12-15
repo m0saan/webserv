@@ -19,7 +19,7 @@
 class Response
 {
 	public:
-		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name);
+		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name, std::fstream const & body_stream);
 		Response(Response const&);
 		Response& operator=(Response const&);
 		~Response(void);
@@ -32,7 +32,8 @@ class Response
 		void				internal_error(void);
 		std::string const& 	get_response(void) const;
 		ssize_t				getResponseLength()const;
-		ssize_t _size;
+		ssize_t 			_size;
+		ssize_t				_bytes_sent;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
 		void	_fill_response(std::string const&, size_t, std::string const&);
@@ -62,4 +63,5 @@ class Response
 		std::map<std::string, std::vector<std::string> >& _request_map;
 		std::pair<std::string, std::string>& _queries_script_name;
 		std::map<std::string, std::string>*	_status_codes;
+        std::fstream const &                       _body_stream;
 };
