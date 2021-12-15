@@ -6,7 +6,7 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::~Request(){}
+Request::~Request() {}
 
 Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection)
 {
@@ -38,12 +38,40 @@ std::vector<std::string> const &Request::getValue(const std::string &key)
 	return _RequestMap[key];
 }
 
+/*
+POST /upload HTTP/1.1
+User-Agent: PostmanRuntime/7.28.4
+Accept: /
+Postman-Token: 448fffaf-b00b-4eb1-8c16-7afaa3687dd1
+Host: localhost:8000
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
+Content-Length: 291
+
+----------------------------590098799345060955619546
+Content-Disposition: form-data; name="readme"; filename="hello.html"
+Content-Type: text/html
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>hello</title>
+    </head>
+</html>
+----------------------------590098799345060955619546--
+*/
+
 void Request::parseRequest()
 {
 	std::string line;
 	bool is_body(false);
 	bool is_chunked(false);
-   _body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
+	bool is_form_data(false);
+	std::string http_method;
+	std::string boundary;
+
+	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
 
 	while (std::getline(_req, line))
 	{
@@ -66,17 +94,25 @@ void Request::parseRequest()
 			continue;
 		}
 
-		if (!is_body)
-			_getHeader(line);
+		if (boundary == line)
+		{
+			is_form_data = true;
+			continue;
+		}
+		if (!is_body && !is_form_data)
+			_getHeader(line, http_method, boundary);
 		else
 			_getBody(line, is_chunked);
 	}
-    _body_stream.close();
+	_body_stream.close();
 	_fd = open("/tmp/body", O_RDONLY);
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
-    _body_stream.close();
-    // std::cout << "printing file content: " << std::endl << _body_stream.rdbuf() << std::endl;
+	_body_stream.close();
+
+	std::cout << _RequestMap["Content-Disposition:"] << std::endl;
+	std::cout << _RequestMap["Content-Type:"] << std::endl;
+	// std::cout << "printing file content: " << std::endl << _body_stream.rdbuf() << std::endl;
 }
 
 bool Request::_isChunckStart(std::string const &line) const
@@ -90,13 +126,19 @@ bool Request::_isBodyEnd(const std::string &line) const { return line == "}"; }
 
 void Request::_getBody(std::string &line, bool is_chunked)
 {
-    std::cout << "in get body." << std::endl;
+	std::vector<std::string> tokens = Utility::split(line);
+	if (tokens[0] == "Content-Disposition:" || tokens[0] == "Content-Disposition:" || "Content-Type:")
+	{
+		tokens[0].pop_back();
+		_RequestMap[tokens[0]] = std::vector<std::string>(tokens.begin() + 1, tokens.end());
+		return;
+	}
 	line.push_back('\n');
 	static int i = 0;
 	if (is_chunked)
 		if (i % 2 != 0)
 			return;
-    _body_stream << line << std::endl;
+	_body_stream << line << std::endl;
 }
 
 bool Request::_isBody(std::string const &line, bool const &is_body) const { return line == "{" && is_body; }
@@ -106,7 +148,7 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 	return _RequestMap;
 }
 
-Request::Request(long long max_size) : _is_alive_connection(true),  _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
+Request::Request(long long max_size) : _is_alive_connection(true), _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
 {
 }
 
@@ -119,7 +161,7 @@ std::stringstream const &Request::get_req()
 	return this->_req;
 }
 
-bool	Request::is_completed() const
+bool Request::is_completed() const
 {
 	if (_transfer_encoding == COMPLETED)
 	{
@@ -129,7 +171,7 @@ bool	Request::is_completed() const
 	}
 	else if (_transfer_encoding == CHUNKED)
 	{
-		if(_req.str().find("0\r\n\r\n") != std::string::npos)
+		if (_req.str().find("0\r\n\r\n") != std::string::npos)
 			return true;
 		else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
 			return true;
@@ -161,27 +203,34 @@ void Request::getReqInfo(const std::string &str)
 	_header_length = getHeaderLength(str);
 }
 
-std::pair<std::string, std::string> _parseStartLine(std::string& url) {
+std::pair<std::string, std::string> _parseStartLine(std::string &url)
+{
 	std::string queries;
-    std::pair<bool, int> has_queries_result;
-    has_queries_result = Utility::hasQueries(url);
-    if (has_queries_result.first)
-        queries =  Utility::getQueries(url, has_queries_result.second);
+	std::pair<bool, int> has_queries_result;
+	has_queries_result = Utility::hasQueries(url);
+	if (has_queries_result.first)
+		queries = Utility::getQueries(url, has_queries_result.second);
 	std::string script_name = Utility::getScriptName(url);
 	return std::make_pair(queries, script_name);
 }
 
-void Request::_getHeader(const std::string &line)
+void Request::_getHeader(const std::string &line, std::string &http_method, std::string &boundary)
 {
 	std::vector<std::string> tokens = Utility::split(line, ' ');
-	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE"){
+	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
+	if (http_method == "POST" && tokens[0] == "Content-Type:")
+		boundary = tokens[2];
+
+	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
+	{
 		_RequestMap["SL"] = std::vector<std::string>(tokens.begin(), tokens.end());
+		http_method = tokens[0];
 		_url_queries_scriptName = _parseStartLine(tokens[1]);
 	}
 	else
 	{
 		tokens[0].pop_back();
-		_RequestMap[tokens[0]] = std::vector<std::string>(tokens.begin()+1, tokens.end());
+		_RequestMap[tokens[0]] = std::vector<std::string>(tokens.begin() + 1, tokens.end());
 	}
 }
 
@@ -198,7 +247,7 @@ size_t Request::getHeaderLength(const std::string &str)
 	return pos;
 }
 
-long long Request::getContentLength(const std::string& str)
+long long Request::getContentLength(const std::string &str)
 {
 	size_t pos;
 	long long length = 0;
@@ -213,17 +262,19 @@ long long Request::getContentLength(const std::string& str)
 		// 	throw std::exception();
 		this->_transfer_encoding = COMPLETED;
 	}
-	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) !=  std::string::npos) // !content-Lenght && transfer-Encoding = chunked
+	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
 	// else // Content-Length not found && !chunked  && should be POST or DELETE
 	// 	throw std::exception();
 	return length;
 }
 
-std::pair<std::string, std::string> &Request::getQueriesScriptName() {
-    return _url_queries_scriptName;
+std::pair<std::string, std::string> &Request::getQueriesScriptName()
+{
+	return _url_queries_scriptName;
 }
 
-const int &Request::getBodyFD() const {
-    return _fd;
+const int &Request::getBodyFD() const
+{
+	return _fd;
 }

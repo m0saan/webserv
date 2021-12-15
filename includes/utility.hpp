@@ -111,13 +111,23 @@ public:
             exitError("error: could not find server block.");
         ServerConfig loc;
         ServerConfig default_loc;
+
+        loc._loc_path = default_loc._loc_path = "";
+
+
         for (size_t j = 0; j < possible_blocks[0]._location.size(); ++j) {
-			if (possible_blocks[0]._location[j]._loc_path == "/")
+			if (possible_blocks[0]._location[j]._loc_path == "/") {
 				default_loc = possible_blocks[0]._location[j];
-            if (Utility::startWith(url, possible_blocks[0]._location[j]._loc_path))
+                continue;
+            }
+            if (url.find(possible_blocks[0]._location[j]._loc_path) != std::string::npos)
                 loc = loc._loc_path.length() < possible_blocks[0]._location[j]._loc_path.length()
                           ? possible_blocks[0]._location[j]
                           : loc;
+            std::cout << "----------------------------------------------------------" << std::endl;
+            std::cout << "loc_path: " << possible_blocks[0]._location[j]._loc_path << std::endl;
+            std::cout << "loc: " <<  loc._loc_path << std::endl;
+            std::cout << "----------------------------------------------------------" << std::endl;
 		}
 
         /*
