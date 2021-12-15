@@ -124,7 +124,6 @@ bool Server::readFromFd(int fd)
 {
 	int position;
 	bool is_client;
-	Request request;
 	position = is_server(fd, &is_client);
 	if (!is_client) // Server Socket
 		try
@@ -171,7 +170,7 @@ bool Server::readFromFd(int fd)
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
-			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), request.getBodyFD());
+			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
 			try
 			{
 				if (!chosen_config._redirect.first.empty())
