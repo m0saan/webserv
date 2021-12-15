@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/15 10:59:06 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/15 15:00:12 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,8 +149,8 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			// std::cout << "request : " << (req_res.getMap())[fd].get_req().str() << std::endl;
-			// exit(1);
+			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
+
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 			std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
@@ -158,9 +158,9 @@ bool Server::readFromFd(int fd)
 			host = host == "localhost" ? "127.0.0.1" : host;
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
-			std::cerr << "-------------------------------------------------------------" << std::endl;
-			std::cerr << chosen_config << std::endl;
-			std::cerr << "-------------------------------------------------------------" << std::endl;
+			// std::cerr << "-------------------------------------------------------------" << std::endl;
+			// std::cerr << chosen_config << std::endl;
+			// std::cerr << "-------------------------------------------------------------" << std::endl;
 
 
             // std::cout << chosen_config << std::endl;
@@ -193,12 +193,7 @@ bool Server::readFromFd(int fd)
 			res._size = res.get_response().length();
             req_res.add_response(fd, res);
 			/* mamoussa done! */
-			// add client fd to write set
-			req_res.set_fd(fd, false, true); 
-			// req_res.remove_fd(fd, 1, 1); // clear fd from read set
-			// if(!req_res.getMap()[fd]._is_alive_connection) // close connection
-			// 	req_res.remove_fd(fd, 1, 1, 1); // clear fd from read set && close connection
-			// else
+			req_res.set_fd(fd, false, true); // add client fd to write set
 			req_res.remove_fd(fd, 1, 1);
 		}
 	}
@@ -211,28 +206,19 @@ void Server::sendResponse(int fd)
 	// req_res.send_all(fd, res);
 	
 	
-	// std::cout << req_res.getResponse(fd) << std::endl;
-// int sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0);	// std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
-// 	if (sent == -1) // send failed
-// 	{
-// 		perror("send ");
-// 		// sendResponse(fd);
-// 		// exit (-1);
-// 		// return false;
-// 	}
-	// req_res.update_sent_bytes(fd, sent);
-	// // exit(1);
-	// // std::cout << req_res.get_response_length(fd) << " " << req_res.get_res_bytes_sent(fd) << " " << sent << std::endl;
-	// if (req_res.get_response_length(fd) == req_res.get_res_bytes_sent(fd)) // response is completely sent
-	// {
-	std::string res = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n";
-	
-	int sent = 0;// req_res.send_all(fd, res);
-	sent = send(fd, res.c_str(), res.length(), 0);
-	res = "\r\n5\r\nHello\r\n8\r\nGood bye\r\n0\r\n\r\n";
-	sent = send(fd, res.c_str(), res.length(), 0);
-
-	req_res.send_all(fd, res);
+	// std::cout << req_res.getResponse(fd) << std::endl; 
+	int sent;
+	// sleep(5);
+	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0);	// std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
+		//ToDo: Handle Error case
+	if (sent == -1) // send failed
+	{
+		perror("send ");
+	}
+	req_res.update_sent_bytes(fd, sent);
+	// std::cout << "Sent : " << sent << std::endl;
+	if (req_res.get_response_length(fd) == req_res.get_res_bytes_sent(fd)) // response is completely sent
+	{
 		if (!req_res.getMap()[fd]._is_alive_connection) // close connection 
 		{
 			req_res.remove_fd(fd, 1, 1, 1); // erase req object from map 
@@ -246,7 +232,7 @@ void Server::sendResponse(int fd)
 			req_res.remove_fd(fd, 0, 0);
 			req_res.set_fd(fd, 1, 1);
 		}
-	// }
+	}
 }
 
 void Server::listen()
