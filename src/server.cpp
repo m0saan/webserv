@@ -150,7 +150,7 @@ bool Server::readFromFd(int fd)
 		if (req_res.req_completed(fd))
 		{
 			// std::cout << "request : " << (req_res.getMap())[fd].get_req().str() << std::endl;
-
+			// exit(1);
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 			std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
@@ -189,6 +189,7 @@ bool Server::readFromFd(int fd)
 				(void)e;
 				res.internal_error();
 			}
+			// std::cout << res.get_response() << std::endl;
 			res._size = res.get_response().length();
             req_res.add_response(fd, res);
 			/* mamoussa done! */

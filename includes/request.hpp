@@ -64,7 +64,7 @@ public:
 
 private:
 
-    void _getHeader(const std::string &line);
+    void _getHeader(const std::string &, std::string&, std::string&);
 
     bool _isBody(std::string const &line, bool const& is_body) const;
 

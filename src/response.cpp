@@ -1,4 +1,5 @@
 #include "../includes/response.hpp"
+# include "../includes/utility.hpp"
 // #include "../includes/location.hpp"
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
@@ -563,7 +564,26 @@ void Response::Redirection(void)
 
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
 
-void Response::Post_request(void)	{	_process_post_delete("POST");	}
+void Response::Post_request(void)	
+{	
+	if (_server_configs._loc_path == "/upload")
+	{
+		if (_request_map.count("Content-Disposition"))
+			std::cout << "Yesss\n";
+		else
+			exit(1);
+		// std::cout << "_loc_path: " << _request_map["Content-Disposition"][2] << std::endl;
+		std::string file_name;
+
+		file_name = Utility::split(_request_map["Content-Disposition"][2], '=')[1];
+		file_name.erase(file_name.begin());
+		file_name.erase(--file_name.end());
+		std::cout << "file_name: " << file_name << std::endl;
+		std::cout << "where to store it: " << _server_configs._upload_store << std::endl;
+		return;
+	}
+	_process_post_delete("POST");
+}
 
 void Response::Get_request(void)
 {
