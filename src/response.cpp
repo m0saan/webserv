@@ -24,7 +24,9 @@ _error_pages(config._error_page),
 _server_configs(config),
 _request_map(request_map),
 _queries_script_name(queries_script_name),
-_fd(fd)
+_fd(fd),
+_size(0),
+_bytes_sent(0)
 {
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
@@ -49,7 +51,9 @@ _error_pages(x._error_pages),
 _server_configs(x._server_configs),
 _request_map(x._request_map),
 _queries_script_name(x._queries_script_name),
-_fd(x._fd)
+_fd(x._fd),
+_size(0),
+_bytes_sent(0)
 { *this = x;	}
 
 Response::~Response(void) {
