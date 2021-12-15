@@ -598,10 +598,13 @@ void Response::Get_request(void)
 	if (loc_path[0] == '/')
 		loc_path.erase(loc_path.begin());
 	// first lets check if the loc path is valid
-	_file_path = _root + '/' + loc_path;
-	if (!_file_is_good(true))
-		return;
-	_file_path.clear();
+	if (_server_configs._cgi.empty())
+	{
+		_file_path = _root + '/' + loc_path;
+		if (!_file_is_good(true))
+			return;
+		_file_path.clear();
+	}
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
@@ -729,7 +732,9 @@ std::string	*get_res(int fd)
 void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 {
 	time_t 				rawtime;
-
+	std::stringstream	ss;
+	
+	ss << tmp_res->length() - (tmp_res->find("\r\n\r\n") + 4);
 	time (&rawtime);
 	if(is_red)
 		_response += "HTTP/1.1 302 Found\r\n";
@@ -738,7 +743,7 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\nServer: webserver\r\n";
-	_response += "Transfer-Encoding: chunked\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
 	_response += "Connection: close\r\n";
 	_response += *tmp_res;
 }
@@ -808,7 +813,6 @@ void Response::_cgi(void)
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
 	close(_fd);
-	std::cout << _response << std::endl;
 	delete tmp_res;
 }
 /*---------------------------------------------------------------------------------------------------*/
@@ -816,14 +820,16 @@ void Response::_cgi(void)
 void Response::_fill_auto_index_response(std::string* tmp_res)
 {
 	time_t 				rawtime;
+	std::stringstream ss;
 
+	ss << tmp_res->length();
 	time (&rawtime);
 	_response += "HTTP/1.1 200 OK\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
-	_response += "Transfer-Encoding: chunked\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
 	_response += "Connection: close\r\n\r\n";
 	_response += *tmp_res;
 }
@@ -882,10 +888,13 @@ void Response::_process_post_delete(std::string const& req_method)
 	if (loc_path[0] == '/')
 		loc_path.erase(loc_path.begin());
 	// first lets check if the loc path is valid
-	_file_path = _root + '/' + loc_path;
-	if (!_file_is_good(true))
-		return;
-	_file_path.clear();
+	if (_server_configs._cgi.empty())
+	{
+		_file_path = _root + '/' + loc_path;
+		if (!_file_is_good(true))
+			return;
+		_file_path.clear();
+	}
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())

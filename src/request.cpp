@@ -118,10 +118,6 @@ void Request::parseRequest()
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
 	_body_stream.close();
-
-	std::cout << _RequestMap["Content-Disposition"] << std::endl;
-	std::cout << _RequestMap["Content-Type"] << std::endl;
-	// std::cout << "printing file content: " << std::endl << _body_stream.rdbuf() << std::endl;
 }
 
 bool Request::_isChunckStart(std::string const &line) const
