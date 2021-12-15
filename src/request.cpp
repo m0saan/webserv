@@ -8,7 +8,7 @@
 
 Request::~Request(){}
 
-Request::Request(const Request &x) : _is_alive_connection(true)
+Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection)
 {
 	_size = x._size;
 	_req.clear();
@@ -43,7 +43,7 @@ void Request::parseRequest()
 	std::string line;
 	bool is_body(false);
 	bool is_chunked(false);
-   _body_stream.open("body", std::fstream::in | std::fstream::out | std::fstream::app);
+   _body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
 
 	while (std::getline(_req, line))
 	{
@@ -71,6 +71,8 @@ void Request::parseRequest()
 		else
 			_getBody(line, is_chunked);
 	}
+    _body_stream.close();
+	_fd = open("/tmp/body", O_RDONLY);
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
     _body_stream.close();
@@ -222,6 +224,6 @@ std::pair<std::string, std::string> &Request::getQueriesScriptName() {
     return _url_queries_scriptName;
 }
 
-const std::fstream &Request::getBodyStream() const {
-    return _body_stream;
+const int &Request::getBodyFD() const {
+    return _fd;
 }

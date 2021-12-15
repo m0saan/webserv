@@ -45,7 +45,7 @@ class RequestResponse
 		const std::stringstream&		get_req(int fd);
 		void			reset(int fd);
 		std::map<int , Request>& getMap();
-		void			add_response(int fd, Response res);
+		void			add_response(int fd, Response &res);
 		size_t			get_res_bytes_sent(int fd);
 		void 			update_sent_bytes(int fd, int nbrOfBytes);
 		ssize_t			get_response_length(int fd);

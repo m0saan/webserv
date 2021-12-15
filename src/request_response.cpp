@@ -97,9 +97,7 @@ void RequestResponse::remove_fd(int fd, bool to_read, bool is_client, bool _clos
 	{
 		FD_CLR(fd, &write_fd);
 		if (is_client && _close)
-		{
 			res_fd.erase(fd);
-		}
 	}
 }
 
@@ -123,6 +121,7 @@ void RequestResponse::close_connection(int fd) const
 {
 	shutdown(fd, 2); // Further sends and receives are disallowed
 	close(fd);
+	std::cout << "connection Closed !" <<std::endl;
 }
 
 std::map<int , Request>& RequestResponse::getMap()
@@ -131,7 +130,7 @@ std::map<int , Request>& RequestResponse::getMap()
 }
 
 
-void RequestResponse::add_response(int fd, Response res)
+void RequestResponse::add_response(int fd, Response & res)
 {
 	this->res_fd.insert(std::make_pair(fd, res));
 }

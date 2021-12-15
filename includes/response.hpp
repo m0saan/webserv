@@ -19,7 +19,8 @@
 class Response
 {
 	public:
-		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name, std::fstream const & body_stream);
+		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map,
+		std::pair<std::string, std::string>& queries_script_name, int);
 		Response(Response const&);
 		Response& operator=(Response const&);
 		~Response(void);
@@ -63,5 +64,5 @@ class Response
 		std::map<std::string, std::vector<std::string> >& _request_map;
 		std::pair<std::string, std::string>& _queries_script_name;
 		std::map<std::string, std::string>*	_status_codes;
-        std::fstream const &                       _body_stream;
+        int                       			_fd;
 };
