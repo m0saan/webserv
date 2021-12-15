@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/15 15:00:12 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/15 16:41:47 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,13 +108,10 @@ int Server::is_server(int fd, bool *is_client) const
 
 void Server::emergencyFree() // !CALL THE POLICE.
 {
-
-	int fd = server_cli.back()->get_fd();
+	int fd = server_cli.back()->get_fd(); // get Fd
+	(req_res.getMap())[fd].resetRequest(); // clear request content
+	// remove fd from read/write sets
 	req_res.remove_fd(fd, true, true, true);
-	(req_res.getMap())[fd].resetRequest();
-	// TO-DO send 502 response
-	std::string res = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
-	req_res.send_all(fd, res);
 	req_res.remove_fd(fd, false, true, true);
 	socketFree(fd);
 	req_res.close_connection(fd);
@@ -124,7 +121,6 @@ bool Server::readFromFd(int fd)
 {
 	int position;
 	bool is_client;
-	Request request;
 	position = is_server(fd, &is_client);
 	if (!is_client) // Server Socket
 		try
@@ -161,10 +157,7 @@ bool Server::readFromFd(int fd)
 			// std::cerr << "-------------------------------------------------------------" << std::endl;
 			// std::cerr << chosen_config << std::endl;
 			// std::cerr << "-------------------------------------------------------------" << std::endl;
-
-
             // std::cout << chosen_config << std::endl;
-
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
 			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), request.getBodyFD());
