@@ -26,6 +26,7 @@ _request_map(request_map),
 _queries_script_name(queries_script_name),
 _fd(fd)
 {
+	std::cout << "Another object created " << std::endl;
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
@@ -62,6 +63,7 @@ Response& Response::operator=(Response const& x)
 	_status_codes = new std::map<std::string, std::string>();
 	*_status_codes = *(x._status_codes);
 	_size = x._size;
+	_bytes_sent = x._bytes_sent;
 	return *this;
 }
 
@@ -940,6 +942,7 @@ void Response::_process_as_dir(void)
 	else
 	{
 		_file_path = _root;
+		std::cout << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_fill_response(_file_path, 200, "OK");
@@ -1048,7 +1051,8 @@ bool Response::_file_is_good(bool fill_resp)
 		_file_path = _root + '/' + _uri;
 	if (open(_file_path.c_str(), O_RDONLY) < 0)
 	{
-		if (errno == 2 && fill_resp)
+		std::cout << "Errno : " << errno << std::endl;
+		if ((errno == 2 || errno == 13) && fill_resp)
 			_fill_response(".html", 404, "Not Found");
 		else if (fill_resp)
 			_fill_response(".html", 403, "Forbidden");

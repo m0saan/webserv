@@ -27,13 +27,12 @@ private:
     long long		_header_length;
     long long		_max_body_size;
     transfer_type	_transfer_encoding;
-    bool            _is_alive_connection;
     std::pair<std::string, std::string> _url_queries_scriptName;
     std::fstream            _body_stream;
     int                     _fd;
 public:
 
-
+    bool            _is_alive_connection;
     Request(long long max_size = 100000);
     ~Request();
     Request(Request const& x);

@@ -6,9 +6,9 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::~Request() {}
+Request::~Request(){}
 
-Request::Request(const Request &x)
+Request::Request(const Request &x) : _is_alive_connection(true)
 {
 	_size = x._size;
 	_req.clear();
@@ -74,7 +74,9 @@ void Request::parseRequest()
     _body_stream.close();
 	_fd = open("/tmp/body", O_RDONLY);
 	if (_RequestMap.count("Connection"))
-		_is_alive_connection = _RequestMap["Connection"][0] == "keep-alive";
+		_is_alive_connection = _RequestMap["Connection"][0] != "close";
+    _body_stream.close();
+    // std::cout << "printing file content: " << std::endl << _body_stream.rdbuf() << std::endl;
 }
 
 bool Request::_isChunckStart(std::string const &line) const
@@ -104,7 +106,7 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 	return _RequestMap;
 }
 
-Request::Request(long long max_size) : _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
+Request::Request(long long max_size) : _is_alive_connection(true),  _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
 {
 }
 
