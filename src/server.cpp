@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/15 16:41:47 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/15 18:39:09 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ bool Server::readFromFd(int fd)
 		catch (std::bad_alloc &e)
 		{
 			emergencyFree();
-			return true;
+			return false;
 		}
 		catch (const std::exception &e)
 		{
@@ -244,7 +244,7 @@ void Server::listen()
 	while (1) // Server Loop
 	{
 		req_res.update_set();
-		if (!req_res.select_fd())
+		if (!req_res.select_fd()) // poll failure
 			continue;
 		for (size_t i = 0; i < server_cli.size(); ++i)
 		{
