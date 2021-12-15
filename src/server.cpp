@@ -149,6 +149,10 @@ bool Server::readFromFd(int fd)
 
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
+
+			if ((req_res.getMap())[fd].isBadRequest())
+				exitError("message: bad request");
+
 			std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
 			std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
 			host = host == "localhost" ? "127.0.0.1" : host;
@@ -160,7 +164,7 @@ bool Server::readFromFd(int fd)
             // std::cout << chosen_config << std::endl;
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
-			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), request.getBodyFD());
+			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
 			try
 			{
 				if (!chosen_config._redirect.first.empty())
@@ -182,6 +186,7 @@ bool Server::readFromFd(int fd)
 				(void)e;
 				res.internal_error();
 			}
+			// std::cout << res.get_response() << std::endl;
 			res._size = res.get_response().length();
             req_res.add_response(fd, res);
 			/* mamoussa done! */

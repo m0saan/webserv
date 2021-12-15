@@ -55,6 +55,5 @@ int main(int ac, char **av) {
     std::vector<ServerConfig> vect = performParsing(av[1]);
     Server serv(vect);
     serv.listen();
-
     return EXIT_SUCCESS;
 }
