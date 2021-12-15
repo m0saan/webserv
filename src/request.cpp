@@ -193,6 +193,7 @@ bool Request::is_completed() const
 void Request::append(char *content, long long size)
 {
 	std::string tmp(content, size);
+	_req_file.open("requests/req.txt", std::fstream::in | std::fstream::out | std::fstream::app);
 	if (_content_length == -1) // 1st time reading req
 		try
 		{
@@ -204,6 +205,11 @@ void Request::append(char *content, long long size)
 			return;
 		}
 	_req << content;
+	if (_req_file.is_open())
+		_req_file << std::string(content);
+	else
+		std::cout << "Cannot open file! " << std::endl;
+	_req_file.close();
 	_size = _req.str().length();
 }
 

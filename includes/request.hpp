@@ -31,6 +31,7 @@ private:
     std::fstream                                        _body_stream;
     int                                                 _fd;
     bool                                                _bad_request_found;
+    std::fstream                                        _req_file;
 public:
 
     bool            _is_alive_connection;

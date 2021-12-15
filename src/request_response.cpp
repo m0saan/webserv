@@ -42,11 +42,6 @@ bool		RequestResponse::receive(int fd, Server &server) // return false if connec
 	return true;
 }
 
-void	RequestResponse::send_all(int fd, std::string res)
-{
-
-}
-
 bool	RequestResponse::req_completed(int fd)
 {
 	return (req_fd[fd]).is_completed();
