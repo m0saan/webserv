@@ -39,7 +39,6 @@ class RequestResponse
 		int				get_maxfd() 					const;
 		int				is_ready(int fd, bool to_read);
 		bool 			receive(int fd, Server &server);
-		void			send_all(int fd, std::string res);
 		void			close_connection(int fd)		 const;
 		bool			req_completed(int fd);
 		const std::stringstream&		get_req(int fd);

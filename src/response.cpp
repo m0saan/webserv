@@ -1,4 +1,5 @@
 #include "../includes/response.hpp"
+# include "../includes/utility.hpp"
 // #include "../includes/location.hpp"
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
@@ -567,7 +568,26 @@ void Response::Redirection(void)
 
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
 
-void Response::Post_request(void)	{	_process_post_delete("POST");	}
+void Response::Post_request(void)	
+{	
+	if (_server_configs._loc_path == "/upload")
+	{
+		if (_request_map.count("Content-Disposition"))
+			std::cout << "Yesss\n";
+		else
+			exit(1);
+		// std::cout << "_loc_path: " << _request_map["Content-Disposition"][2] << std::endl;
+		std::string file_name;
+
+		file_name = Utility::split(_request_map["Content-Disposition"][2], '=')[1];
+		file_name.erase(file_name.begin());
+		file_name.erase(--file_name.end());
+		std::cout << "file_name: " << file_name << std::endl;
+		std::cout << "where to store it: " << _server_configs._upload_store << std::endl;
+		return;
+	}
+	_process_post_delete("POST");
+}
 
 void Response::Get_request(void)
 {
@@ -578,10 +598,13 @@ void Response::Get_request(void)
 	if (loc_path[0] == '/')
 		loc_path.erase(loc_path.begin());
 	// first lets check if the loc path is valid
-	_file_path = _root + '/' + loc_path;
-	if (!_file_is_good(true))
-		return;
-	_file_path.clear();
+	if (_server_configs._cgi.empty())
+	{
+		_file_path = _root + '/' + loc_path;
+		if (!_file_is_good(true))
+			return;
+		_file_path.clear();
+	}
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
@@ -616,14 +639,20 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * The server MUST set this meta-variable if and only if the request is accompanied by a message body entity.
 	 *	The CONTENT_LENGTH value must reflect the length of the message-body
 	 */
-	str = std::string("CONTENT_LENGHT=") + _request_map["Content-Length"][0] +  '\n';
+	if (_request_map.count("Content-Length"))
+		str = std::string("CONTENT_LENGHT=") + _request_map["Content-Length"][0] +  '\n';
+	else
+		str = std::string("CONTENT_LENGHT=\n");
 	meta_var.push_back(str.c_str());
 	// _cgi_meta_var += "CONTENT_LENGHT=" + '\n';
 	/*
 	 * SRC = Request (we will get this info from the request headers)
 	 * The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
 	 */
-	str = std::string("CONTENT_TYPE=") + _request_map["Content-Type"][0] + '\n';
+	if (_request_map.count("Content-Type"))
+		str = std::string("CONTENT_TYPE=") + _request_map["Content-Type"][0] +  '\n';
+	else
+		str = std::string("CONTENT_TYPE=\n");
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Static (hard code it)
@@ -638,6 +667,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * URL http://www.myhost.com/mypath/myscript.cgi/path/info/here will set PATH_INFO to "/path/info/here".
 	 * Commonly used for path-like data, but you can use it for anything.
 	 */
+	// std::cout << "script name: " <<  _queries_script_name.second << std::endl;
 	str = std::string("PATH_INFO=") + _queries_script_name.second + '\n';
 	meta_var.push_back(str.c_str());
 	/*
@@ -702,7 +732,9 @@ std::string	*get_res(int fd)
 void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 {
 	time_t 				rawtime;
-
+	std::stringstream	ss;
+	
+	ss << tmp_res->length() - (tmp_res->find("\r\n\r\n") + 4);
 	time (&rawtime);
 	if(is_red)
 		_response += "HTTP/1.1 302 Found\r\n";
@@ -711,8 +743,8 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\nServer: webserver\r\n";
-	_response += "Transfer-Encoding: chunked\r\n";
-	_response += "Connection: close\r\n\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: close\r\n";
 	_response += *tmp_res;
 }
 
@@ -724,13 +756,11 @@ void Response::_cgi(void)
 	size_t 		index;
 	int			status;
 
-	if (_request_map["SL"][0] == "GET")
+	if (_fd == -1)
 	{
 		_file_path = _root + '/' + _uri;
 		if (!_file_is_good(true))
 			return;
-		if (_fd > 2)
-			close(_fd);
 		_fd = open(_file_path.c_str(), O_RDONLY);
 	} 
 	pipe(pfd);
@@ -790,14 +820,16 @@ void Response::_cgi(void)
 void Response::_fill_auto_index_response(std::string* tmp_res)
 {
 	time_t 				rawtime;
+	std::stringstream ss;
 
+	ss << tmp_res->length();
 	time (&rawtime);
 	_response += "HTTP/1.1 200 OK\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
-	_response += "Transfer-Encoding: chunked\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
 	_response += "Connection: close\r\n\r\n";
 	_response += *tmp_res;
 }
@@ -856,10 +888,13 @@ void Response::_process_post_delete(std::string const& req_method)
 	if (loc_path[0] == '/')
 		loc_path.erase(loc_path.begin());
 	// first lets check if the loc path is valid
-	_file_path = _root + '/' + loc_path;
-	if (!_file_is_good(true))
-		return;
-	_file_path.clear();
+	if (_server_configs._cgi.empty())
+	{
+		_file_path = _root + '/' + loc_path;
+		if (!_file_is_good(true))
+			return;
+		_file_path.clear();
+	}
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())

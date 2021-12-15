@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/15 15:00:12 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/15 18:39:09 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,13 +108,10 @@ int Server::is_server(int fd, bool *is_client) const
 
 void Server::emergencyFree() // !CALL THE POLICE.
 {
-
-	int fd = server_cli.back()->get_fd();
+	int fd = server_cli.back()->get_fd(); // get Fd
+	(req_res.getMap())[fd].resetRequest(); // clear request content
+	// remove fd from read/write sets
 	req_res.remove_fd(fd, true, true, true);
-	(req_res.getMap())[fd].resetRequest();
-	// TO-DO send 502 response
-	std::string res = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
-	req_res.send_all(fd, res);
 	req_res.remove_fd(fd, false, true, true);
 	socketFree(fd);
 	req_res.close_connection(fd);
@@ -135,7 +132,7 @@ bool Server::readFromFd(int fd)
 		catch (std::bad_alloc &e)
 		{
 			emergencyFree();
-			return true;
+			return false;
 		}
 		catch (const std::exception &e)
 		{
@@ -164,10 +161,7 @@ bool Server::readFromFd(int fd)
 			// std::cerr << "-------------------------------------------------------------" << std::endl;
 			// std::cerr << chosen_config << std::endl;
 			// std::cerr << "-------------------------------------------------------------" << std::endl;
-
-
             // std::cout << chosen_config << std::endl;
-
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
 			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
@@ -192,6 +186,7 @@ bool Server::readFromFd(int fd)
 				(void)e;
 				res.internal_error();
 			}
+			// std::cout << res.get_response() << std::endl;
 			res._size = res.get_response().length();
             req_res.add_response(fd, res);
 			/* mamoussa done! */
@@ -249,7 +244,7 @@ void Server::listen()
 	while (1) // Server Loop
 	{
 		req_res.update_set();
-		if (!req_res.select_fd())
+		if (!req_res.select_fd()) // poll failure
 			continue;
 		for (size_t i = 0; i < server_cli.size(); ++i)
 		{
