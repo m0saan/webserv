@@ -70,6 +70,7 @@ void Request::parseRequest()
 	bool is_form_data(false);
 	std::string http_method;
 	std::string boundary;
+	int			total_read = 0;
 
 	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
 
@@ -102,10 +103,14 @@ void Request::parseRequest()
 		if (!is_body && !is_form_data)
 			_getHeader(line, http_method, boundary);
 		else
-			_getBody(line, is_chunked);
+			_getBody(line, is_chunked, total_read);
 	}
 	_body_stream.close();
-	_fd = open("/tmp/body", O_RDONLY);
+
+	_checkForBadRequest();
+
+	_fd = !total_read ? -1 : open("/tmp/body", O_RDONLY);
+	
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
 	_body_stream.close();
@@ -124,7 +129,7 @@ bool Request::_isBodyStart(const std::string &line, bool is_body) const { return
 
 bool Request::_isBodyEnd(const std::string &line) const { return line == "}"; }
 
-void Request::_getBody(std::string &line, bool is_chunked)
+void Request::_getBody(std::string &line, bool is_chunked, int &total_read)
 {
 	std::vector<std::string> tokens = Utility::split(line);
 	if (tokens[0] == "Content-Disposition:" || tokens[0] == "Content-Disposition:" || "Content-Type:")
@@ -138,6 +143,7 @@ void Request::_getBody(std::string &line, bool is_chunked)
 	if (is_chunked)
 		if (i % 2 != 0)
 			return;
+	total_read += line.length();
 	_body_stream << line << std::endl;
 }
 
@@ -277,4 +283,14 @@ std::pair<std::string, std::string> &Request::getQueriesScriptName()
 const int &Request::getBodyFD() const
 {
 	return _fd;
+}
+
+bool Request::isBadRequest() {
+	return _bad_request_found;
+}
+
+void	Request::_checkForBadRequest() {
+	// case1: The host is not provided.
+	if (!_RequestMap.count("Host"))
+		_bad_request_found = true;
 }

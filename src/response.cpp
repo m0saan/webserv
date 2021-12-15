@@ -744,7 +744,7 @@ void Response::_cgi(void)
 	size_t 		index;
 	int			status;
 
-	if (_request_map["SL"][0] == "GET")
+	if (!(_fd > 2))
 	{
 		_file_path = _root + '/' + _uri;
 		if (!_file_is_good(true))

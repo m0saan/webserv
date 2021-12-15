@@ -20,16 +20,17 @@ class Request {
 
 private:
 
-    std::map<std::string, std::vector<std::string> > _RequestMap;
-    std::stringstream		_req;
-    long long 		_size;
-    long long 		_content_length;
-    long long		_header_length;
-    long long		_max_body_size;
-    transfer_type	_transfer_encoding;
-    std::pair<std::string, std::string> _url_queries_scriptName;
-    std::fstream            _body_stream;
-    int                     _fd;
+    std::map<std::string, std::vector<std::string> >    _RequestMap;
+    std::stringstream	                        	    _req;
+    long long 		                                    _size;
+    long long 		                                    _content_length;
+    long long		                                    _header_length;
+    long long		                                    _max_body_size;
+    transfer_type	                                    _transfer_encoding;
+    std::pair<std::string, std::string>                 _url_queries_scriptName;
+    std::fstream                                        _body_stream;
+    int                                                 _fd;
+    bool                                                _bad_request_found;
 public:
 
     bool            _is_alive_connection;
@@ -45,6 +46,8 @@ public:
     std::vector<std::string> const &getValue(std::string const & key);
 
     const int &getBodyFD() const;
+
+    bool isBadRequest();
 
     void parseRequest();
 
@@ -68,13 +71,15 @@ private:
 
     bool _isBody(std::string const &line, bool const& is_body) const;
 
-    void _getBody(std::string &line, bool is_chunked);
+    void _getBody(std::string &line, bool is_chunked, int&);
 
     bool _isBodyEnd(const std::string &line) const;
 
     bool _isBodyStart(const std::string &line, bool is_body) const;
 
     bool _isChunckStart(const std::string& line) const;
+
+    void _checkForBadRequest();
 
 };
 
