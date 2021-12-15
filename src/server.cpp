@@ -14,17 +14,49 @@
 #include "../includes/response.hpp"
 #include "../includes/utility.hpp"
 
+std::ostream& operator<<(std::ostream& os, std::vector<std::string>const &vec) {
+	os << "[ ";
+	for (size_t i = 0; i < vec.size(); i++)
+		os << vec[i] << " ";
+	os << "]";	
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, std::set<std::string>const &s) {
+	os << "[ ";
+	std::set<std::string>::iterator start = s.begin();
+	for (; start != s.end(); ++start)
+		os << *start << " ";
+	os << "]";	
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, std::map<std::string, std::string> &m) {
+	os << "[ ";
+	std::map<std::string, std::string>::iterator start = m.begin();
+	for (; start != m.end(); ++start)
+		os << '(' << start->first << ", " << start->second  << ')' << " ";
+	os << "]";	
+	return os;
+}
+
 std::ostream &operator<<(std::ostream &os, ServerConfig const &conf) {
+    std::cout << "port: " << conf._port  << std::endl;
+    std::cout << "host: " << conf._host  << std::endl;
+    std::cout << "server name: " << conf._server_name << std::endl;
+	// std::cout << "error_page: " << conf._error_page << std::endl;
+	std::cout << "auto index: " << conf._index << std::endl;
+	std::cout << "allowed methods: " << conf._allowed_method << std::endl;
     std::cout << "cgi path: " << conf._cgi << std::endl;
     std::cout << "redirect: " << conf._redirect.first << ' ' << conf._redirect.second << std::endl;
     std::cout << "auto index: " << conf._auto_index  << std::endl;
-    std::cout << " location path: " << conf._loc_path  << std::endl;
+	std::cout << "upload store: " << conf._upload_store << std::endl;
+    std::cout << "location path: " << conf._loc_path  << std::endl;
     // std::cout << " location path" << conf._allowed_method  << std::endl;
     std::cout << " root: " << conf._root  << std::endl;
-    std::cout << " port: " << conf._port  << std::endl;
-    std::cout << " host: " << conf._host  << std::endl;
     return os;
 }
+
 
 void Server::initConfig(ServerConfig &conf, size_t size)
 {
@@ -125,11 +157,16 @@ bool Server::readFromFd(int fd)
 			host = host == "localhost" ? "127.0.0.1" : host;
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
+			std::cerr << "-------------------------------------------------------------" << std::endl;
+			std::cerr << chosen_config << std::endl;
+			std::cerr << "-------------------------------------------------------------" << std::endl;
+
+
             // std::cout << chosen_config << std::endl;
 
             /* mosan is done right here!! */
 			// ToDo: check if the request is bad!!!!!!
-			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), request.getBodyStream());
+			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), request.getBodyFD());
 			try
 			{
 				if (!chosen_config._redirect.first.empty())

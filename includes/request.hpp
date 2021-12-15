@@ -30,6 +30,7 @@ private:
     bool            _is_alive_connection;
     std::pair<std::string, std::string> _url_queries_scriptName;
     std::fstream            _body_stream;
+    int                     _fd;
 public:
 
 
@@ -44,7 +45,7 @@ public:
 
     std::vector<std::string> const &getValue(std::string const & key);
 
-    const std::fstream &getBodyStream() const;
+    const int &getBodyFD() const;
 
     void parseRequest();
 

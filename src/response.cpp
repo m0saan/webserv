@@ -17,13 +17,14 @@ std::string	*error_page(std::string const& message)
 	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
 	return error_body;
 }
-Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map, std::pair<std::string, std::string>& queries_script_name, std::fstream const & body_stream)
+Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map,
+				std::pair<std::string, std::string>& queries_script_name, int fd)
 :
 _error_pages(config._error_page),
 _server_configs(config),
 _request_map(request_map),
 _queries_script_name(queries_script_name),
-_body_stream(body_stream)
+_fd(fd)
 {
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
@@ -48,7 +49,7 @@ _error_pages(x._error_pages),
 _server_configs(x._server_configs),
 _request_map(x._request_map),
 _queries_script_name(x._queries_script_name),
-_body_stream(x._body_stream)
+_fd(x._fd)
 { *this = x;	}
 
 Response::~Response(void) {
