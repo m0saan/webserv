@@ -8,7 +8,7 @@
 
 Request::~Request(){}
 
-Request::Request(const Request &x) : _is_alive_connection(true)
+Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection)
 {
 	_size = x._size;
 	_req.clear();

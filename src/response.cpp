@@ -23,9 +23,10 @@ _error_pages(config._error_page),
 _server_configs(config),
 _request_map(request_map),
 _queries_script_name(queries_script_name),
-_body_stream(body_stream)
+_body_stream(body_stream),
+_bytes_sent(0),
+_size(0)
 {
-	std::cout << "Another object created " << std::endl;
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
@@ -49,13 +50,15 @@ _error_pages(x._error_pages),
 _server_configs(x._server_configs),
 _request_map(x._request_map),
 _queries_script_name(x._queries_script_name),
-_body_stream(x._body_stream)
+_body_stream(x._body_stream),
+_bytes_sent(x._bytes_sent),
+_size(x._size)
 { *this = x;	}
 
 Response::~Response(void) {
-	 _file.close();
-	 delete _status_codes;
-	 }
+	_file.close();
+	delete _status_codes;
+	}
 Response& Response::operator=(Response const& x)
 {
 	_response = x._response;
@@ -72,7 +75,7 @@ void Response::_fill_status_codes(void)
 	/*----------------- 1xx status codes -------------*/
 	// 	< HTTP/1.1 100 
 	// < Server: nginx/1.21.4
-	// < Date: Tue, 07 Dec 2021 10:55:30 GMT
+	// < Date: Tue, 07 Dec 2021 10:55:30 GMT_
 	// < Content-Type: application/octet-stream
 	// < Content-Length: 17
 	// < Connection: keep-alive
@@ -1046,17 +1049,19 @@ void Response::_fill_response(std::string const& tmp_path, size_t status_code, s
 
 bool Response::_file_is_good(bool fill_resp)
 {
+	int fd;
+
 	if (_file_path.empty())
 		_file_path = _root + '/' + _uri;
-	if (open(_file_path.c_str(), O_RDONLY) < 0)
+	if ((fd = open(_file_path.c_str(), O_RDONLY)) < 0)
 	{
-		std::cout << "Errno : " << errno << std::endl;
 		if ((errno == 2 || errno == 13) && fill_resp)
 			_fill_response(".html", 404, "Not Found");
 		else if (fill_resp)
 			_fill_response(".html", 403, "Forbidden");
 		return false;
 	}
+	close(fd);
 	return true;
 }
 std::string const& 	Response::get_response(void) const	{ return _response; }
