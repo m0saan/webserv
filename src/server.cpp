@@ -151,6 +151,7 @@ bool Server::readFromFd(int fd)
 				(void)e;
 				res.internal_error();
 			}
+			// std::cout << res.get_response() << std::endl;
 			res._size = res.get_response().length();
             req_res.add_response(fd, res);
 			/* mamoussa done! */
