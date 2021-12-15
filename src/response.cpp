@@ -714,7 +714,6 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 
 void Response::_cgi(void)
 {
-	int 		fd;
 	int			pfd[2];
 	std::string	*tmp_res;
 	pid_t		pid;
@@ -726,7 +725,9 @@ void Response::_cgi(void)
 		_file_path = _root + '/' + _uri;
 		if (!_file_is_good(true))
 			return;
-		fd = open(_file_path.c_str(), O_RDONLY);
+		if (_fd > 2)
+			close(_fd);
+		_fd = open(_file_path.c_str(), O_RDONLY);
 	} 
 	pipe(pfd);
 	if(!(pid = fork()))
@@ -739,7 +740,7 @@ void Response::_cgi(void)
 		args.push_back(NULL);
 		path = _server_configs._cgi;
 		close(pfd[0]);
-		dup2(fd, 0);
+		dup2(_fd, 0);
 		dup2(pfd[1], 1);
 		if (execve(path.c_str(), const_cast<char *const*>(&(*args.begin()))
 		, const_cast<char *const*>(&(*meta_var.begin()))) < 0)
@@ -753,7 +754,7 @@ void Response::_cgi(void)
 	}
 	else if (pid < 0)
 	{
-		close(fd);
+		close(_fd);
 		close(pfd[0]);
 		close(pfd[1]);
 		throw std::exception();
@@ -764,7 +765,7 @@ void Response::_cgi(void)
 	if (WEXITSTATUS(status) == 1)
 	{
 		close(pfd[0]);
-		close(fd);
+		close(_fd);
 		_fill_response(".html", 502, "Bad Gateway");
 		return;
 	}
@@ -777,7 +778,7 @@ void Response::_cgi(void)
 	else
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
-	close(fd);
+	close(_fd);
 	delete tmp_res;
 }
 /*---------------------------------------------------------------------------------------------------*/
