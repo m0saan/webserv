@@ -90,7 +90,6 @@ bool Request::_isBodyEnd(const std::string &line) const { return line == "}"; }
 
 void Request::_getBody(std::string &line, bool is_chunked)
 {
-    std::cout << "in get body." << std::endl;
 	line.push_back('\n');
 	static int i = 0;
 	if (is_chunked)
