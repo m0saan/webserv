@@ -636,14 +636,20 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * The server MUST set this meta-variable if and only if the request is accompanied by a message body entity.
 	 *	The CONTENT_LENGTH value must reflect the length of the message-body
 	 */
-	str = std::string("CONTENT_LENGHT=") + _request_map["Content-Length"][0] +  '\n';
+	if (_request_map.count("Content-Length"))
+		str = std::string("CONTENT_LENGHT=") + _request_map["Content-Length"][0] +  '\n';
+	else
+		str = std::string("CONTENT_LENGHT=\n");
 	meta_var.push_back(str.c_str());
 	// _cgi_meta_var += "CONTENT_LENGHT=" + '\n';
 	/*
 	 * SRC = Request (we will get this info from the request headers)
 	 * The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
 	 */
-	str = std::string("CONTENT_TYPE=") + _request_map["Content-Type"][0] + '\n';
+	if (_request_map.count("Content-Type"))
+		str = std::string("CONTENT_TYPE=") + _request_map["Content-Type"][0] +  '\n';
+	else
+		str = std::string("CONTENT_TYPE=\n");
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Static (hard code it)
@@ -658,6 +664,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * URL http://www.myhost.com/mypath/myscript.cgi/path/info/here will set PATH_INFO to "/path/info/here".
 	 * Commonly used for path-like data, but you can use it for anything.
 	 */
+	// std::cout << "script name: " <<  _queries_script_name.second << std::endl;
 	str = std::string("PATH_INFO=") + _queries_script_name.second + '\n';
 	meta_var.push_back(str.c_str());
 	/*
@@ -732,7 +739,7 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 	_response.erase(--_response.end());
 	_response += "\r\nServer: webserver\r\n";
 	_response += "Transfer-Encoding: chunked\r\n";
-	_response += "Connection: close\r\n\r\n";
+	_response += "Connection: close\r\n";
 	_response += *tmp_res;
 }
 
@@ -744,13 +751,11 @@ void Response::_cgi(void)
 	size_t 		index;
 	int			status;
 
-	if (!(_fd > 2))
+	if (_fd == -1)
 	{
 		_file_path = _root + '/' + _uri;
 		if (!_file_is_good(true))
 			return;
-		if (_fd > 2)
-			close(_fd);
 		_fd = open(_file_path.c_str(), O_RDONLY);
 	} 
 	pipe(pfd);
@@ -803,6 +808,7 @@ void Response::_cgi(void)
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
 	close(_fd);
+	std::cout << _response << std::endl;
 	delete tmp_res;
 }
 /*---------------------------------------------------------------------------------------------------*/
