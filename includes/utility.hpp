@@ -124,10 +124,6 @@ public:
                 loc = loc._loc_path.length() < possible_blocks[0]._location[j]._loc_path.length()
                           ? possible_blocks[0]._location[j]
                           : loc;
-            std::cout << "----------------------------------------------------------" << std::endl;
-            std::cout << "loc_path: " << possible_blocks[0]._location[j]._loc_path << std::endl;
-            std::cout << "loc: " <<  loc._loc_path << std::endl;
-            std::cout << "----------------------------------------------------------" << std::endl;
 		}
 
         /*
