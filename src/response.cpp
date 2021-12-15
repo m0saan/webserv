@@ -25,7 +25,6 @@ _request_map(request_map),
 _queries_script_name(queries_script_name),
 _body_stream(body_stream)
 {
-	std::cout << "Another object created " << std::endl;
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
@@ -714,13 +713,20 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 
 void Response::_cgi(void)
 {
-	int fd = open("user_login.php", O_RDONLY);
+	int 		fd;
 	int			pfd[2];
 	std::string	*tmp_res;
 	pid_t		pid;
 	size_t 		index;
 	int			status;
 
+	if (_request_map["SL"][0] == "GET")
+	{
+		_file_path = _root + '/' + _uri;
+		if (!_file_is_good(true))
+			return;
+		fd = open(_file_path.c_str(), O_RDONLY);
+	} 
 	pipe(pfd);
 	if(!(pid = fork()))
 	{
