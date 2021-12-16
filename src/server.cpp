@@ -184,8 +184,6 @@ bool Server::readFromFd(int fd)
 					res.Post_request();
 				else if (_request_map["SL"][0] == "DELETE")
 					res.Delete_request();
-				else
-					res.Forbidden_method();
 			}
 
 			catch(std::bad_alloc const& e)
