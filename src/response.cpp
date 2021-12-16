@@ -59,6 +59,8 @@ _bytes_sent(0)
 
 Response::~Response(void) {
 	_file.close();
+	if (_fd != -1)
+		close(_fd);
 	delete _status_codes;
 	}
 Response& Response::operator=(Response const& x)
@@ -573,11 +575,26 @@ void Response::Post_request(void)
 	if (_server_configs._loc_path == "/upload")
 	{
 		std::string file_name;
+		time_t rawtime;
+
 		file_name = Utility::split(_request_map["Content-Disposition"][2], '=')[1];
 		file_name.erase(file_name.begin());
 		file_name.erase(--file_name.end());
-		std::cout << "file_name: " << file_name << std::endl;
-		std::cout << "where to store it: " << _server_configs._upload_store << std::endl;
+		_file_path = _server_configs._upload_store;
+		if (!_file_is_good(true))
+			return;
+		_file_path += '/' + file_name;
+		_file_path = std::string("cp /tmp/body ") + _file_path;
+		system(_file_path.c_str());
+		time (&rawtime);
+		_response += "HTTP/1.1 200 OK\r\n";
+		_response += "Date: " + std::string(ctime(&rawtime));
+		_response.erase(--_response.end());
+		_response += "\r\n";
+		_response += "Server: webserver\r\n";
+		_response += "Content-Length: 0\r\n";
+		_response += "Connection: close\r\n\r\n";
+		std::cout << _response;
 		return;
 	}
 	_process_post_delete("POST");
@@ -589,12 +606,13 @@ void Response::Get_request(void)
 	std::string 				loc_path = _server_configs._loc_path;
 
 	// lets first check for alowed methods in this location
-	if (loc_path[0] == '/')
-		loc_path.erase(loc_path.begin());
+	if (loc_path[0] != '/')
+		loc_path = '/' + loc_path;
 	// first lets check if the loc path is valid
 	if (_server_configs._cgi.empty())
 	{
-		_file_path = _root + '/' + loc_path;
+		_file_path = _root + loc_path;
+		std::cout << "loc_path: " << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_file_path.clear();
@@ -616,7 +634,7 @@ void Response::Get_request(void)
 	// first we have to check if the location is a dir or just a file
     if (loc_path == "/")
 		_process_as_dir();
-	else if (_is_dir(_root + '/' + loc_path))
+	else if (_is_dir(_root + loc_path))
 		_process_as_dir();
 	else
 		_process_as_file();
@@ -879,12 +897,12 @@ void Response::_process_post_delete(std::string const& req_method)
 	bool								found(false);
 
 	// lets first check for alowed methods in this location
-	if (loc_path[0] == '/')
-		loc_path.erase(loc_path.begin());
+	if (loc_path[0] != '/')
+		loc_path = '/' + loc_path;
 	// first lets check if the loc path is valid
 	if (_server_configs._cgi.empty())
 	{
-		_file_path = _root + '/' + loc_path;
+		_file_path = _root + loc_path;
 		if (!_file_is_good(true))
 			return;
 		_file_path.clear();

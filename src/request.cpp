@@ -72,8 +72,8 @@ void Request::parseRequest()
 	std::string boundary;
 	int total_read = 0;
 
+	system("rm -f /tmp/body"); // remove the file if it's existe
 	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
-
 	// std::cout << _req.rdbuf() << std::endl;
 	// exit(1);
 
@@ -143,7 +143,7 @@ void Request::_getBody(std::string &line, bool is_chunked, int &total_read)
 		if (i % 2 != 0)
 			return;
 	total_read += line.length();
-	_body_stream << line << std::endl;
+	_body_stream << line;
 }
 
 bool Request::_isBody(std::string const &line, bool const &is_body) const { return line == "{" && is_body; }
