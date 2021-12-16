@@ -33,7 +33,9 @@ private:
     int                                                 _fd;
     bool                                                _bad_request_found;
     bool                                                _is_chunked_completed;
+    bool                                                _is_forbiden_method;
     std::fstream                                        _req_file;
+    std::vector<std::string>                            _forbidden_http_methods;
 public:
 
     std::string                                         _req_filename;
@@ -50,6 +52,8 @@ public:
     std::vector<std::string> const &getValue(std::string const & key);
 
     const int &getBodyFD() const;
+
+    const bool& getIsFobiddenMethod() const;
 
     bool isBadRequest();
 

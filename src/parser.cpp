@@ -65,7 +65,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
             std::vector<std::string> tokens = Utility::split(line);
             if (tokens.size())
             {
-                 directive = getDirective(tokens[0]);
+                directive = getDirective(tokens[0]);
                 if (tokens[0] == "server")
                 {
                     if (tokens.size() != 2 || tokens[1] != "{")
@@ -73,7 +73,8 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                     directive = -1;
                     ++N_curly_braces_open;
                 }
-            } else
+            }
+            else
                 continue;
 
             switch (directive)
@@ -85,7 +86,6 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 j = -1;
                 break;
 
-
             case Directives::PORT:
                 if (tokens.size() != 2)
                     exitError("error near directive: <" + tokens[0] + ">");
@@ -95,18 +95,16 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                     fillGlobalDirectives(globalConfig[i]._location[j]._port, tokens[1], tokens[0]);
                 break;
 
-
             case Directives::HOST:
                 if (tokens.size() != 2)
                     exitError("error near directive: <" + tokens[0] + ">");
                 if (tokens[1] == "localhost")
-					tokens[1] = "127.0.0.1";
-				if (!isLocation)
+                    tokens[1] = "127.0.0.1";
+                if (!isLocation)
                     fillGlobalDirectives(globalConfig[i]._host, tokens[1], tokens[0]);
                 else
                     fillGlobalDirectives(globalConfig[i]._location[j]._host, tokens[1], tokens[0]);
                 break;
-
 
             case Directives::SERVER_NAME:
                 if (tokens.size() != 2)
@@ -117,9 +115,8 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                     fillGlobalDirectives(globalConfig[i]._location[j]._server_name, tokens[1], tokens[0]);
                 break;
 
-
             case Directives::ERROR_PAGE:
-                if (tokens.size() <= 2 || tokens[1] != "<" || tokens[tokens.size() - 1] != ">")
+                if (tokens.size() <= 2 || tokens[1] != "<" || tokens[tokens.size() - 1] != ">" || !globalConfig[i]._error_page.empty())
                     exitError("error near directive: <" + tokens[0] + ">");
                 for (int k = 2; k < tokens.size(); ++k)
                 {
@@ -135,7 +132,6 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 }
                 break;
 
-
             case Directives::MAX_FILE_SIZE:
                 if (tokens.size() != 2)
                     exitError("error near directive: <" + tokens[0] + ">");
@@ -144,7 +140,6 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 else
                     fillGlobalDirectives(globalConfig[i]._location[j]._max_file_size, tokens[1], tokens[0]);
                 break;
-
 
             case Directives::TIME_OUT:
                 if (tokens.size() != 2)
@@ -155,57 +150,78 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                     fillGlobalDirectives(globalConfig[i]._location[j]._time_out, tokens[1], tokens[0]);
                 break;
 
-
             case Directives::ROOT:
                 if (tokens.size() != 2)
                     exitError("error near directive: <" + tokens[0] + ">");
                 if (!isLocation)
+                {
+                    if (!globalConfig[i]._root.empty())
+                        exitError("error near directive: <" + tokens[0] + ">");
                     fillGlobalDirectives(globalConfig[i]._root, tokens[1], tokens[0]);
+                }
                 else
+                {
+                    if (!globalConfig[i]._location[j]._root.empty())
+                        exitError("error near directive: <" + tokens[0] + ">");
                     fillGlobalDirectives(globalConfig[i]._location[j]._root, tokens[1], tokens[0]);
+                }
                 break;
-
 
             case Directives::ALLOWED_METHODS:
                 if (!isLocation)
+                {
+
+                    if (!globalConfig[i]._allowed_method.empty())
+                        exitError("error near directive: <" + tokens[0] + ">");
+
                     for (int k = 1; k < tokens.size(); ++k)
                         globalConfig[i]._allowed_method.insert(tokens[k]);
+                }
                 else
+                {
+
+                    if (!globalConfig[i]._location[j]._allowed_method.empty())
+                        exitError("error near directive: <" + tokens[0] + ">");
                     for (int k = 1; k < tokens.size(); ++k)
                         globalConfig[i]._location[j]._allowed_method.insert(tokens[k]);
+                }
                 break;
 
-
             case Directives::REDIRECT: // Handle the redirection directive.
-                if (tokens.size() != 3)
+                if (tokens.size() != 3 || !globalConfig[i]._location[j]._redirect.first.empty())
                     exitError("error near directive: <redirect>");
                 globalConfig[i]._location[j]._redirect.first = tokens[1];
                 globalConfig[i]._location[j]._redirect.second = tokens[2];
                 break;
 
-
             case Directives::UPLOAD: // Handle the redirection directive.
-                if (tokens.size() != 2)
+                if (tokens.size() != 2 || !globalConfig[i]._location[j]._upload_store.empty())
                     exitError("error near directive: <upload>");
                 globalConfig[i]._location[j]._upload_store = tokens[1];
                 break;
 
-
             case Directives::CGI: // Handle the cgi directive.
-                if (tokens.size() != 2)
+                if (tokens.size() != 2 || !globalConfig[i]._location[j]._cgi.empty())
                     exitError("error near directive: <cgi>");
                 globalConfig[i]._location[j]._cgi = tokens[1];
                 break;
 
-
             case Directives::INDEX:
+
                 if (!isLocation)
+                {
                     std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]._index));
+                    if (!globalConfig[i]._index.empty())
+                        exitError("error near directive: <" + tokens[0] + ">");
+                }
                 else
+                {
+                    if (!globalConfig[i]._location[j]._index.empty())
+                        exitError("error near directive: <" + tokens[0] + ">");
                     std::copy(tokens.begin() + 1, tokens.end(),
                               std::back_inserter(globalConfig[i]._location[j]._index));
+                }
                 break;
-
 
             case Directives::AUTO_INDEX:
                 if (tokens.size() != 2)
@@ -215,7 +231,6 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 else
                     fillGlobalDirectives(globalConfig[i]._location[j]._auto_index, tokens[1], tokens[0]);
                 break;
-
 
             case Directives::LOCATION:
                 if (tokens.size() != 3 || tokens[2] != "[")
@@ -227,17 +242,14 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 isLocation = true;
                 break;
 
-
             case Directives::LOCATION_END:
                 isLocation = false;
                 ++N_square_bracket_close;
                 break;
 
-
             case Directives::SERVER_END:
                 ++N_curly_braces_close;
                 break;
-
 
             case INVALID_DIRECTIVE:
                 exitError("Invalid Directive " + tokens[0]);

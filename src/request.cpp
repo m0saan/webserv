@@ -6,7 +6,14 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::~Request() {}
+Request::~Request()
+{
+	_forbidden_http_methods.push_back("PATCH");
+	_forbidden_http_methods.push_back("PUT");
+	_forbidden_http_methods.push_back("OPTIONS");
+	_forbidden_http_methods.push_back("TRACE");
+	_forbidden_http_methods.push_back("CONNECT");
+}
 
 Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection)
 {
@@ -18,6 +25,7 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_transfer_encoding = x._transfer_encoding;
 	_content_type = x._content_type;
 	_is_chunked_completed = x._is_chunked_completed;
+	_forbidden_http_methods = x._forbidden_http_methods;
 }
 
 // Request &Request::operator=(const Request &x) {
@@ -56,9 +64,16 @@ void Request::parseRequest()
 	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
 	std::fstream ifs;
 	ifs.open(_req_filename, std::ios::in);
-	std::cout << "is good: "  << ifs.good() << std::endl;
 	while (std::getline(ifs, line))
 	{
+		if (_is_forbiden_method) {
+			ifs.close();
+			_body_stream.close();
+			system("rm -f /tmp/body"); // remove the file if it's existe
+			system((std::string("rm -rf ") + _req_filename).c_str()); // remove the file if it's existe
+			return;
+		}
+
 		if (!line.empty())
 			line.pop_back();
 		if (line.empty() || _isBodyStart(line, is_body))
@@ -143,7 +158,7 @@ bool Request::is_completed() const
 {
 	if (_transfer_encoding == COMPLETED)
 	{
-		if ((_content_length == -1 || _content_length == 0)) // completed request without body 
+		if ((_content_length == -1 || _content_length == 0)) // completed request without body
 			return _size == _header_length + 4;
 		return (_size == _content_length + _header_length);
 	}
@@ -165,7 +180,7 @@ void Request::append(char *content, long long size, int fd)
 	std::string tmp(content, size);
 	_req_filename = generateFilename(fd);
 	_req_file.open(_req_filename, std::fstream::in | std::fstream::out | std::fstream::app);
-	
+
 	if (_content_length == -1) // 1st time reading req
 		try
 		{
@@ -191,8 +206,8 @@ void Request::append(char *content, long long size, int fd)
 	// std::cout << "file Size " << _req_file.tellg() << std::endl;
 	// file.close();
 	_req_file.close();
-	if ((_transfer_encoding == CHUNKED) && 
-	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
+	if ((_transfer_encoding == CHUNKED) &&
+		std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
 	{
 		// std::cout << "Chunked Req is completed " << std::endl;
 		this->_is_chunked_completed = true;
@@ -220,6 +235,13 @@ std::pair<std::string, std::string> _parseStartLine(std::string &url)
 void Request::_getHeader(const std::string &line, std::string &http_method, std::string &boundary)
 {
 	std::vector<std::string> tokens = Utility::split(line, ' ');
+
+	if (_RequestMap.count("SL") == 0) {
+		if (std::find(_forbidden_http_methods.begin(), _forbidden_http_methods.end(), 
+			tokens[0]) != _forbidden_http_methods.end())
+			_is_forbiden_method = true;
+	}
+
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
 	if (http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload" && boundary.empty())
 		boundary = Utility::split(tokens[2], '=')[1];
@@ -251,7 +273,7 @@ size_t Request::getHeaderLength(const std::string &str)
 }
 
 void Request::setContentType(const std::string &str)
-{	
+{
 	if (str.find("Content-Type: ") != std::string::npos)
 		this->_content_type = true;
 	else
@@ -275,8 +297,8 @@ long long Request::getContentLength(const std::string &str)
 	}
 	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
-	else // Content-Length not found && !chunked 
-		_transfer_encoding =  COMPLETED; 
+	else // Content-Length not found && !chunked
+		_transfer_encoding = COMPLETED;
 	// 	throw std::exception();
 	// std::cout << "transfer_encodin " << _transfer_encoding << std::endl;
 	return length;
@@ -304,10 +326,14 @@ void Request::_checkForBadRequest()
 		_bad_request_found = true;
 }
 
-std::string	Request::generateFilename(int fd)
+std::string Request::generateFilename(int fd)
 {
 	time_t seconds;
 
-  	seconds = time (NULL);
-	return "/tmp/req_" + std::to_string(fd) + "_" + std::to_string(seconds) ;
+	seconds = time(NULL);
+	return "/tmp/req_" + std::to_string(fd) + "_" + std::to_string(seconds);
+}
+
+const bool& Request::getIsFobiddenMethod() const {
+	return _is_forbiden_method;
 }
