@@ -143,6 +143,7 @@ bool Request::is_completed() const
 {
 	if (_transfer_encoding == COMPLETED)
 	{
+		// std::cout << "Content length " << _content_length << " header length " << _header_length << " size " << _size << std::endl;
 		if ((_content_length == -1 || _content_length == 0)) // completed request without body 
 			return _size == _header_length + 4;
 		return (_size == _content_length + _header_length);
@@ -150,11 +151,12 @@ bool Request::is_completed() const
 	else if (_transfer_encoding == CHUNKED)
 	{
 		// std::cout << "Chunked completed : " <<_is_chunked_completed << std::endl;
-		if (_req.str().find("0\r\n\r\n") != std::string::npos)
-			return true;
+		return _is_chunked_completed;
+		// if (_req.str().find("0\r\n\r\n") != std::string::npos)
+		// 	return true;
 		// else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
 		// 	return true;
-		return false;
+		// return false;
 	}
 	return true;
 }
@@ -180,9 +182,10 @@ void Request::append(char *content, long long size)
 	else
 		std::cout << "Cannot open file! " << std::endl;
 	std::ifstream file("requests/req.txt", std::ios::binary | std::ios::ate);
-	_size = _req.str().length();
-	std::cout << "req Size " << _size << std::endl;
-	std::cout << "file Size " << _req_file.tellg() << std::endl;
+	// _size = _req.str().length();
+	_size = _req_file.tellg();
+	// std::cout << "req Size " << _size << std::endl;
+	// std::cout << "file Size " << _req_file.tellg() << std::endl;
 	file.close();
 	if ((_transfer_encoding == CHUNKED) && 
 	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
