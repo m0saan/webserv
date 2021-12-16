@@ -43,5 +43,6 @@ request
 webserv
 .vscode/
 config_files/
-a.out
-a.out.dSYM/
+config_files/
+request
+response.html
