@@ -158,12 +158,8 @@ bool Server::readFromFd(int fd)
 			host = host == "localhost" ? "127.0.0.1" : host;
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
-			// std::cerr << "-------------------------------------------------------------" << std::endl;
-			// std::cerr << chosen_config << std::endl;
-			// std::cerr << "-------------------------------------------------------------" << std::endl;
-            // std::cout << chosen_config << std::endl;
             /* mosan is done right here!! */
-			// ToDo: check if the request is bad!!!!!!
+
 			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
 			try
 			{
@@ -176,6 +172,7 @@ bool Server::readFromFd(int fd)
 				else
 					res.Delete_request();
 			}
+			
 			catch(std::bad_alloc const& e)
 			{
 				(void)e;
