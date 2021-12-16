@@ -50,6 +50,7 @@ class Response
 		void	_fill_status_codes(void);
 		void	_redirect_with_location(size_t);
 		void	_redirect_without_location(size_t);
+		void	_default_response(void);
 		std::vector<char const*>	_cgi_meta_var(void);
 
 	private:

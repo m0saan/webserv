@@ -568,6 +568,11 @@ void Response::Redirection(void)
 		_redirect_without_location(status_code);
 }
 
+void Response::_default_response(void)
+{
+
+}
+
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
 
 void Response::Post_request(void)	
@@ -609,10 +614,9 @@ void Response::Get_request(void)
 	if (loc_path[0] != '/')
 		loc_path = '/' + loc_path;
 	// first lets check if the loc path is valid
-	if (_server_configs._cgi.empty())
+	if (_server_configs._cgi.empty() && !_server_configs._is_default_loc)
 	{
 		_file_path = _root + loc_path;
-		std::cout << "loc_path: " << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_file_path.clear();
@@ -632,8 +636,13 @@ void Response::Get_request(void)
 		return;
 	}
 	// first we have to check if the location is a dir or just a file
-    if (loc_path == "/")
+    if (loc_path == "/") {
+		if (_server_configs._is_default_loc) {
+			_default_response();
+			return;
+		}
 		_process_as_dir();
+	}
 	else if (_is_dir(_root + loc_path))
 		_process_as_dir();
 	else

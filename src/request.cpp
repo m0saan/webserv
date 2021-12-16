@@ -83,7 +83,7 @@ void Request::parseRequest()
 			is_form_data = true;
 			continue;
 		}
-		if (!is_body && !is_form_data)
+		if ((!is_body && !is_form_data) || (line.find("Content-Disposition:") != std::string::npos || line.find("Content-Type:") != std::string::npos))
 			_getHeader(line, http_method, boundary);
 		else
 			_getBody(line, is_chunked, total_read);
@@ -110,13 +110,6 @@ bool Request::_isBodyEnd(const std::string &line) const { return line == "}"; }
 
 void Request::_getBody(std::string &line, bool is_chunked, int &total_read)
 {
-	std::vector<std::string> tokens = Utility::split(line);
-	if (tokens[0] == "Content-Disposition:" || tokens[0] == "Content-Type:")
-	{
-		tokens[0].pop_back();
-		_RequestMap[tokens[0]] = std::vector<std::string>(tokens.begin() + 1, tokens.end());
-		return;
-	}
 	line.push_back('\n');
 	static int i = 0;
 	if (is_chunked)
@@ -226,7 +219,7 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 {
 	std::vector<std::string> tokens = Utility::split(line, ' ');
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
-	if (http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload")
+	if (http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload" && boundary.empty())
 		boundary = Utility::split(tokens[2], '=')[1];
 
 	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
