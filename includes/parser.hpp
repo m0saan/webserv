@@ -50,7 +50,7 @@ struct ServerConfig {
     _time_out(), _cgi(), _root(),
     _auto_index(), _loc_path(), _upload_store(),
     _redirect(), _index(),
-    _allowed_method(), _location(), _is_default_loc(false) {}
+    _allowed_method(), _location(){}
 
     std::string _port;
     std::string _host;
@@ -69,7 +69,6 @@ struct ServerConfig {
     std::set<std::string> _allowed_method;
 
     std::vector<ServerConfig> _location;
-    bool                        _is_default_loc;
 };
 
 int getDirective(std::string const &token);

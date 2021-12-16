@@ -568,15 +568,53 @@ void Response::Redirection(void)
 		_redirect_without_location(status_code);
 }
 
+std::string*	Response::_get_def_response(void)
+{
+	std::string *tmp_body = new std::string();
+
+	*tmp_body = std::string("<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>Welcome to webserv!</title>")
+	+ std::string("\r\n<style>\r\nhtml {	color-scheme: light dark;}\r\nbody")
+	+ std::string("{width: 35em; margin: 0 auto;font-family: Tahoma, Verdana, Arial, sans-serif;}\r\n")
+	+ std::string("</style>\r\n</head>\r\n<body>\r\n<h1>Welcome to webserv: the worst webserver ever!</h1>\r\n")
+	+ std::string("<p>If you see this page, you are just a fucking sucker who know nothing about servers. ")
+	+ std::string("Further configuration is required.</p>")
+	+ std::string("<p><em>Thank you for using our motherfucking server.</em></p>\r\n</body>\r\n</html>");
+	return tmp_body;
+}
 void Response::_default_response(void)
 {
+	time_t rawtime;
+	std::string *tmp_body;
+	std::stringstream ss;
 
+	tmp_body = _get_def_response();
+	ss << tmp_body->length();
+	time (&rawtime);
+	_response += "HTTP/1.1 200 OK\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Content-Length: " + ss.str() +  "\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += *tmp_body;
+	delete tmp_body;
 }
 
 void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
 
 void Response::Post_request(void)	
 {	
+	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
+	if (!allowed.empty())
+	{
+		if (find(allowed.begin(), allowed.end(), "POST") == allowed.end())
+		{
+			_fill_response(".html", 403, "Forbiden");
+			return;
+		}
+	}
 	if (_server_configs._loc_path == "/upload")
 	{
 		std::string file_name;
@@ -610,17 +648,6 @@ void Response::Get_request(void)
 	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
 	std::string 				loc_path = _server_configs._loc_path;
 
-	// lets first check for alowed methods in this location
-	if (loc_path[0] != '/')
-		loc_path = '/' + loc_path;
-	// first lets check if the loc path is valid
-	if (_server_configs._cgi.empty() && !_server_configs._is_default_loc)
-	{
-		_file_path = _root + loc_path;
-		if (!_file_is_good(true))
-			return;
-		_file_path.clear();
-	}
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), "GET") == allowed.end())
@@ -629,6 +656,22 @@ void Response::Get_request(void)
 			return;
 		}
 	}
+	if (_root.empty())
+	{
+		_default_response();
+		return;
+	}
+	// lets first check for alowed methods in this location
+	if (loc_path[0] != '/')
+		loc_path = '/' + loc_path;
+	// first lets check if the loc path is valid
+	if (_server_configs._cgi.empty())
+	{
+		_file_path = _root + loc_path;
+		if (!_file_is_good(true))
+			return;
+		_file_path.clear();
+	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (!_server_configs._cgi.empty())
 	{
@@ -636,13 +679,8 @@ void Response::Get_request(void)
 		return;
 	}
 	// first we have to check if the location is a dir or just a file
-    if (loc_path == "/") {
-		if (_server_configs._is_default_loc) {
-			_default_response();
-			return;
-		}
+    if (loc_path == "/")
 		_process_as_dir();
-	}
 	else if (_is_dir(_root + loc_path))
 		_process_as_dir();
 	else
@@ -905,6 +943,14 @@ void Response::_process_post_delete(std::string const& req_method)
 	std::vector<std::string>	const 	index = _server_configs._index;
 	bool								found(false);
 
+	if (!allowed.empty())
+	{
+		if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
+		{
+			_fill_response(".html", 403, "Forbiden");
+			return;
+		}
+	}
 	// lets first check for alowed methods in this location
 	if (loc_path[0] != '/')
 		loc_path = '/' + loc_path;
@@ -915,14 +961,6 @@ void Response::_process_post_delete(std::string const& req_method)
 		if (!_file_is_good(true))
 			return;
 		_file_path.clear();
-	}
-	if (!allowed.empty())
-	{
-		if (find(allowed.begin(), allowed.end(), req_method) == allowed.end())
-		{
-			_fill_response(".html", 403, "Forbiden");
-			return;
-		}
 	}
 	// now lets check if we have to pass the file to the cgi (when we have a .php location), or process it as a static file otherwise
 	if (!_server_configs._cgi.empty())

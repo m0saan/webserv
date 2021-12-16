@@ -51,6 +51,7 @@ class Response
 		void	_redirect_with_location(size_t);
 		void	_redirect_without_location(size_t);
 		void	_default_response(void);
+		std::string*	_get_def_response(void);
 		std::vector<char const*>	_cgi_meta_var(void);
 
 	private:

@@ -145,8 +145,6 @@ public:
         // If no location provided!, create a default one.
         if (loc._loc_path.empty() && default_loc._loc_path.empty()) {
             loc._loc_path = "/";
-            std::cout << "YYaaaay" << std::endl;
-            loc._is_default_loc = true;
         }
 
         // This is the configuration that will be sent to the response handler.
@@ -155,7 +153,6 @@ public:
         possible_blocks[0]._auto_index = loc._auto_index;
         possible_blocks[0]._loc_path = loc._loc_path;
         possible_blocks[0]._upload_store = loc._upload_store;
-        possible_blocks[0]._is_default_loc = loc._is_default_loc;
         if (loc._allowed_method.size() > 0)
             possible_blocks[0]._allowed_method = loc._allowed_method;
         if (loc._index.size() > 0)
