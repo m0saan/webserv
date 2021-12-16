@@ -163,7 +163,9 @@ bool Request::is_completed() const
 void Request::append(char *content, long long size, int fd)
 {
 	std::string tmp(content, size);
-	_req_file.open(generateFilename(fd), std::fstream::in | std::fstream::out | std::fstream::app);
+	_req_filename = generateFilename(fd);
+	_req_file.open(_req_filename, std::fstream::in | std::fstream::out | std::fstream::app);
+	
 	if (_content_length == -1) // 1st time reading req
 		try
 		{
@@ -172,6 +174,7 @@ void Request::append(char *content, long long size, int fd)
 		catch (std::exception &e)
 		{
 			std::cout << "Bad Request !" << std::endl;
+			_req_file.close();
 			return;
 		}
 	_req << content;
