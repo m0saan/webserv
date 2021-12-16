@@ -25,12 +25,14 @@ private:
     long long 		                                    _size;
     long long 		                                    _content_length;
     long long		                                    _header_length;
+    bool                                         _content_type;
     long long		                                    _max_body_size;
     transfer_type	                                    _transfer_encoding;
     std::pair<std::string, std::string>                 _url_queries_scriptName;
     std::fstream                                        _body_stream;
     int                                                 _fd;
     bool                                                _bad_request_found;
+    bool                                                _is_chunked_completed;
     std::fstream                                        _req_file;
 public:
 
@@ -64,6 +66,7 @@ public:
 
     size_t getHeaderLength(const std::string &str);
 
+    void    setContentType(const std::string &str);
     void    resetRequest();
 
 private:

@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/15 18:39:09 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/16 09:49:09 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,6 @@ bool Server::readFromFd(int fd)
 		{
 			server_cli.push_back(server_cli[position]->accept_connection(fd)); // accept connections && add client to server_cli obj
 			req_res.set_fd((server_cli.back())->get_fd(), true, true);		   // add client fd to read set && create req_fd
-			
 		}
 		catch (std::bad_alloc &e)
 		{
@@ -145,7 +144,7 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
+			std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
 
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();

@@ -16,6 +16,8 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_header_length = x._header_length;
 	_max_body_size = x._max_body_size;
 	_transfer_encoding = x._transfer_encoding;
+	_content_type = x._content_type;
+	_is_chunked_completed = x._is_chunked_completed;
 }
 
 // Request &Request::operator=(const Request &x) {
@@ -31,6 +33,8 @@ void Request::resetRequest()
 	_size = -1;
 	_content_length = -1;
 	_header_length = -1;
+	_content_type = false;
+	_is_chunked_completed = false;
 }
 
 std::vector<std::string> const &Request::getValue(const std::string &key)
@@ -153,7 +157,7 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 	return _RequestMap;
 }
 
-Request::Request(long long max_size) : _is_alive_connection(true), _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
+Request::Request(long long max_size) : _is_alive_connection(true), _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
 {
 }
 
@@ -170,12 +174,13 @@ bool Request::is_completed() const
 {
 	if (_transfer_encoding == COMPLETED)
 	{
-		if ((_content_length == -1 || _content_length == 0))
+		if ((_content_length == -1 || _content_length == 0)) // completed request without body 
 			return _size == _header_length + 4;
 		return (_size == _content_length + _header_length);
 	}
 	else if (_transfer_encoding == CHUNKED)
 	{
+		std::cout << "Chunked completed : " <<_is_chunked_completed << std::endl;
 		if (_req.str().find("0\r\n\r\n") != std::string::npos)
 			return true;
 		else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
@@ -206,12 +211,23 @@ void Request::append(char *content, long long size)
 		std::cout << "Cannot open file! " << std::endl;
 	_req_file.close();
 	_size = _req.str().length();
+	std::ifstream file("requests/req.txt", std::ios::binary | std::ios::ate);
+	std::cout << "req Size " << _size << std::endl;
+	std::cout << "file Size " << _req_file.tellg();
+	file.close();
+	if ((_transfer_encoding == CHUNKED) && 
+	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
+	{
+		std::cout << "Chunked Req is completed " << std::endl;
+	}
+
 }
 
 void Request::getReqInfo(const std::string &str)
 {
 	_content_length = getContentLength(str);
 	_header_length = getHeaderLength(str);
+	setContentType(str);
 }
 
 std::pair<std::string, std::string> _parseStartLine(std::string &url)
@@ -256,6 +272,14 @@ size_t Request::getHeaderLength(const std::string &str)
 		throw std::exception();
 	}
 	return pos;
+}
+
+void Request::setContentType(const std::string &str)
+{	
+	if (str.find("Content-Type: ") != std::string::npos)
+		this->_content_type = true;
+	else
+		this->_content_type = false;
 }
 
 long long Request::getContentLength(const std::string &str)
