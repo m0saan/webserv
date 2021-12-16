@@ -11,7 +11,6 @@ Request::~Request() {}
 Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection)
 {
 	_size = x._size;
-	_req.clear();
 	_content_length = x._content_length;
 	_header_length = x._header_length;
 	_max_body_size = x._max_body_size;
@@ -27,9 +26,6 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 
 void Request::resetRequest()
 {
-	_req.clear();
-	_req.str("");
-	_req.clear();
 	_size = -1;
 	_content_length = -1;
 	_header_length = -1;
@@ -56,7 +52,6 @@ void Request::parseRequest()
 	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
 	std::fstream ifs;
 	ifs.open(_req_filename, std::ios::in);
-	std::cout << "is good: "  << ifs.good() << std::endl;
 	while (std::getline(ifs, line))
 	{
 		if (!line.empty())
@@ -97,6 +92,8 @@ void Request::parseRequest()
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
 	_body_stream.close();
+	ifs.close();
+	std::remove((_req_filename).c_str());
 }
 
 bool Request::_isChunckStart(std::string const &line) const
@@ -126,7 +123,7 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 	return _RequestMap;
 }
 
-Request::Request(long long max_size) : _is_alive_connection(true), _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
+Request::Request(long long max_size) : _is_alive_connection(true), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
 {
 }
 
@@ -134,10 +131,6 @@ Request::Request(long long max_size) : _is_alive_connection(true), _req(), _size
 // {
 // }
 
-std::stringstream const &Request::get_req()
-{
-	return this->_req;
-}
 
 bool Request::is_completed() const
 {
@@ -148,15 +141,7 @@ bool Request::is_completed() const
 		return (_size == _content_length + _header_length);
 	}
 	else if (_transfer_encoding == CHUNKED)
-	{
-		// std::cout << "Chunked completed : " <<_is_chunked_completed << std::endl;
 		return _is_chunked_completed;
-		// if (_req.str().find("0\r\n\r\n") != std::string::npos)
-		// 	return true;
-		// else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
-		// 	return true;
-		// return false;
-	}
 	return true;
 }
 
@@ -177,26 +162,17 @@ void Request::append(char *content, long long size, int fd)
 			_req_file.close();
 			return;
 		}
-	_req << content;
 	// std::cout << "Appended " << _req_file.is_open() << std::endl;
 	// std::cout << "Filename " << generateFilename(fd) << std::endl;
 	if (_req_file.is_open())
 		_req_file << std::string(content);
 	else
 		std::cout << "Cannot open file! " << std::endl;
-	// std::ifstream file("requests/req.txt", std::ios::binary | std::ios::ate);
-	// _size = _req.str().length();
 	_size = _req_file.tellg();
-	// std::cout << "req Size " << _req.str().length() << std::endl;
-	// std::cout << "file Size " << _req_file.tellg() << std::endl;
-	// file.close();
 	_req_file.close();
 	if ((_transfer_encoding == CHUNKED) && 
 	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
-	{
-		// std::cout << "Chunked Req is completed " << std::endl;
 		this->_is_chunked_completed = true;
-	}
 }
 
 void Request::getReqInfo(const std::string &str)
