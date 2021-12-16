@@ -38,30 +38,6 @@ std::vector<std::string> const &Request::getValue(const std::string &key)
 	return _RequestMap[key];
 }
 
-/*
-POST /upload HTTP/1.1
-User-Agent: PostmanRuntime/7.28.4
-Accept: /
-Postman-Token: 448fffaf-b00b-4eb1-8c16-7afaa3687dd1
-Host: localhost:8000
-Accept-Encoding: gzip, deflate, br
-Connection: keep-alive
-Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
-Content-Length: 291
-
-----------------------------590098799345060955619546
-Content-Disposition: form-data; name="readme"; filename="hello.html"
-Content-Type: text/html
-
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>hello</title>
-    </head>
-</html>
-----------------------------590098799345060955619546--
-*/
-
 void Request::parseRequest()
 {
 	std::string line;
@@ -229,7 +205,7 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 {
 	std::vector<std::string> tokens = Utility::split(line, ' ');
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
-	if (http_method == "POST" && tokens[0] == "Content-Type:")
+	if (http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload")
 		boundary = Utility::split(tokens[2], '=')[1];
 
 	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
