@@ -20,6 +20,7 @@
 #include "server.hpp"
 #include <algorithm>
 
+
 class Utility
 {
 public:
@@ -137,9 +138,17 @@ public:
 
          */
 
-        if (url == "/")
+        // This would choose the default location block.
+        if (url == "/" || loc._loc_path.empty())
             loc = default_loc;
 
+        // If no location provided!, create a default one.
+        if (loc._loc_path.empty() && default_loc._loc_path.empty()) {
+            loc._loc_path = "/";
+            loc._index = std::vector<std::string>(1, "index.html");
+        }
+
+        // This is the configuration that will be sent to the response handler.
         possible_blocks[0]._cgi = loc._cgi;
         possible_blocks[0]._redirect = loc._redirect;
         possible_blocks[0]._auto_index = loc._auto_index;
@@ -153,7 +162,7 @@ public:
             possible_blocks[0]._root = loc._root;
         if (!loc._max_file_size.empty())
             possible_blocks[0]._max_file_size = loc._max_file_size;
-
+        
         return possible_blocks[0];
     }
 };
