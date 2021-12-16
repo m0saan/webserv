@@ -351,7 +351,8 @@ void Response::_fill_status_codes(void)
 }
 
 /*-------------------------------------------------------------------------------*/
-/* public methods to hand bad_allocation and iternal_errors response */
+/* public methods to hand bad_allocation, iternal_errors and Forbidden_methods response */
+void	Response::Forbidden_method(void)	{_fill_response(".html", 403, "Forbidden");}
 void	Response::bad_allocation(void)
 {
 	time_t 		rawtime;
@@ -617,6 +618,11 @@ void Response::Post_request(void)
 	}
 	if (_server_configs._loc_path == "/upload")
 	{
+		if (!_request_map.count("Content-Disposition"))
+		{
+			_fill_response(".html", 404, "Not Found");
+			return;
+		}
 		std::string file_name;
 		time_t rawtime;
 

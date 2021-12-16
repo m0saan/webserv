@@ -31,6 +31,7 @@ class Response
 		void				Delete_request(void);
 		void				bad_allocation(void);
 		void				internal_error(void);
+		void				Forbidden_method(void);
 		std::string const& 	get_response(void) const;
 		ssize_t				getResponseLength()const;
 		ssize_t 			_size;
