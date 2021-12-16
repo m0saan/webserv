@@ -137,7 +137,7 @@ public:
 
          */
 
-        if (url == "/")
+        if (url == "/" || default_loc._loc_path.empty())
             loc = default_loc;
 
         possible_blocks[0]._cgi = loc._cgi;
