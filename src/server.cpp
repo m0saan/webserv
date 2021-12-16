@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/16 11:37:19 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/16 15:42:03 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,13 +147,14 @@ bool Server::readFromFd(int fd)
 			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
 
 			// TODO: Should check the request body size.
-
+			// std::cout << (req_res.getMap())[fd]._req_filename << std::endl;
+			std::cout << "Removed : " << std::remove(((req_res.getMap())[fd]._req_filename).c_str()) << std::endl;
 
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
-			if ((req_res.getMap())[fd].isBadRequest())
-				exitError("message: bad request");
+			// if ((req_res.getMap())[fd].isBadRequest())
+			// 	exitError("message: bad request");
 
 			// extract the host, port and server_name from the request map. 
 			// use them to choose which server block to handle the request with.

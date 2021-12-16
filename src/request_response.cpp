@@ -38,7 +38,7 @@ bool		RequestResponse::receive(int fd, Server &server) // return false if connec
 		server.socketFree(fd);
 		return false;
 	}
-	req_fd[fd].append(buffer, status);
+	req_fd[fd].append(buffer, status, fd);
 	return true;
 }
 
@@ -116,7 +116,6 @@ void RequestResponse::close_connection(int fd) const
 {
 	shutdown(fd, 2); // Further sends and receives are disallowed
 	close(fd);
-	std::cout << "connection Closed !" <<std::endl;
 }
 
 std::map<int , Request>& RequestResponse::getMap()

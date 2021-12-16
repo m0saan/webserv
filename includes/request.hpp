@@ -36,6 +36,7 @@ private:
     std::fstream                                        _req_file;
 public:
 
+    std::string                                         _req_filename;
     bool            _is_alive_connection;
     Request(long long max_size = 100000);
     ~Request();
@@ -56,7 +57,7 @@ public:
 
     bool is_completed() const;
 
-    void append(char *content, long long size);
+    void append(char *content, long long size, int fd);
 
     std::stringstream const & get_req();
 
@@ -66,9 +67,9 @@ public:
 
     size_t getHeaderLength(const std::string &str);
 
-    void    setContentType(const std::string &str);
-    void    resetRequest();
-
+    void            setContentType(const std::string &str);
+    void            resetRequest();
+    std::string     generateFilename(int fd);
 private:
 
     void _getHeader(const std::string &, std::string&, std::string&);
