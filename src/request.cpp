@@ -16,6 +16,8 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_header_length = x._header_length;
 	_max_body_size = x._max_body_size;
 	_transfer_encoding = x._transfer_encoding;
+	_content_type = x._content_type;
+	_is_chunked_completed = x._is_chunked_completed;
 }
 
 // Request &Request::operator=(const Request &x) {
@@ -31,36 +33,14 @@ void Request::resetRequest()
 	_size = -1;
 	_content_length = -1;
 	_header_length = -1;
+	_content_type = false;
+	_is_chunked_completed = false;
 }
 
 std::vector<std::string> const &Request::getValue(const std::string &key)
 {
 	return _RequestMap[key];
 }
-
-/*
-POST /upload HTTP/1.1
-User-Agent: PostmanRuntime/7.28.4
-Accept: /
-Postman-Token: 448fffaf-b00b-4eb1-8c16-7afaa3687dd1
-Host: localhost:8000
-Accept-Encoding: gzip, deflate, br
-Connection: keep-alive
-Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
-Content-Length: 291
-
-----------------------------590098799345060955619546
-Content-Disposition: form-data; name="readme"; filename="hello.html"
-Content-Type: text/html
-
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>hello</title>
-    </head>
-</html>
-----------------------------590098799345060955619546--
-*/
 
 void Request::parseRequest()
 {
@@ -153,7 +133,7 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 	return _RequestMap;
 }
 
-Request::Request(long long max_size) : _is_alive_connection(true), _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size)
+Request::Request(long long max_size) : _is_alive_connection(true), _req(), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
 {
 }
 
@@ -170,16 +150,17 @@ bool Request::is_completed() const
 {
 	if (_transfer_encoding == COMPLETED)
 	{
-		if ((_content_length == -1 || _content_length == 0))
+		if ((_content_length == -1 || _content_length == 0)) // completed request without body 
 			return _size == _header_length + 4;
 		return (_size == _content_length + _header_length);
 	}
 	else if (_transfer_encoding == CHUNKED)
 	{
+		// std::cout << "Chunked completed : " <<_is_chunked_completed << std::endl;
 		if (_req.str().find("0\r\n\r\n") != std::string::npos)
 			return true;
-		else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
-			return true;
+		// else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
+		// 	return true;
 		return false;
 	}
 	return true;
@@ -200,18 +181,31 @@ void Request::append(char *content, long long size)
 			return;
 		}
 	_req << content;
+	std::cout << "Appended " << _req_file.is_open() << std::endl;
 	if (_req_file.is_open())
 		_req_file << std::string(content);
 	else
 		std::cout << "Cannot open file! " << std::endl;
-	_req_file.close();
+	std::ifstream file("requests/req.txt", std::ios::binary | std::ios::ate);
 	_size = _req.str().length();
+	std::cout << "req Size " << _size << std::endl;
+	std::cout << "file Size " << _req_file.tellg() << std::endl;
+	file.close();
+	if ((_transfer_encoding == CHUNKED) && 
+	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
+	{
+		std::cout << "Chunked Req is completed " << std::endl;
+		this->_is_chunked_completed = true;
+	}
+	_req_file.close();
+
 }
 
 void Request::getReqInfo(const std::string &str)
 {
 	_content_length = getContentLength(str);
 	_header_length = getHeaderLength(str);
+	setContentType(str);
 }
 
 std::pair<std::string, std::string> _parseStartLine(std::string &url)
@@ -229,7 +223,7 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 {
 	std::vector<std::string> tokens = Utility::split(line, ' ');
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
-	if (http_method == "POST" && tokens[0] == "Content-Type:")
+	if (http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload")
 		boundary = Utility::split(tokens[2], '=')[1];
 
 	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
@@ -256,6 +250,14 @@ size_t Request::getHeaderLength(const std::string &str)
 		throw std::exception();
 	}
 	return pos;
+}
+
+void Request::setContentType(const std::string &str)
+{	
+	if (str.find("Content-Type: ") != std::string::npos)
+		this->_content_type = true;
+	else
+		this->_content_type = false;
 }
 
 long long Request::getContentLength(const std::string &str)

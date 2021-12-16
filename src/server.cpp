@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/15 18:39:09 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/16 11:37:19 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,6 @@ bool Server::readFromFd(int fd)
 		{
 			server_cli.push_back(server_cli[position]->accept_connection(fd)); // accept connections && add client to server_cli obj
 			req_res.set_fd((server_cli.back())->get_fd(), true, true);		   // add client fd to read set && create req_fd
-			
 		}
 		catch (std::bad_alloc &e)
 		{
@@ -145,7 +144,7 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
+			std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
 
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
@@ -153,17 +152,19 @@ bool Server::readFromFd(int fd)
 			if ((req_res.getMap())[fd].isBadRequest())
 				exitError("message: bad request");
 
+			// extract the host, port and server_name from the request map. 
+			// use them to choose which server block to handle the request with.
 			std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
 			std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
 			host = host == "localhost" ? "127.0.0.1" : host;
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
-			// std::cerr << "-------------------------------------------------------------" << std::endl;
-			// std::cerr << chosen_config << std::endl;
-			// std::cerr << "-------------------------------------------------------------" << std::endl;
-            // std::cout << chosen_config << std::endl;
-            /* mosan is done right here!! */
-			// ToDo: check if the request is bad!!!!!!
+            /* mosan is done right here!!  Yaaaaaaaay */
+
+			// std::cout << "port: " << chosen_config._port << std::endl;
+			// std::cout << "host:  " << chosen_config._host << std::endl;
+			// std::cout << "location path: " << chosen_config._loc_path << std::endl;
+
 			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
 			try
 			{
@@ -176,6 +177,7 @@ bool Server::readFromFd(int fd)
 				else
 					res.Delete_request();
 			}
+
 			catch(std::bad_alloc const& e)
 			{
 				(void)e;
