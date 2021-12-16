@@ -572,13 +572,7 @@ void Response::Post_request(void)
 {	
 	if (_server_configs._loc_path == "/upload")
 	{
-		if (_request_map.count("Content-Disposition"))
-			std::cout << "Yesss\n";
-		else
-			exit(1);
-		// std::cout << "_loc_path: " << _request_map["Content-Disposition"][2] << std::endl;
 		std::string file_name;
-
 		file_name = Utility::split(_request_map["Content-Disposition"][2], '=')[1];
 		file_name.erase(file_name.begin());
 		file_name.erase(--file_name.end());
