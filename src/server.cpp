@@ -147,8 +147,8 @@ bool Server::readFromFd(int fd)
 			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
 
 			// TODO: Should check the request body size.
-			std::remove(((req_res.getMap())[fd]._req_filename).c_str()); // remove request file
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
+			// std::remove(((req_res.getMap())[fd]._req_filename).c_str()); // remove request file
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
 			// if ((req_res.getMap())[fd].isBadRequest())
@@ -160,6 +160,11 @@ bool Server::readFromFd(int fd)
 			std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
 			host = host == "localhost" ? "127.0.0.1" : host;
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
+
+			std::map<std::string, std::vector<std::string> >::iterator it = _request_map.begin();
+			for (; it != _request_map.end(); it++)
+				std::cout << '(' << it->first << ", " << it->second << ')' << std::endl;
+			
 
             /* mosan is done right here!!  Yaaaaaaaay */
 
