@@ -47,10 +47,6 @@ bool	RequestResponse::req_completed(int fd)
 	return (req_fd[fd]).is_completed();
 }
 
-const std::stringstream&		RequestResponse::get_req(int fd)
-{
-	return this->req_fd[fd].get_req();
-}
 
 int 	RequestResponse::is_ready(int fd, bool to_read)
 {

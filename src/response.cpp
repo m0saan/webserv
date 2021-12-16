@@ -1047,7 +1047,7 @@ void Response::_process_as_dir(void)
 	else
 	{
 		_file_path = _root;
-		std::cout << _file_path << std::endl;
+		// std::cout << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_fill_response(_file_path, 200, "OK");

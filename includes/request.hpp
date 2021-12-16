@@ -21,11 +21,10 @@ class Request {
 private:
 
     std::map<std::string, std::vector<std::string> >    _RequestMap;
-    std::stringstream	                        	    _req;
     long long 		                                    _size;
     long long 		                                    _content_length;
     long long		                                    _header_length;
-    bool                                         _content_type;
+    bool                                                _content_type;
     long long		                                    _max_body_size;
     transfer_type	                                    _transfer_encoding;
     std::pair<std::string, std::string>                 _url_queries_scriptName;
