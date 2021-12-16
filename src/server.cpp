@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/16 16:21:46 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/16 18:58:52 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,9 +167,9 @@ bool Server::readFromFd(int fd)
 
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
-			std::map<std::string, std::vector<std::string> >::iterator it = _request_map.begin();
-			for (; it != _request_map.end(); it++)
-				std::cout << '(' << it->first << ", " << it->second << ')' << std::endl;
+			// std::map<std::string, std::vector<std::string> >::iterator it = _request_map.begin();
+			// for (; it != _request_map.end(); it++)
+			// 	std::cout << '(' << it->first << ", " << it->second << ')' << std::endl;
 			
 
             /* mosan is done right here!!  Yaaaaaaaay */
@@ -220,15 +220,21 @@ void Server::sendResponse(int fd)
 	int sent;
 	// sleep(5);
 	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0);	// std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
-		//ToDo: Handle Error case
+		//ToDo: Handle Error case 0 and -1
 	if (sent == -1) // send failed
 	{
 		perror("send ");
+		req_res.remove_fd(fd, 1, 1, 1); // erase client req object from map 
+		req_res.remove_fd(fd, 0, 1, 1); // remove client from write fd and erase res object from map
+		req_res.close_connection(fd);
+		socketFree(fd);
+		return;
 	}
 	req_res.update_sent_bytes(fd, sent);
 	// std::cout << "Sent : " << sent << std::endl;
 	if (req_res.get_response_length(fd) == req_res.get_res_bytes_sent(fd)) // response is completely sent
 	{
+		// std::cout << "Keep alive " << req_res.getMap()[fd]._is_alive_connection << std::endl;
 		if (!req_res.getMap()[fd]._is_alive_connection) // close connection 
 		{
 			req_res.remove_fd(fd, 1, 1, 1); // erase req object from map 
