@@ -54,10 +54,10 @@ void Request::parseRequest()
 
 	system("rm -f /tmp/body"); // remove the file if it's existe
 	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
-	// std::cout << _req.rdbuf() << std::endl;
-	// exit(1);
-
-	while (std::getline(_req, line))
+	std::fstream ifs;
+	ifs.open(_req_filename, std::ios::in);
+	std::cout << "is good: "  << ifs.good() << std::endl;
+	while (std::getline(ifs, line))
 	{
 		if (!line.empty())
 			line.pop_back();
