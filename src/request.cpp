@@ -52,8 +52,8 @@ void Request::parseRequest()
 	std::string boundary;
 	int total_read = 0;
 
-	system("rm -f /tmp/body"); // remove the file if it's existe
 	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
+
 	// std::cout << _req.rdbuf() << std::endl;
 	// exit(1);
 
@@ -116,7 +116,7 @@ void Request::_getBody(std::string &line, bool is_chunked, int &total_read)
 		if (i % 2 != 0)
 			return;
 	total_read += line.length();
-	_body_stream << line;
+	_body_stream << line << std::endl;
 }
 
 bool Request::_isBody(std::string const &line, bool const &is_body) const { return line == "{" && is_body; }
@@ -150,20 +150,19 @@ bool Request::is_completed() const
 	else if (_transfer_encoding == CHUNKED)
 	{
 		// std::cout << "Chunked completed : " <<_is_chunked_completed << std::endl;
-		return _is_chunked_completed;
-		// if (_req.str().find("0\r\n\r\n") != std::string::npos)
-		// 	return true;
+		if (_req.str().find("0\r\n\r\n") != std::string::npos)
+			return true;
 		// else if (_req.str().length() == _req.str().find("\r\n\r\n") + 4) // chunked request without body
 		// 	return true;
-		// return false;
+		return false;
 	}
 	return true;
 }
 
-void Request::append(char *content, long long size, int fd)
+void Request::append(char *content, long long size)
 {
 	std::string tmp(content, size);
-	_req_file.open(generateFilename(fd), std::fstream::in | std::fstream::out | std::fstream::app);
+	_req_file.open("requests/req.txt", std::fstream::in | std::fstream::out | std::fstream::app);
 	if (_content_length == -1) // 1st time reading req
 		try
 		{
@@ -175,25 +174,24 @@ void Request::append(char *content, long long size, int fd)
 			return;
 		}
 	_req << content;
-	// std::cout << "Appended " << _req_file.is_open() << std::endl;
-	// std::cout << "Filename " << generateFilename(fd) << std::endl;
+	std::cout << "Appended " << _req_file.is_open() << std::endl;
 	if (_req_file.is_open())
 		_req_file << std::string(content);
 	else
 		std::cout << "Cannot open file! " << std::endl;
-	// std::ifstream file("requests/req.txt", std::ios::binary | std::ios::ate);
-	// _size = _req.str().length();
-	_size = _req_file.tellg();
-	// std::cout << "req Size " << _req.str().length() << std::endl;
-	// std::cout << "file Size " << _req_file.tellg() << std::endl;
-	// file.close();
-	_req_file.close();
+	std::ifstream file("requests/req.txt", std::ios::binary | std::ios::ate);
+	_size = _req.str().length();
+	std::cout << "req Size " << _size << std::endl;
+	std::cout << "file Size " << _req_file.tellg() << std::endl;
+	file.close();
 	if ((_transfer_encoding == CHUNKED) && 
 	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
 	{
-		// std::cout << "Chunked Req is completed " << std::endl;
+		std::cout << "Chunked Req is completed " << std::endl;
 		this->_is_chunked_completed = true;
 	}
+	_req_file.close();
+
 }
 
 void Request::getReqInfo(const std::string &str)
@@ -272,10 +270,8 @@ long long Request::getContentLength(const std::string &str)
 	}
 	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
-	else // Content-Length not found && !chunked 
-		_transfer_encoding =  COMPLETED; 
+	// else // Content-Length not found && !chunked  && should be POST or DELETE
 	// 	throw std::exception();
-	// std::cout << "transfer_encodin " << _transfer_encoding << std::endl;
 	return length;
 }
 
@@ -299,12 +295,4 @@ void Request::_checkForBadRequest()
 	// case1: The host is not provided.
 	if (!_RequestMap.count("Host"))
 		_bad_request_found = true;
-}
-
-std::string	Request::generateFilename(int fd)
-{
-	time_t seconds;
-
-  	seconds = time (NULL);
-	return "/tmp/req_" + std::to_string(fd) + "_" + std::to_string(seconds) ;
 }
