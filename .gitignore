@@ -41,3 +41,5 @@ cmake-build-debug
 CMakeLists.txt
 request
 webserv
+.vscode/
+config_files/
