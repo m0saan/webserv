@@ -146,6 +146,9 @@ bool Server::readFromFd(int fd)
 		{
 			std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
 
+			// TODO: Should check the request body size.
+
+
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
