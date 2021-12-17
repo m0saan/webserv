@@ -14,48 +14,6 @@
 #include "../includes/response.hpp"
 #include "../includes/utility.hpp"
 
-std::ostream& operator<<(std::ostream& os, std::vector<std::string>const &vec) {
-	os << "[ ";
-	for (size_t i = 0; i < vec.size(); i++)
-		os << vec[i] << " ";
-	os << "]";	
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, std::set<std::string>const &s) {
-	os << "[ ";
-	std::set<std::string>::iterator start = s.begin();
-	for (; start != s.end(); ++start)
-		os << *start << " ";
-	os << "]";	
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, std::map<std::string, std::string> &m) {
-	os << "[ ";
-	std::map<std::string, std::string>::iterator start = m.begin();
-	for (; start != m.end(); ++start)
-		os << '(' << start->first << ", " << start->second  << ')' << " ";
-	os << "]";	
-	return os;
-}
-
-std::ostream &operator<<(std::ostream &os, ServerConfig const &conf) {
-    std::cout << "port: " << conf._port  << std::endl;
-    std::cout << "host: " << conf._host  << std::endl;
-    std::cout << "server name: " << conf._server_name << std::endl;
-	// std::cout << "error_page: " << conf._error_page << std::endl;
-	std::cout << "auto index: " << conf._index << std::endl;
-	std::cout << "allowed methods: " << conf._allowed_method << std::endl;
-    std::cout << "cgi path: " << conf._cgi << std::endl;
-    std::cout << "redirect: " << conf._redirect.first << ' ' << conf._redirect.second << std::endl;
-    std::cout << "auto index: " << conf._auto_index  << std::endl;
-	std::cout << "upload store: " << conf._upload_store << std::endl;
-    std::cout << "location path: " << conf._loc_path  << std::endl;
-    // std::cout << " location path" << conf._allowed_method  << std::endl;
-    std::cout << " root: " << conf._root  << std::endl;
-    return os;
-}
 
 
 void Server::initConfig(ServerConfig &conf, size_t size)
