@@ -26,5 +26,5 @@ if ($conn->query($sql) === TRUE) {
   echo "Error creating table: " . $conn->error;
 }
 $conn->close();
-$conn->setcookie("hello", "world");
+setcookie("hello", "world");
 ?>

@@ -142,7 +142,6 @@ bool Server::readFromFd(int fd)
 			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
 			try
 			{
-				std::cout << "not herrre" << std::endl;
 				if (!chosen_config._redirect.first.empty())
 					res.Redirection();
 				else if (_request_map["SL"][0] == "GET")

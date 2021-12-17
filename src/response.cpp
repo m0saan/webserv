@@ -830,13 +830,13 @@ void Response::_cgi(void)
 	size_t 		index;
 	int			status;
 
-	if (_fd == -1)
-	{
-		_file_path = _root + '/' + _uri;
-		if (!_file_is_good(true))
-			return;
-		_fd = open(_file_path.c_str(), O_RDONLY);
-	} 
+	// if (_fd == -1)
+	// {
+	// 	_file_path = _root + '/' + _uri;
+	// 	if (!_file_is_good(true))
+	// 		return;
+	// 	_fd = open(_file_path.c_str(), O_RDONLY);
+	// } 
 	pipe(pfd);
 	if(!(pid = fork()))
 	{
@@ -845,6 +845,7 @@ void Response::_cgi(void)
 		std::string path;
 
 		args.push_back(_server_configs._cgi.c_str());
+		args.push_back(_queries_script_name.second.c_str());
 		args.push_back(NULL);
 		path = _server_configs._cgi;
 		close(pfd[0]);
@@ -887,7 +888,6 @@ void Response::_cgi(void)
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
 	close(_fd);
-	std::cout << _response;
 	delete tmp_res;
 }
 /*---------------------------------------------------------------------------------------------------*/
