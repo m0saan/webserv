@@ -150,7 +150,7 @@ bool Server::readFromFd(int fd)
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			
 			if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
-				std::cout << "found forbidden method" << std::endl;
+				_MSG("found forbidden method");
 				exit(1);
 			}
 			

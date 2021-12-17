@@ -20,10 +20,13 @@
 #include "server.hpp"
 #include <algorithm>
 
+#define _MSG(msg) { std::cerr << "file: "<< __FILE__ << "(@" << __LINE__ << "): " << msg << '\n'; }
+
 
 class Utility
 {
 public:
+
     static std::vector<std::string> split(std::string const &line, char del = ' ')
     {
         std::vector<std::string> out;
