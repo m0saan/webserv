@@ -43,6 +43,164 @@ void fillGlobalDirectives(T &field, T const &value, std::string const &directive
     field = value;
 }
 
+void getPort(std::vector<std::string> const &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2)
+        exitError("error near directive: <" + tokens[0] + ">");
+    if (!isLocation)
+        fillGlobalDirectives(globalConfig[i]._port, tokens[1], tokens[0]);
+    else
+        fillGlobalDirectives(globalConfig[i]._location[j]._port, tokens[1], tokens[0]);
+}
+
+void getHost(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2)
+        exitError("error near directive: <" + tokens[0] + ">");
+    if (tokens[1] == "localhost")
+        tokens[1] = "127.0.0.1";
+    if (!isLocation)
+        fillGlobalDirectives(globalConfig[i]._host, tokens[1], tokens[0]);
+    else
+        fillGlobalDirectives(globalConfig[i]._location[j]._host, tokens[1], tokens[0]);
+}
+
+void getServerName(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2 || !globalConfig[i]._server_name.empty())
+        exitError("error near directive: <" + tokens[0] + ">");
+    if (!isLocation)
+        fillGlobalDirectives(globalConfig[i]._server_name, tokens[1], tokens[0]);
+    else
+        fillGlobalDirectives(globalConfig[i]._location[j]._server_name, tokens[1], tokens[0]);
+}
+
+void getErrorPage(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() <= 2 || tokens[1] != "<" || tokens[tokens.size() - 1] != ">" || !globalConfig[i]._error_page.empty())
+        exitError("error near directive: <" + tokens[0] + ">");
+    for (int k = 2; k < tokens.size(); ++k)
+    {
+        if (tokens[k] == ">")
+            break;
+        std::vector<std::string> res = Utility::split(tokens[k], ':');
+        if (res.size() != 2)
+            exitError("error near directive: <" + tokens[0] + ">");
+        if (res[1].back() != ';')
+            exitError("<;> delimiter is expected.");
+        res[1].pop_back();
+        globalConfig[i]._error_page[res[0]] = res[1];
+    }
+}
+
+void getMaxFileSize(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2)
+        exitError("error near directive: <" + tokens[0] + ">");
+    if (!isLocation)
+        fillGlobalDirectives(globalConfig[i]._max_file_size, tokens[1], tokens[0]);
+    else
+        fillGlobalDirectives(globalConfig[i]._location[j]._max_file_size, tokens[1], tokens[0]);
+}
+
+void getTimeOut(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2)
+        exitError("error near directive: <" + tokens[0] + ">");
+    if (!isLocation)
+        fillGlobalDirectives(globalConfig[i]._time_out, tokens[1], tokens[0]);
+    else
+        fillGlobalDirectives(globalConfig[i]._location[j]._time_out, tokens[1], tokens[0]);
+}
+
+void getRoot(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2)
+        exitError("error near directive: <" + tokens[0] + ">");
+    if (!isLocation)
+    {
+        if (!globalConfig[i]._root.empty())
+            exitError("error near directive: <" + tokens[0] + ">");
+        fillGlobalDirectives(globalConfig[i]._root, tokens[1], tokens[0]);
+    }
+    else
+    {
+        if (!globalConfig[i]._location[j]._root.empty())
+            exitError("error near directive: <" + tokens[0] + ">");
+        fillGlobalDirectives(globalConfig[i]._location[j]._root, tokens[1], tokens[0]);
+    }
+}
+
+void getAllowedMethods(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (!isLocation)
+    {
+
+        if (!globalConfig[i]._allowed_method.empty())
+            exitError("error near directive: <" + tokens[0] + ">");
+
+        for (int k = 1; k < tokens.size(); ++k)
+            globalConfig[i]._allowed_method.insert(tokens[k]);
+    }
+    else
+    {
+
+        if (!globalConfig[i]._location[j]._allowed_method.empty())
+            exitError("error near directive: <" + tokens[0] + ">");
+        for (int k = 1; k < tokens.size(); ++k)
+            globalConfig[i]._location[j]._allowed_method.insert(tokens[k]);
+    }
+}
+
+void getRedirect(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 3 || !globalConfig[i]._location[j]._redirect.first.empty())
+        exitError("error near directive: <redirect>");
+    globalConfig[i]._location[j]._redirect.first = tokens[1];
+    globalConfig[i]._location[j]._redirect.second = tokens[2];
+}
+
+void getUpload(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2 || !globalConfig[i]._location[j]._upload_store.empty())
+        exitError("error near directive: <upload>");
+    globalConfig[i]._location[j]._upload_store = tokens[1];
+}
+
+void getCGI(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2 || !globalConfig[i]._location[j]._cgi.empty())
+        exitError("error near directive: <cgi>");
+    globalConfig[i]._location[j]._cgi = tokens[1];
+}
+
+void getIndex(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (!isLocation)
+    {
+        std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]._index));
+        if (!globalConfig[i]._index.empty())
+            exitError("error near directive: <" + tokens[0] + ">");
+    }
+    else
+    {
+        if (!globalConfig[i]._location[j]._index.empty())
+            exitError("error near directive: <" + tokens[0] + ">");
+        std::copy(tokens.begin() + 1, tokens.end(),
+                  std::back_inserter(globalConfig[i]._location[j]._index));
+    }
+}
+
+void getAutoIndex(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+{
+    if (tokens.size() != 2)
+        exitError("error near directive: <" + tokens[0] + ">");
+    if (!isLocation)
+        fillGlobalDirectives(globalConfig[i]._auto_index, tokens[1], tokens[0]);
+    else
+        fillGlobalDirectives(globalConfig[i]._location[j]._auto_index, tokens[1], tokens[0]);
+}
+
 std::vector<ServerConfig> performParsing(std::string const &filename)
 {
     std::vector<ServerConfig> globalConfig;
@@ -87,149 +245,55 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 break;
 
             case Directives::PORT:
-                if (tokens.size() != 2)
-                    exitError("error near directive: <" + tokens[0] + ">");
-                if (!isLocation)
-                    fillGlobalDirectives(globalConfig[i]._port, tokens[1], tokens[0]);
-                else
-                    fillGlobalDirectives(globalConfig[i]._location[j]._port, tokens[1], tokens[0]);
+                getPort(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::HOST:
-                if (tokens.size() != 2)
-                    exitError("error near directive: <" + tokens[0] + ">");
-                if (tokens[1] == "localhost")
-                    tokens[1] = "127.0.0.1";
-                if (!isLocation)
-                    fillGlobalDirectives(globalConfig[i]._host, tokens[1], tokens[0]);
-                else
-                    fillGlobalDirectives(globalConfig[i]._location[j]._host, tokens[1], tokens[0]);
+                getHost(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::SERVER_NAME:
-                if (tokens.size() != 2)
-                    exitError("error near directive: <" + tokens[0] + ">");
-                if (!isLocation)
-                    fillGlobalDirectives(globalConfig[i]._server_name, tokens[1], tokens[0]);
-                else
-                    fillGlobalDirectives(globalConfig[i]._location[j]._server_name, tokens[1], tokens[0]);
+                getServerName(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::ERROR_PAGE:
-                if (tokens.size() <= 2 || tokens[1] != "<" || tokens[tokens.size() - 1] != ">" || !globalConfig[i]._error_page.empty())
-                    exitError("error near directive: <" + tokens[0] + ">");
-                for (int k = 2; k < tokens.size(); ++k)
-                {
-                    if (tokens[k] == ">")
-                        break;
-                    std::vector<std::string> res = Utility::split(tokens[k], ':');
-                    if (res.size() != 2)
-                        exitError("error near directive: <" + tokens[0] + ">");
-                    if (res[1].back() != ';')
-                        exitError("<;> delimiter is expected.");
-                    res[1].pop_back();
-                    globalConfig[i]._error_page[res[0]] = res[1];
-                }
+                getErrorPage(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::MAX_FILE_SIZE:
-                if (tokens.size() != 2)
-                    exitError("error near directive: <" + tokens[0] + ">");
-                if (!isLocation)
-                    fillGlobalDirectives(globalConfig[i]._max_file_size, tokens[1], tokens[0]);
-                else
-                    fillGlobalDirectives(globalConfig[i]._location[j]._max_file_size, tokens[1], tokens[0]);
+                getMaxFileSize(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::TIME_OUT:
-                if (tokens.size() != 2)
-                    exitError("error near directive: <" + tokens[0] + ">");
-                if (!isLocation)
-                    fillGlobalDirectives(globalConfig[i]._time_out, tokens[1], tokens[0]);
-                else
-                    fillGlobalDirectives(globalConfig[i]._location[j]._time_out, tokens[1], tokens[0]);
+                getTimeOut(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::ROOT:
-                if (tokens.size() != 2)
-                    exitError("error near directive: <" + tokens[0] + ">");
-                if (!isLocation)
-                {
-                    if (!globalConfig[i]._root.empty())
-                        exitError("error near directive: <" + tokens[0] + ">");
-                    fillGlobalDirectives(globalConfig[i]._root, tokens[1], tokens[0]);
-                }
-                else
-                {
-                    if (!globalConfig[i]._location[j]._root.empty())
-                        exitError("error near directive: <" + tokens[0] + ">");
-                    fillGlobalDirectives(globalConfig[i]._location[j]._root, tokens[1], tokens[0]);
-                }
+                getRoot(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::ALLOWED_METHODS:
-                if (!isLocation)
-                {
-
-                    if (!globalConfig[i]._allowed_method.empty())
-                        exitError("error near directive: <" + tokens[0] + ">");
-
-                    for (int k = 1; k < tokens.size(); ++k)
-                        globalConfig[i]._allowed_method.insert(tokens[k]);
-                }
-                else
-                {
-
-                    if (!globalConfig[i]._location[j]._allowed_method.empty())
-                        exitError("error near directive: <" + tokens[0] + ">");
-                    for (int k = 1; k < tokens.size(); ++k)
-                        globalConfig[i]._location[j]._allowed_method.insert(tokens[k]);
-                }
+                getAllowedMethods(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::REDIRECT: // Handle the redirection directive.
-                if (tokens.size() != 3 || !globalConfig[i]._location[j]._redirect.first.empty())
-                    exitError("error near directive: <redirect>");
-                globalConfig[i]._location[j]._redirect.first = tokens[1];
-                globalConfig[i]._location[j]._redirect.second = tokens[2];
+                getRedirect(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::UPLOAD: // Handle the redirection directive.
-                if (tokens.size() != 2 || !globalConfig[i]._location[j]._upload_store.empty())
-                    exitError("error near directive: <upload>");
-                globalConfig[i]._location[j]._upload_store = tokens[1];
+                getUpload(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::CGI: // Handle the cgi directive.
-                if (tokens.size() != 2 || !globalConfig[i]._location[j]._cgi.empty())
-                    exitError("error near directive: <cgi>");
-                globalConfig[i]._location[j]._cgi = tokens[1];
+                getCGI(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::INDEX:
-
-                if (!isLocation)
-                {
-                    std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(globalConfig[i]._index));
-                    if (!globalConfig[i]._index.empty())
-                        exitError("error near directive: <" + tokens[0] + ">");
-                }
-                else
-                {
-                    if (!globalConfig[i]._location[j]._index.empty())
-                        exitError("error near directive: <" + tokens[0] + ">");
-                    std::copy(tokens.begin() + 1, tokens.end(),
-                              std::back_inserter(globalConfig[i]._location[j]._index));
-                }
+                getIndex(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::AUTO_INDEX:
-                if (tokens.size() != 2)
-                    exitError("error near directive: <" + tokens[0] + ">");
-                if (!isLocation)
-                    fillGlobalDirectives(globalConfig[i]._auto_index, tokens[1], tokens[0]);
-                else
-                    fillGlobalDirectives(globalConfig[i]._location[j]._auto_index, tokens[1], tokens[0]);
+                getAutoIndex(tokens, isLocation, globalConfig, i, j);
                 break;
 
             case Directives::LOCATION:
