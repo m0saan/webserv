@@ -6,14 +6,7 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::~Request()
-{
-	_forbidden_http_methods.push_back("PATCH");
-	_forbidden_http_methods.push_back("PUT");
-	_forbidden_http_methods.push_back("OPTIONS");
-	_forbidden_http_methods.push_back("TRACE");
-	_forbidden_http_methods.push_back("CONNECT");
-}
+Request::~Request() { }
 
 Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection)
 {
@@ -141,6 +134,11 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 
 Request::Request(long long max_size) : _is_alive_connection(true), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
 {
+	_forbidden_http_methods.push_back("PATCH");
+	_forbidden_http_methods.push_back("PUT");
+	_forbidden_http_methods.push_back("OPTIONS");
+	_forbidden_http_methods.push_back("TRACE");
+	_forbidden_http_methods.push_back("CONNECT");
 }
 
 // Request::request(char *content, long long lenght, long long content_length):_req(std::string(content, lenght)), _size(lenght), _content_length(content_length)
@@ -186,15 +184,8 @@ void Request::append(char *content, long long size, int fd)
 		std::cout << "Cannot open file! " << std::endl;
 	_size = _req_file.tellg();
 	_req_file.close();
-<<<<<<< HEAD
-	if ((_transfer_encoding == CHUNKED) &&
-		std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
-	{
-		// std::cout << "Chunked Req is completed " << std::endl;
-=======
 	if ((_transfer_encoding == CHUNKED) && 
 	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
->>>>>>> c3d45eb0e6c8cc3d8aac9e9ee705592791c1221a
 		this->_is_chunked_completed = true;
 }
 
@@ -224,6 +215,7 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 		if (std::find(_forbidden_http_methods.begin(), _forbidden_http_methods.end(), 
 			tokens[0]) != _forbidden_http_methods.end())
 			_is_forbiden_method = true;
+			return;
 	}
 
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546

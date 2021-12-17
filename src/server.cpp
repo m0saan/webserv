@@ -148,6 +148,12 @@ bool Server::readFromFd(int fd)
 
 			// TODO: Should check the request body size.
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
+			
+			if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
+				std::cout << "found forbidden method" << std::endl;
+				exit(1);
+			}
+			
 			// std::remove(((req_res.getMap())[fd]._req_filename).c_str()); // remove request file
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
@@ -160,10 +166,6 @@ bool Server::readFromFd(int fd)
 			std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
 			host = host == "localhost" ? "127.0.0.1" : host;
 
-			if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
-				std::cout << "found forbidden method" << std::endl;
-				exit(1);
-			}
 
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
