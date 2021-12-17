@@ -71,6 +71,8 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 			throw std::exception();
 		else if (conf._host == "localhost")
 			conf._host = "127.0.0.1";
+		else
+			conf._host = "0.0.0.0";
 	}
 	catch (const std::exception &e)
 	{
