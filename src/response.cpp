@@ -750,12 +750,21 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 */
 	str = std::string("QUERY_STRING=") + _queries_script_name.first + '\n';
 	meta_var.push_back(str.c_str());
+
+	str = std::string("HTTP_COOKIE=");
+	for (size_t i = 0; i < _request_map["Cookie"].size(); i++)
+		str += _request_map["Cookie"][i]; 
+	str += "\n";
+	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
 	 * Contains the method (as specified with the METHOD attribute in an HTML form) that is
 	 * used to send the request. Example: GET
 	 */
 	str = std::string("REQUEST_METHOD=") + _request_map["SL"][0] + '\n';
+	meta_var.push_back(str.c_str());
+
+	str = std::string("REDIRECT_STATUS=\n");
 	meta_var.push_back(str.c_str());
 	/*
 	 * SRC = Request
@@ -878,6 +887,7 @@ void Response::_cgi(void)
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
 	close(_fd);
+	std::cout << _response;
 	delete tmp_res;
 }
 /*---------------------------------------------------------------------------------------------------*/

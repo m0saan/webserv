@@ -21,13 +21,14 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	int PORT;
 	if (conf._port == "null" || conf._host == "null" || size == 0)
 		return;
+	std::cout << conf._host << std::endl;
 	try
 	{
 		/* code */
 		PORT = std::stoi(conf._port);
 		if (conf._host.length() == 0)
 			throw std::exception();
-		else if (conf._host == "localhost")
+		else if (conf._host == "localhost" || conf._host == "127.0.0.1")
 			conf._host = "127.0.0.1";
 		else
 			conf._host = "0.0.0.0";
