@@ -1,6 +1,3 @@
-check max body size before processing the request 
-Should close request file when request is completed
-
 If the server block do not contain localhost, you should bind to "0.0.0.0"
 
 If you have multiple servers with the same ports, you should
@@ -8,3 +5,5 @@ If you have multiple servers with the same ports, you should
 - instead just create one and let the request handler to handle the routing between the servers by comparing the HOST header.
 If the HOST exists in the config file, you should use it's config,
 - else just use the first server block parsed.
+
+check max body size before processing the request -> by mbani.

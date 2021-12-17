@@ -14,48 +14,6 @@
 #include "../includes/response.hpp"
 #include "../includes/utility.hpp"
 
-std::ostream& operator<<(std::ostream& os, std::vector<std::string>const &vec) {
-	os << "[ ";
-	for (size_t i = 0; i < vec.size(); i++)
-		os << vec[i] << " ";
-	os << "]";	
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, std::set<std::string>const &s) {
-	os << "[ ";
-	std::set<std::string>::iterator start = s.begin();
-	for (; start != s.end(); ++start)
-		os << *start << " ";
-	os << "]";	
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, std::map<std::string, std::string> &m) {
-	os << "[ ";
-	std::map<std::string, std::string>::iterator start = m.begin();
-	for (; start != m.end(); ++start)
-		os << '(' << start->first << ", " << start->second  << ')' << " ";
-	os << "]";	
-	return os;
-}
-
-std::ostream &operator<<(std::ostream &os, ServerConfig const &conf) {
-    std::cout << "port: " << conf._port  << std::endl;
-    std::cout << "host: " << conf._host  << std::endl;
-    std::cout << "server name: " << conf._server_name << std::endl;
-	// std::cout << "error_page: " << conf._error_page << std::endl;
-	std::cout << "auto index: " << conf._index << std::endl;
-	std::cout << "allowed methods: " << conf._allowed_method << std::endl;
-    std::cout << "cgi path: " << conf._cgi << std::endl;
-    std::cout << "redirect: " << conf._redirect.first << ' ' << conf._redirect.second << std::endl;
-    std::cout << "auto index: " << conf._auto_index  << std::endl;
-	std::cout << "upload store: " << conf._upload_store << std::endl;
-    std::cout << "location path: " << conf._loc_path  << std::endl;
-    // std::cout << " location path" << conf._allowed_method  << std::endl;
-    std::cout << " root: " << conf._root  << std::endl;
-    return os;
-}
 
 
 void Server::initConfig(ServerConfig &conf, size_t size)
@@ -150,6 +108,12 @@ bool Server::readFromFd(int fd)
 
 			// TODO: Should check the request body size.
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
+			
+			if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
+				_MSG("found forbidden method");
+				exit(1);
+			}
+			
 			// std::remove(((req_res.getMap())[fd]._req_filename).c_str()); // remove request file
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
@@ -161,6 +125,8 @@ bool Server::readFromFd(int fd)
 			std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
 			std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
 			host = host == "localhost" ? "127.0.0.1" : host;
+
+
 			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
 			// std::map<std::string, std::vector<std::string> >::iterator it = _request_map.begin();
@@ -170,10 +136,8 @@ bool Server::readFromFd(int fd)
 
             /* mosan is done right here!!  Yaaaaaaaay */
 
-			// std::cout << "port: " << chosen_config._port << std::endl;
-			// std::cout << "host:  " << chosen_config._host << std::endl;
-			// std::cout << "location path: " << chosen_config._loc_path << std::endl;
 
+			// TODO: check if a forbidden method is provided <mamoussa>.
 			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
 			try
 			{
