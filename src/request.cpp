@@ -6,7 +6,16 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::~Request() { }
+Request::Request(long long max_size) : _is_alive_connection(true), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
+{
+	_forbidden_http_methods.push_back("PATCH");
+	_forbidden_http_methods.push_back("PUT");
+	_forbidden_http_methods.push_back("OPTIONS");
+	_forbidden_http_methods.push_back("TRACE");
+	_forbidden_http_methods.push_back("CONNECT");
+}
+
+Request::~Request() {}
 
 Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection)
 {
@@ -55,10 +64,11 @@ void Request::parseRequest()
 	ifs.open(_req_filename, std::ios::in);
 	while (std::getline(ifs, line))
 	{
-		if (_is_forbiden_method) {
+		if (_is_forbiden_method)
+		{
 			ifs.close();
 			_body_stream.close();
-			system("rm -f /tmp/body"); // remove the file if it's existe
+			system("rm -f /tmp/body");								  // remove the file if it's existe
 			system((std::string("rm -rf ") + _req_filename).c_str()); // remove the file if it's existe
 			return;
 		}
@@ -132,20 +142,6 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 	return _RequestMap;
 }
 
-Request::Request(long long max_size) : _is_alive_connection(true), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
-{
-	_forbidden_http_methods.push_back("PATCH");
-	_forbidden_http_methods.push_back("PUT");
-	_forbidden_http_methods.push_back("OPTIONS");
-	_forbidden_http_methods.push_back("TRACE");
-	_forbidden_http_methods.push_back("CONNECT");
-}
-
-// Request::request(char *content, long long lenght, long long content_length):_req(std::string(content, lenght)), _size(lenght), _content_length(content_length)
-// {
-// }
-
-
 bool Request::is_completed() const
 {
 	if (_transfer_encoding == COMPLETED)
@@ -184,8 +180,8 @@ void Request::append(char *content, long long size, int fd)
 		std::cout << "Cannot open file! " << std::endl;
 	_size = _req_file.tellg();
 	_req_file.close();
-	if ((_transfer_encoding == CHUNKED) && 
-	std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
+	if ((_transfer_encoding == CHUNKED) &&
+		std::string(content).find("0\r\n\r\n") != std::string::npos) // find end message
 		this->_is_chunked_completed = true;
 }
 
@@ -211,11 +207,12 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 {
 	std::vector<std::string> tokens = Utility::split(line, ' ');
 
-	if (_RequestMap.count("SL") == 0) {
-		if (std::find(_forbidden_http_methods.begin(), _forbidden_http_methods.end(), 
-			tokens[0]) != _forbidden_http_methods.end())
+	if (_RequestMap.count("SL") == 0)
+	{
+		if (std::find(_forbidden_http_methods.begin(), _forbidden_http_methods.end(), tokens[0]) != _forbidden_http_methods.end()) {
 			_is_forbiden_method = true;
 			return;
+		}
 	}
 
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
@@ -310,6 +307,7 @@ std::string Request::generateFilename(int fd)
 	return "/tmp/req_" + std::to_string(fd) + "_" + std::to_string(seconds);
 }
 
-const bool& Request::getIsFobiddenMethod() const {
+const bool &Request::getIsFobiddenMethod() const
+{
 	return _is_forbiden_method;
 }
