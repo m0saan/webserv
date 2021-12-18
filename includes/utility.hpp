@@ -20,13 +20,14 @@
 #include "server.hpp"
 #include <algorithm>
 
-#define _MSG(msg) { std::cerr << "file: "<< __FILE__ << "(@" << __LINE__ << "): " << msg << '\n'; }
-
+#define _MSG(msg)                                                                      \
+    {                                                                                  \
+        std::cerr << "file: " << __FILE__ << "(@" << __LINE__ << "): " << msg << '\n'; \
+    }
 
 class Utility
 {
 public:
-
     static std::vector<std::string> split(std::string const &line, char del = ' ')
     {
         std::vector<std::string> out;
@@ -47,7 +48,8 @@ public:
         return (std::make_pair(res != std::string::npos, res));
     }
 
-    static std::string getQueries(std::string const &url, std::size_t querie_start) {
+    static std::string getQueries(std::string const &url, std::size_t querie_start)
+    {
         return url.substr(querie_start + 1);
     }
 
@@ -87,7 +89,21 @@ public:
         return true;
     }
 
-    static ServerConfig 
+    static ServerConfig getDefaultServerConfig()
+    {
+        ServerConfig default_server_config;
+        default_server_config._port = "80";
+        default_server_config._host = "localhost";
+        default_server_config._server_name = "localhost";
+        default_server_config._root = "./";
+        default_server_config._max_file_size = "1048576";
+        default_server_config._upload_store = "./";
+        default_server_config._auto_index = "false";
+        default_server_config._loc_path = "/";
+        return default_server_config;
+    }
+
+    static ServerConfig
     getRightConfig(std::string const &port, std::string const &host, std::string const &server_name,
                    std::string const &url, std::vector<ServerConfig> const &config_vec)
     {
@@ -101,34 +117,43 @@ public:
 
         if (possible_blocks.size() > 1)
         {
-            for (size_t i = 0; i < config_vec.size(); i++)
+            std::vector<ServerConfig>::iterator start = possible_blocks.begin();
+            for (; start != possible_blocks.end();)
             {
-                if (server_name.find(config_vec[i]._server_name, 0) != std::string::npos)
-                    continue;
-                else
-                    possible_blocks.erase(possible_blocks.begin() + i);
+                if (server_name.find(start->_server_name, 0) != std::string::npos)
+                    ++start;
+                else {
+                    possible_blocks.erase(start);
+                    start = possible_blocks.begin();
+                }
             }
         }
 
+        std::cout << possible_blocks.size() << std::endl;
+
         // request_url.starts_with(location_url)  -> right location
-        if (possible_blocks.empty())
-            exitError("error: could not find server block.");
+        if (possible_blocks.empty()){
+            std::cout << "default" << std::endl;
+            return getDefaultServerConfig();
+        }
+        
         ServerConfig loc;
         ServerConfig default_loc;
 
         loc._loc_path = default_loc._loc_path = "";
 
-
-        for (size_t j = 0; j < possible_blocks[0]._location.size(); ++j) {
-			if (possible_blocks[0]._location[j]._loc_path == "/") {
-				default_loc = possible_blocks[0]._location[j];
+        for (size_t j = 0; j < possible_blocks[0]._location.size(); ++j)
+        {
+            if (possible_blocks[0]._location[j]._loc_path == "/")
+            {
+                default_loc = possible_blocks[0]._location[j];
                 continue;
             }
             if (url.find(possible_blocks[0]._location[j]._loc_path) != std::string::npos)
                 loc = loc._loc_path.length() < possible_blocks[0]._location[j]._loc_path.length()
                           ? possible_blocks[0]._location[j]
                           : loc;
-		}
+        }
 
         /*
 
@@ -146,7 +171,8 @@ public:
             loc = default_loc;
 
         // If no location provided!, create a default one.
-        if (loc._loc_path.empty() && default_loc._loc_path.empty()) {
+        if (loc._loc_path.empty() && default_loc._loc_path.empty())
+        {
             loc._loc_path = "/";
         }
 
@@ -164,10 +190,9 @@ public:
             possible_blocks[0]._root = loc._root;
         if (!loc._max_file_size.empty())
             possible_blocks[0]._max_file_size = loc._max_file_size;
-        
+
         return possible_blocks[0];
     }
 };
-
 
 #endif // __UTILITY_HPP__
