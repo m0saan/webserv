@@ -14,7 +14,7 @@
 
 int main(int ac, char **av) {
     if (ac != 2)
-        exit(1);
+        exitError("message: wrong arguments."); 
 
     std::vector<ServerConfig> vect = performParsing(av[1]);
     Server serv(vect);

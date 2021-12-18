@@ -23,7 +23,8 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	try
 	{
 		/* code */
-		PORT = std::stoi(conf._port);
+		std::stringstream tmp_stream(conf._port);
+		tmp_stream >> PORT;
 		if (conf._host.length() == 0)
 			throw std::exception();
 		else if (conf._host == "localhost" || conf._host == "127.0.0.1")
@@ -106,27 +107,25 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;
-			// TODO: Should check the request body size.
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
-			bool			is_bad_request(false);
-			ServerConfig	chosen_config;
-			bool			is_body_size_exceeded(false);
+			bool is_bad_request(false);
+			ServerConfig chosen_config;
+			bool is_body_size_exceeded(false);
 
 			if (!((req_res.getMap())[fd].getIsFobiddenMethod()))
 			{
-
 				if (_request_map.count("Host") == 0)
 					is_bad_request = true;
 				if (!is_bad_request)
 				{
-					std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
-					std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
+					std::string host_key = _request_map["Host"][0];
+					std::string host = host_key.substr(0, host_key.find(":")); // localhost
+					std::string port = host_key.substr(host_key.find(":") + 1);
 					host = host == "localhost" ? "127.0.0.1" : host;
 
-					chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
+					chosen_config = Utility::getRightConfig(port, host, host_key, _request_map["SL"][1], _config);
 
 					std::stringstream tmp_convert;
 					long request_content_length = 0;
@@ -175,10 +174,10 @@ bool Server::readFromFd(int fd)
 				(void)e;
 				res.internal_error();
 			}
-			// std::cout << res.get_response() << std::endl;
+
 			res._size = res.get_response().length();
 			req_res.add_response(fd, res);
-			/* mamoussa done! */
+
 			req_res.set_fd(fd, false, true); // add client fd to write set
 			req_res.remove_fd(fd, 1, 1);
 		}

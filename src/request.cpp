@@ -110,7 +110,7 @@ void Request::parseRequest()
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
 	_body_stream.close();
 	ifs.close();
-	std::remove((_req_filename).c_str());
+	// std::remove((_req_filename).c_str());
 }
 
 bool Request::_isChunckStart(std::string const &line) const
@@ -239,7 +239,9 @@ size_t Request::getHeaderLength(const std::string &str)
 		_header_length = (pos + 5);
 	else
 	{
-		throw std::exception();
+		std::cout << "REQ {" << str << "}" << std::endl;
+		std::cout << "Here " << std::endl;
+		// throw std::exception();
 	}
 	return pos;
 }
@@ -261,8 +263,8 @@ long long Request::getContentLength(const std::string &str)
 	if (_content_length == -1 && (pos = str.find("Content-Length: ")) != std::string::npos) // if content-Length is found
 	{
 		length = std::strtoll(&str[pos + 16], &ptr_end, 10) + 4;
-		if (ptr_end == &str[pos + 16])
-			throw std::exception();
+		// if (ptr_end == &str[pos + 16])
+		// 	throw std::exception();
 		// if (length > _max_body_size) // check if lenght is greater than max body size
 		// 	throw std::exception();
 		this->_transfer_encoding = COMPLETED;

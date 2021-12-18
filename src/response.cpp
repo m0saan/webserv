@@ -596,7 +596,10 @@ void Response::_default_response(void)
 	delete tmp_body;
 }
 
-void Response::Delete_request(void) { _process_post_delete("DELETE"); }
+void Response::Delete_request(void) 
+{ 
+	_process_post_delete("DELETE");
+}
 
 void Response::Post_request(void)
 {
@@ -608,6 +611,11 @@ void Response::Post_request(void)
 			_fill_response(".html", 403, "Forbiden");
 			return;
 		}
+	}
+	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
+	{
+		_fill_response(".html", 403, "Forbiden");
+		return;
 	}
 	if (_server_configs._loc_path == "/upload")
 	{
@@ -659,6 +667,11 @@ void Response::Get_request(void)
 	if (_root.empty())
 	{
 		_default_response();
+		return;
+	}
+	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
+	{
+		_fill_response(".html", 403, "Forbiden");
 		return;
 	}
 	// lets first check for alowed methods in this location
@@ -959,6 +972,11 @@ void Response::_process_post_delete(std::string const &req_method)
 			_fill_response(".html", 403, "Forbiden");
 			return;
 		}
+	}
+	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
+	{
+		_fill_response(".html", 403, "Forbiden");
+		return;
 	}
 	// lets first check for alowed methods in this location
 	if (loc_path[0] != '/')
