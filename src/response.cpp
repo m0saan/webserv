@@ -739,7 +739,6 @@ std::vector<char const *> Response::_cgi_meta_var(void)
 	 * URL http://www.myhost.com/mypath/myscript.cgi/path/info/here will set PATH_INFO to "/path/info/here".
 	 * Commonly used for path-like data, but you can use it for anything.
 	 */
-	// std::cout << "script name: " <<  _queries_script_name.second << std::endl;
 	str = std::string("PATH_INFO=") + _queries_script_name.second + '\n';
 	meta_var.push_back(str.c_str());
 	/*

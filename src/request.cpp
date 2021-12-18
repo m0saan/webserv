@@ -171,8 +171,6 @@ void Request::append(char *content, long long size, int fd)
 			_req_file.close();
 			return;
 		}
-	// std::cout << "Appended " << _req_file.is_open() << std::endl;
-	// std::cout << "Filename " << generateFilename(fd) << std::endl;
 	if (_req_file.is_open())
 		_req_file << std::string(content);
 	else
@@ -263,18 +261,12 @@ long long Request::getContentLength(const std::string &str)
 	if (_content_length == -1 && (pos = str.find("Content-Length: ")) != std::string::npos) // if content-Length is found
 	{
 		length = std::strtoll(&str[pos + 16], &ptr_end, 10) + 4;
-		// if (ptr_end == &str[pos + 16])
-		// 	throw std::exception();
-		// if (length > _max_body_size) // check if lenght is greater than max body size
-		// 	throw std::exception();
 		this->_transfer_encoding = COMPLETED;
 	}
 	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
 	else // Content-Length not found && !chunked
 		_transfer_encoding = COMPLETED;
-	// 	throw std::exception();
-	// std::cout << "transfer_encodin " << _transfer_encoding << std::endl;
 	return length;
 }
 

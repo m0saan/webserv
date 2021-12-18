@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/18 18:08:45 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/18 22:09:38 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	int PORT;
 	if (conf._port == "null" || conf._host == "null" || size == 0)
 		return;
-	// std::cout << conf._host << std::endl;
 	try
 	{
 		/* code */
@@ -187,10 +186,6 @@ bool Server::readFromFd(int fd)
 
 void Server::sendResponse(int fd)
 {
-	// send response
-	// req_res.send_all(fd, res);
-
-	// std::cout << req_res.getResponse(fd) << std::endl;
 	int sent;
 	// sleep(5);
 	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
@@ -205,10 +200,8 @@ void Server::sendResponse(int fd)
 		return;
 	}
 	req_res.update_sent_bytes(fd, sent);
-	// std::cout << "Sent : " << sent << std::endl;
 	if (req_res.get_response_length(fd) == (ssize_t)req_res.get_res_bytes_sent(fd)) // response is completely sent
 	{
-		// std::cout << "Keep alive " << req_res.getMap()[fd]._is_alive_connection << std::endl;
 		if (!req_res.getMap()[fd]._is_alive_connection) // close connection
 		{
 			req_res.remove_fd(fd, 1, 1, 1); // erase req object from map

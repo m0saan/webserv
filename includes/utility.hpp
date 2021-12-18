@@ -131,12 +131,8 @@ public:
             }
         }
 
-        // request_url.starts_with(location_url)  -> right location
         if (possible_blocks.empty())
-        {
-            // std::cout << "default" << std::endl;
             return getDefaultServerConfig();
-        }
 
         ServerConfig loc;
         ServerConfig default_loc;
