@@ -95,7 +95,7 @@ void RequestResponse::remove_fd(int fd, bool to_read, bool is_client, bool _clos
 bool RequestResponse::select_fd()
 {
 	if (select(max_fd + 1, &(this->tmp_read), &(this->tmp_write), NULL, NULL) < 0)
-
+		return false;
 	return true;
 }
 
