@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/18 10:23:01 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/18 14:06:02 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,12 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 		return;
 	}
 	if (std::find(_opened_ports.begin(), _opened_ports.end(), PORT) != _opened_ports.end()) // Port already opened
+<<<<<<< HEAD
 		return;
+=======
+		return ;
+		// PORT+=1;
+>>>>>>> a4f30915e08b429df4de392cfdb243c72bd05352
 	server_cli.push_back(new Sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
@@ -224,6 +229,7 @@ void Server::listen()
 
 void Server::socketFree(int fd)
 {
+	// remove sockket 
 	std::vector<Sockets *>::iterator first(server_cli.begin());
 
 	for (; first != server_cli.end(); ++first)
