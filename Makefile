@@ -18,7 +18,13 @@ all : $(NAME)
 
 $(NAME) : $(SRCS)
 	@clang++ $(FLAGS) $(SRCS) -o $(NAME)
+
+run:
+	@ ./$(NAME) config_files/multiple-servers.config
+
 clean :
 	@rm -rf $(NAME)
+
 fclean : clean
+
 re : fclean all 
