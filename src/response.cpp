@@ -1,5 +1,5 @@
 #include "../includes/response.hpp"
-# include "../includes/utility.hpp"
+#include "../includes/utility.hpp"
 // #include "../includes/location.hpp"
 
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
@@ -8,7 +8,7 @@ ssize_t Response::getResponseLength() const
 	return _size;
 }
 
-std::string	*error_page(std::string const& message)
+std::string *error_page(std::string const &message)
 {
 	std::string *error_body = new std::string();
 
@@ -18,52 +18,49 @@ std::string	*error_page(std::string const& message)
 	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
 	return error_body;
 }
-Response::Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map,
-				std::pair<std::string, std::string>& queries_script_name, int fd)
-:
-_error_pages(config._error_page),
-_server_configs(config),
-_request_map(request_map),
-_queries_script_name(queries_script_name),
-_fd(fd),
-_size(0),
-_bytes_sent(0)
+Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::string> > &request_map,
+				   std::pair<std::string, std::string> &queries_script_name, int fd, bool found_forbidden_method)
+	: _error_pages(config._error_page),
+	  _server_configs(config),
+	  _request_map(request_map),
+	  _queries_script_name(queries_script_name),
+	  _fd(fd),
+	  _size(0),
+	  _bytes_sent(0)
 {
+	if (!found_forbidden_method)
+	{
+		_uri = _request_map["SL"][1];
+		if (*_uri.begin() == '/')
+			_uri.erase(_uri.begin());
+		_root = _server_configs._root;
+	}
 	_type.insert(std::make_pair("json", "application"));
 	_type.insert(std::make_pair("html", "text"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
-	_uri = _request_map["SL"][1];
-	if (*_uri.begin() == '/')
-		_uri.erase(_uri.begin());
-	_root = _server_configs._root;
 	_fill_status_codes();
-
-
-//    std::cout << "-----------------------------------------------" << std::endl;
-//    std::cout << "root: " << _root << std::endl;
-//    std::cout << "uri: " << _uri << std::endl;
-//    std::cout << "-----------------------------------------------" << std::endl;
-
 }
 
-Response::Response(Response const& x)
-: 
-_error_pages(x._error_pages),
-_server_configs(x._server_configs),
-_request_map(x._request_map),
-_queries_script_name(x._queries_script_name),
-_fd(x._fd),
-_size(0),
-_bytes_sent(0)
-{ *this = x;	}
+Response::Response(Response const &x)
+	: _error_pages(x._error_pages),
+	  _server_configs(x._server_configs),
+	  _request_map(x._request_map),
+	  _queries_script_name(x._queries_script_name),
+	  _fd(x._fd),
+	  _size(0),
+	  _bytes_sent(0)
+{
+	*this = x;
+}
 
-Response::~Response(void) {
+Response::~Response(void)
+{
 	_file.close();
 	if (_fd != -1)
 		close(_fd);
 	delete _status_codes;
-	}
-Response& Response::operator=(Response const& x)
+}
+Response &Response::operator=(Response const &x)
 {
 	_response = x._response;
 	_status_codes = new std::map<std::string, std::string>();
@@ -77,7 +74,7 @@ void Response::_fill_status_codes(void)
 {
 	_status_codes = new std::map<std::string, std::string>();
 	/*----------------- 1xx status codes -------------*/
-	// 	< HTTP/1.1 100 
+	// 	< HTTP/1.1 100
 	// < Server: nginx/1.21.4
 	// < Date: Tue, 07 Dec 2021 10:55:30 GMT_
 	// < Content-Type: application/octet-stream
@@ -98,7 +95,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Type: application/octet-stream
 	// < Content-Length: 17
 	// < Connection: keep-alive
-	// < 
+	// <
 	// * Connection #0 to host localhost left intact
 	// http://google.com
 	_status_codes->insert(std::make_pair("200", "OK"));
@@ -106,32 +103,32 @@ void Response::_fill_status_codes(void)
 	_status_codes->insert(std::make_pair("201", "Created"));
 	// < HTTP/1.1 202 Accepted
 	_status_codes->insert(std::make_pair("202", "Accepted"));
-	// < HTTP/1.1 203 
+	// < HTTP/1.1 203
 	_status_codes->insert(std::make_pair("203", ""));
 	// 	< HTTP/1.1 204 No Content
 	// < Server: nginx/1.21.4
 	// < Date: Mon, 06 Dec 2021 02:55:50 GMT
 	// < Connection: keep-alive
 	_status_codes->insert(std::make_pair("204", "No Content"));
-	// < HTTP/1.1 205 
+	// < HTTP/1.1 205
 	_status_codes->insert(std::make_pair("205", ""));
 	// < HTTP/1.1 206 Partial Content
 	_status_codes->insert(std::make_pair("206", "Partial Content"));
-	// < HTTP/1.1 207 
+	// < HTTP/1.1 207
 	_status_codes->insert(std::make_pair("207", ""));
-	// < HTTP/1.1 208 
+	// < HTTP/1.1 208
 	_status_codes->insert(std::make_pair("208", ""));
-	// < HTTP/1.1 226 
+	// < HTTP/1.1 226
 	_status_codes->insert(std::make_pair("226", ""));
 	/*-----------------------------------------------*/
 	/*----------------- 3xx status codes -------------*/
-	// 	< HTTP/1.1 300 
+	// 	< HTTP/1.1 300
 	// < Server: nginx/1.21.4
 	// < Date: Tue, 07 Dec 2021 10:45:07 GMT
 	// < Content-Type: application/octet-stream
 	// < Content-Length: 17
 	// < Connection: keep-alive
-	// < 
+	// <
 	// * Connection #0 to host localhost left intact
 	// http://google.com
 	_status_codes->insert(std::make_pair("300", ""));
@@ -142,7 +139,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Length: 169
 	// < Connection: keep-alive
 	// < Location: http://google.com
-	// < 
+	// <
 	// <html>
 	// <head><title>301 Moved Permanently</title></head>
 	// <body>
@@ -158,7 +155,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Length: 145
 	// < Connection: keep-alive
 	// < Location: http://google.com
-	// < 
+	// <
 	// <html>
 	// <head><title>302 Found</title></head>
 	// <body>
@@ -174,7 +171,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Length: 153
 	// < Connection: keep-alive
 	// < Location: http://google.com
-	// < 
+	// <
 	// <html>
 	// <head><title>303 See Other</title></head>
 	// <body>
@@ -190,23 +187,23 @@ void Response::_fill_status_codes(void)
 	// < Content-Length: 17
 	// < Connection: keep-alive
 	_status_codes->insert(std::make_pair("304", ""));
-	// 	< HTTP/1.1 305 
+	// 	< HTTP/1.1 305
 	// < Server: nginx/1.21.4
 	// < Date: Tue, 07 Dec 2021 10:47:40 GMT
 	// < Content-Type: application/octet-stream
 	// < Content-Length: 17
 	// < Connection: keep-alive
-	// < 
+	// <
 	// * Connection #0 to host localhost left intact
 	// http://google.com
 	_status_codes->insert(std::make_pair("305", ""));
-	// 	< HTTP/1.1 306 
+	// 	< HTTP/1.1 306
 	// < Server: nginx/1.21.4
 	// < Date: Tue, 07 Dec 2021 10:47:59 GMT
 	// < Content-Type: application/octet-stream
 	// < Content-Length: 17
 	// < Connection: keep-alive
-	// < 
+	// <
 	// * Connection #0 to host localhost left intact
 	// http://google.com%
 	_status_codes->insert(std::make_pair("306", ""));
@@ -217,7 +214,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Length: 171
 	// < Connection: keep-alive
 	// < Location: http://google.com
-	// < 
+	// <
 	// <html>
 	// <head><title>307 Temporary Redirect</title></head>
 	// <body>
@@ -233,7 +230,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Length: 171
 	// < Connection: keep-alive
 	// < Location: http://google.com
-	// < 
+	// <
 	// <html>
 	// <head><title>308 Permanent Redirect</title></head>
 	// <body>
@@ -250,7 +247,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Type: application/octet-stream
 	// < Content-Length: 17
 	// < Connection: keep-alive
-	// < 
+	// <
 	// * Connection #0 to host localhost left intact
 	// http://google.com%
 	_status_codes->insert(std::make_pair("400", "Bad Request"));
@@ -266,7 +263,7 @@ void Response::_fill_status_codes(void)
 	_status_codes->insert(std::make_pair("405", "Not Allowed"));
 	// < HTTP/1.1 406 Not Acceptable
 	_status_codes->insert(std::make_pair("406", "Not Acceptable"));
-	// < HTTP/1.1 407 
+	// < HTTP/1.1 407
 	_status_codes->insert(std::make_pair("407", ""));
 	// < HTTP/1.1 408 Request Time-out
 	_status_codes->insert(std::make_pair("408", "Request Time-out"));
@@ -286,31 +283,31 @@ void Response::_fill_status_codes(void)
 	_status_codes->insert(std::make_pair("415", "Unsupported Media Type"));
 	// < HTTP/1.1 416 Requested Range Not Satisfiable
 	_status_codes->insert(std::make_pair("416", "Requested Range Not Satisfiable"));
-	// < HTTP/1.1 417 
+	// < HTTP/1.1 417
 	_status_codes->insert(std::make_pair("417", ""));
-	// < HTTP/1.1 418 
+	// < HTTP/1.1 418
 	_status_codes->insert(std::make_pair("418", ""));
 	// < HTTP/1.1 421 Misdirected Request
 	_status_codes->insert(std::make_pair("421", "Misdirected Request"));
-	// < HTTP/1.1 422 
+	// < HTTP/1.1 422
 	_status_codes->insert(std::make_pair("422", ""));
-	// < HTTP/1.1 423 
+	// < HTTP/1.1 423
 	_status_codes->insert(std::make_pair("423", ""));
-	// < HTTP/1.1 424 
+	// < HTTP/1.1 424
 	_status_codes->insert(std::make_pair("424", ""));
-	// < HTTP/1.1 426 
+	// < HTTP/1.1 426
 	_status_codes->insert(std::make_pair("426", ""));
-	// < HTTP/1.1 428 
+	// < HTTP/1.1 428
 	_status_codes->insert(std::make_pair("428", ""));
 	// < HTTP/1.1 429 Too Many Requests
 	_status_codes->insert(std::make_pair("429", "Too Many Requests"));
-	// < HTTP/1.1 431 
+	// < HTTP/1.1 431
 	_status_codes->insert(std::make_pair("431", ""));
-	// < HTTP/1.1 444 
+	// < HTTP/1.1 444
 	_status_codes->insert(std::make_pair("444", ""));
-	// < HTTP/1.1 451 
+	// < HTTP/1.1 451
 	_status_codes->insert(std::make_pair("451", ""));
-	// < HTTP/1.1 499 
+	// < HTTP/1.1 499
 	_status_codes->insert(std::make_pair("499", ""));
 	/*-----------------------------------------------*/
 	/*----------------- 5xx status codes -------------*/
@@ -320,7 +317,7 @@ void Response::_fill_status_codes(void)
 	// < Content-Type: application/octet-stream
 	// < Content-Length: 17
 	// < Connection: keep-alive
-	// < 
+	// <
 	// * Connection #0 to host localhost left intact
 	// http://google.com%
 	_status_codes->insert(std::make_pair("500", "Internal Server Error"));
@@ -334,33 +331,32 @@ void Response::_fill_status_codes(void)
 	_status_codes->insert(std::make_pair("504", "Gateway Time-out"));
 	// < HTTP/1.1 505 HTTP Version Not Supported
 	_status_codes->insert(std::make_pair("505", "HTTP Version Not Supported"));
-	// < HTTP/1.1 506 
+	// < HTTP/1.1 506
 	_status_codes->insert(std::make_pair("506", ""));
 	// < HTTP/1.1 507 Insufficient Storage
 	_status_codes->insert(std::make_pair("507", "Insufficient Storage"));
-	// < HTTP/1.1 508 
+	// < HTTP/1.1 508
 	_status_codes->insert(std::make_pair("508", ""));
-	// < HTTP/1.1 510 
+	// < HTTP/1.1 510
 	_status_codes->insert(std::make_pair("510", ""));
-	// < HTTP/1.1 511 
+	// < HTTP/1.1 511
 	_status_codes->insert(std::make_pair("511", ""));
-	// < HTTP/1.1 599 
+	// < HTTP/1.1 599
 	_status_codes->insert(std::make_pair("599", ""));
 	/*------------------------------------------------*/
-
 }
 
 /*-------------------------------------------------------------------------------*/
 /* public methods to hand bad_allocation, iternal_errors and Forbidden_methods response */
-void	Response::Forbidden_method(void)	{_fill_response(".html", 403, "Forbidden");}
-void	Response::bad_allocation(void)
+void Response::Forbidden_method(void) { _fill_response(".html", 403, "Forbidden"); }
+void Response::bad_allocation(void)
 {
-	time_t 		rawtime;
-	std::string	*tmp_res;
+	time_t rawtime;
+	std::string *tmp_res;
 	std::stringstream ss;
-	std::string		line;
+	std::string line;
 
-	time (&rawtime);
+	time(&rawtime);
 	if (_error_pages.count("507"))
 	{
 		_file_path = _error_pages["507"];
@@ -394,14 +390,14 @@ void	Response::bad_allocation(void)
 	delete tmp_res;
 }
 // "500", "Internal Server Error"
-void	Response::internal_error(void)
+void Response::internal_error(void)
 {
-	time_t 		rawtime;
-	std::string	*tmp_res;
+	time_t rawtime;
+	std::string *tmp_res;
 	std::stringstream ss;
-	std::string		line;
+	std::string line;
 
-	time (&rawtime);
+	time(&rawtime);
 	if (_error_pages.count("500"))
 	{
 		_file_path = _error_pages["500"];
@@ -446,7 +442,7 @@ void	Response::internal_error(void)
 // < Content-Length: 169
 // < Connection: keep-alive
 // < Location: http://google.com
-// < 
+// <
 // <html>
 // <head><title>301 Moved Permanently</title></head>
 // <body>
@@ -456,15 +452,15 @@ void	Response::internal_error(void)
 // </html>
 void Response::_redirect_with_location(size_t status_code)
 {
-	time_t 		rawtime;
-	std::string	*tmp_res;
+	time_t rawtime;
+	std::string *tmp_res;
 	std::string status = _server_configs._redirect.first;
-	std::string	message =	_status_codes->operator[](status);
+	std::string message = _status_codes->operator[](status);
 	std::stringstream ss;
-	std::string		str_status_code;
-	std::string		line;
+	std::string str_status_code;
+	std::string line;
 
-	time (&rawtime);
+	time(&rawtime);
 	ss << status_code;
 	ss >> str_status_code;
 	if (_error_pages.count(str_status_code))
@@ -510,7 +506,7 @@ void Response::_redirect_with_location(size_t status_code)
 // < Content-Type: application/octet-stream
 // < Content-Length: 17
 // < Connection: keep-alive
-// < 
+// <
 // * Connection #0 to host localhost left intact
 // http://google.com%
 /*---------------------------------------------*/
@@ -528,13 +524,13 @@ void Response::_redirect_with_location(size_t status_code)
 // < Connection: keep-alive
 void Response::_redirect_without_location(size_t status_code)
 {
-	time_t 		rawtime;
-	std::string	*tmp_res;
+	time_t rawtime;
+	std::string *tmp_res;
 	std::string status = _server_configs._redirect.first;
-	std::string	message =	_status_codes->operator[](status);
+	std::string message = _status_codes->operator[](status);
 	std::stringstream ss;
 
-	time (&rawtime);
+	time(&rawtime);
 	_response += "HTTP/1.1 " + status + ' ' + message + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
@@ -545,7 +541,7 @@ void Response::_redirect_without_location(size_t status_code)
 	if (status_code != 304)
 		tmp_res = error_page(status + ' ' + message);
 	else
-		*tmp_res =  _server_configs._redirect.second + "\r\n";
+		*tmp_res = _server_configs._redirect.second + "\r\n";
 	ss << tmp_res->length();
 	_response += "Content-Type: application/octet-stream\r\n";
 	_response += "Content-Length: " + ss.str() + "\r\n";
@@ -557,29 +553,22 @@ void Response::_redirect_without_location(size_t status_code)
 }
 void Response::Redirection(void)
 {
-	size_t				status_code;
-	std::stringstream	ss;
+	size_t status_code;
+	std::stringstream ss;
 
 	ss << _server_configs._redirect.first;
 	ss >> status_code;
-	if ((status_code >= 301 && status_code <= 303)
-	|| (status_code == 307 || status_code == 308))
+	if ((status_code >= 301 && status_code <= 303) || (status_code == 307 || status_code == 308))
 		_redirect_with_location(status_code);
 	else
 		_redirect_without_location(status_code);
 }
 
-std::string*	Response::_get_def_response(void)
+std::string *Response::_get_def_response(void)
 {
 	std::string *tmp_body = new std::string();
 
-	*tmp_body = std::string("<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>Welcome to webserv!</title>")
-	+ std::string("\r\n<style>\r\nhtml {	color-scheme: light dark;}\r\nbody")
-	+ std::string("{width: 35em; margin: 0 auto;font-family: Tahoma, Verdana, Arial, sans-serif;}\r\n")
-	+ std::string("</style>\r\n</head>\r\n<body>\r\n<h1>Welcome to webserv: the worst webserver ever!</h1>\r\n")
-	+ std::string("<p>If you see this page, you are just a fucking sucker who know nothing about servers. ")
-	+ std::string("Further configuration is required.</p>")
-	+ std::string("<p><em>Thank you for using our motherfucking server.</em></p>\r\n</body>\r\n</html>");
+	*tmp_body = std::string("<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>Welcome to webserv!</title>") + std::string("\r\n<style>\r\nhtml {	color-scheme: light dark;}\r\nbody") + std::string("{width: 35em; margin: 0 auto;font-family: Tahoma, Verdana, Arial, sans-serif;}\r\n") + std::string("</style>\r\n</head>\r\n<body>\r\n<h1>Welcome to webserv: the worst webserver ever!</h1>\r\n") + std::string("<p>If you see this page, you are just a fucking sucker who know nothing about servers. ") + std::string("Further configuration is required.</p>") + std::string("<p><em>Thank you for using our motherfucking server.</em></p>\r\n</body>\r\n</html>");
 	return tmp_body;
 }
 void Response::_default_response(void)
@@ -590,24 +579,24 @@ void Response::_default_response(void)
 
 	tmp_body = _get_def_response();
 	ss << tmp_body->length();
-	time (&rawtime);
+	time(&rawtime);
 	_response += "HTTP/1.1 200 OK\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
-	_response += "Content-Length: " + ss.str() +  "\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
 	_response += "Content-Type: text/html\r\n";
 	_response += "Connection: close\r\n\r\n";
 	_response += *tmp_body;
 	delete tmp_body;
 }
 
-void Response::Delete_request(void)	{	_process_post_delete("DELETE");	}
+void Response::Delete_request(void) { _process_post_delete("DELETE"); }
 
-void Response::Post_request(void)	
-{	
-	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
+void Response::Post_request(void)
+{
+	std::vector<std::string> allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
 	if (!allowed.empty())
 	{
 		if (find(allowed.begin(), allowed.end(), "POST") == allowed.end())
@@ -635,7 +624,7 @@ void Response::Post_request(void)
 		_file_path += '/' + file_name;
 		_file_path = std::string("cp /tmp/body ") + _file_path;
 		system(_file_path.c_str());
-		time (&rawtime);
+		time(&rawtime);
 		_response += "HTTP/1.1 200 OK\r\n";
 		_response += "Date: " + std::string(ctime(&rawtime));
 		_response.erase(--_response.end());
@@ -651,8 +640,8 @@ void Response::Post_request(void)
 
 void Response::Get_request(void)
 {
-	std::vector<std::string> 	allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string 				loc_path = _server_configs._loc_path;
+	std::vector<std::string> allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
+	std::string loc_path = _server_configs._loc_path;
 
 	if (!allowed.empty())
 	{
@@ -685,7 +674,7 @@ void Response::Get_request(void)
 		return;
 	}
 	// first we have to check if the location is a dir or just a file
-    if (loc_path == "/")
+	if (loc_path == "/")
 		_process_as_dir();
 	else if (_is_dir(_root + loc_path))
 		_process_as_dir();
@@ -694,10 +683,10 @@ void Response::Get_request(void)
 }
 /*----------------------------------------------------------------------------*/
 /* this part is for the cgi (fill the meta_var and excute it) */
-std::vector<char const*>	Response::_cgi_meta_var(void)
+std::vector<char const *> Response::_cgi_meta_var(void)
 {
-	std::vector<char const*> meta_var;
-	std::string				str;
+	std::vector<char const *> meta_var;
+	std::string str;
 
 	/*
 	 * SRC = Request (we will get this info from the request headers)
@@ -705,7 +694,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 *	The CONTENT_LENGTH value must reflect the length of the message-body
 	 */
 	if (_request_map.count("Content-Length"))
-		str = std::string("CONTENT_LENGHT=") + _request_map["Content-Length"][0] +  '\n';
+		str = std::string("CONTENT_LENGHT=") + _request_map["Content-Length"][0] + '\n';
 	else
 		str = std::string("CONTENT_LENGHT=\n");
 	meta_var.push_back(str.c_str());
@@ -715,7 +704,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	 * The server MUST set this meta-variable if an HTTP Content-Type field is present in the client request header.
 	 */
 	if (_request_map.count("Content-Type"))
-		str = std::string("CONTENT_TYPE=") + _request_map["Content-Type"][0] +  '\n';
+		str = std::string("CONTENT_TYPE=") + _request_map["Content-Type"][0] + '\n';
 	else
 		str = std::string("CONTENT_TYPE=\n");
 	meta_var.push_back(str.c_str());
@@ -753,7 +742,7 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 
 	str = std::string("HTTP_COOKIE=");
 	for (size_t i = 0; i < _request_map["Cookie"].size(); i++)
-		str += _request_map["Cookie"][i]; 
+		str += _request_map["Cookie"][i];
 	str += "\n";
 	meta_var.push_back(str.c_str());
 	/*
@@ -792,11 +781,11 @@ std::vector<char const*>	Response::_cgi_meta_var(void)
 	return meta_var;
 }
 
-std::string	*get_res(int fd)
+std::string *get_res(int fd)
 {
 	std::string *ans = new std::string();
-	char		buff[1024];
-	int 		ret;
+	char buff[1024];
+	int ret;
 
 	while ((ret = read(fd, buff, 1024)))
 		*ans += buff;
@@ -805,12 +794,12 @@ std::string	*get_res(int fd)
 
 void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 {
-	time_t 				rawtime;
-	std::stringstream	ss;
-	
+	time_t rawtime;
+	std::stringstream ss;
+
 	ss << tmp_res->length() - (tmp_res->find("\r\n\r\n") + 4);
-	time (&rawtime);
-	if(is_red)
+	time(&rawtime);
+	if (is_red)
 		_response += "HTTP/1.1 302 Found\r\n";
 	else
 		_response += "HTTP/1.1 200 OK\r\n";
@@ -824,11 +813,11 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 
 void Response::_cgi(void)
 {
-	int			pfd[2];
-	std::string	*tmp_res;
-	pid_t		pid;
-	size_t 		index;
-	int			status;
+	int pfd[2];
+	std::string *tmp_res;
+	pid_t pid;
+	size_t index;
+	int status;
 
 	// if (_fd == -1)
 	// {
@@ -836,12 +825,12 @@ void Response::_cgi(void)
 	// 	if (!_file_is_good(true))
 	// 		return;
 	// 	_fd = open(_file_path.c_str(), O_RDONLY);
-	// } 
+	// }
 	pipe(pfd);
-	if(!(pid = fork()))
+	if (!(pid = fork()))
 	{
-		std::vector<char const*> meta_var = _cgi_meta_var();
-		std::vector<char const*> args;
+		std::vector<char const *> meta_var = _cgi_meta_var();
+		std::vector<char const *> args;
 		std::string path;
 
 		args.push_back(_server_configs._cgi.c_str());
@@ -851,8 +840,7 @@ void Response::_cgi(void)
 		close(pfd[0]);
 		dup2(_fd, 0);
 		dup2(pfd[1], 1);
-		if (execve(path.c_str(), const_cast<char *const*>(&(*args.begin()))
-		, const_cast<char *const*>(&(*meta_var.begin()))) < 0)
+		if (execve(path.c_str(), const_cast<char *const *>(&(*args.begin())), const_cast<char *const *>(&(*meta_var.begin()))) < 0)
 		{
 			close(pfd[1]);
 			args.~vector();
@@ -892,13 +880,13 @@ void Response::_cgi(void)
 }
 /*---------------------------------------------------------------------------------------------------*/
 /* this part is for the files and subdirectoreis listing e.i when we have the auto indexing */
-void Response::_fill_auto_index_response(std::string* tmp_res)
+void Response::_fill_auto_index_response(std::string *tmp_res)
 {
-	time_t 				rawtime;
+	time_t rawtime;
 	std::stringstream ss;
 
 	ss << tmp_res->length();
-	time (&rawtime);
+	time(&rawtime);
 	_response += "HTTP/1.1 200 OK\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
@@ -911,9 +899,9 @@ void Response::_fill_auto_index_response(std::string* tmp_res)
 
 void Response::_auto_index_list(void)
 {
-	std::string 	*tmp_res = new std::string();
-	DIR*			dir;
-	struct dirent	*dir_info;
+	std::string *tmp_res = new std::string();
+	DIR *dir;
+	struct dirent *dir_info;
 
 	dir = opendir(_root.c_str());
 	if (!dir)
@@ -952,12 +940,12 @@ void Response::_auto_index_list(void)
 }
 /*-----------------------------------------------------------------------------------------------------*/
 
-void Response::_process_post_delete(std::string const& req_method)
+void Response::_process_post_delete(std::string const &req_method)
 {
-	std::vector<std::string> const 		allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
-	std::string 	 					loc_path = _server_configs._loc_path;
-	std::vector<std::string>	const 	index = _server_configs._index;
-	bool								found(false);
+	std::vector<std::string> const allowed(_server_configs._allowed_method.begin(), _server_configs._allowed_method.end());
+	std::string loc_path = _server_configs._loc_path;
+	std::vector<std::string> const index = _server_configs._index;
+	bool found(false);
 
 	if (!allowed.empty())
 	{
@@ -1032,11 +1020,11 @@ void Response::_process_post_delete(std::string const& req_method)
 
 void Response::_process_as_dir(void)
 {
-	std::vector<std::string>	const 	index = _server_configs._index;
-	bool								found(false);
+	std::vector<std::string> const index = _server_configs._index;
+	bool found(false);
 
 	_root += '/' + _uri;
-    if (_uri.empty() || _is_dir(_root))
+	if (_uri.empty() || _is_dir(_root))
 	{
 		for (size_t i = 0; i < index.size(); ++i)
 		{
@@ -1083,7 +1071,7 @@ void Response::_process_as_file(void)
 	return;
 }
 
-bool Response::_is_dir(std::string const& path) const
+bool Response::_is_dir(std::string const &path) const
 {
 	struct stat s;
 
@@ -1097,15 +1085,15 @@ bool Response::_is_dir(std::string const& path) const
 	return false;
 }
 
-void Response::_set_headers(size_t status_code, std::string const& message, size_t content_length, std::string const& path)
+void Response::_set_headers(size_t status_code, std::string const &message, size_t content_length, std::string const &path)
 {
 	time_t rawtime;
 	std::string const extention = path.substr(path.find_last_of(".") + 1);
 	std::stringstream ss, ss_content;
 
 	ss << status_code;
-	time (&rawtime);
-	_response += "HTTP/1.1 " +  ss.str() + " " + message + "\r\n";
+	time(&rawtime);
+	_response += "HTTP/1.1 " + ss.str() + " " + message + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
@@ -1119,19 +1107,19 @@ void Response::_set_headers(size_t status_code, std::string const& message, size
 	_response += "Connection: close\r\n\r\n";
 }
 
-void Response::_fill_response(std::string const& tmp_path, size_t status_code, std::string const& message)
+void Response::_fill_response(std::string const &tmp_path, size_t status_code, std::string const &message)
 {
-	std::string 		line;
-	std::string			*tmp_resp = new std::string();
-	std::stringstream	ss;
-	std::string			path;	
+	std::string line;
+	std::string *tmp_resp = new std::string();
+	std::stringstream ss;
+	std::string path;
 
 	path = tmp_path;
 	ss << status_code;
-	if (status_code == 200 || (!_error_pages.empty() && _error_pages.count(ss.str())) ) // check if this status_code has a error_page
+	if (status_code == 200 || (!_error_pages.empty() && _error_pages.count(ss.str()))) // check if this status_code has a error_page
 	{
 		// now if status_code is not 200 then we should change the path to be the error_page path
-		if (status_code != 200)	
+		if (status_code != 200)
 		{
 			path = _error_pages[ss.str()];
 			if (path[0] == '/')
@@ -1153,12 +1141,12 @@ void Response::_fill_response(std::string const& tmp_path, size_t status_code, s
 	}
 	else
 	{
-		std::stringstream	ss;
-		std::string			buff;
+		std::stringstream ss;
+		std::string buff;
 		ss << status_code;
 		ss >> buff;
 		delete tmp_resp;
-		tmp_resp = error_page(buff  + ' ' + message);
+		tmp_resp = error_page(buff + ' ' + message);
 	}
 	// set all the needed response header
 	_set_headers(status_code, message, tmp_resp->length(), path);
@@ -1183,4 +1171,4 @@ bool Response::_file_is_good(bool fill_resp)
 	close(fd);
 	return true;
 }
-std::string const& 	Response::get_response(void) const	{ return _response; }
+std::string const &Response::get_response(void) const { return _response; }

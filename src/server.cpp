@@ -14,8 +14,6 @@
 #include "../includes/response.hpp"
 #include "../includes/utility.hpp"
 
-
-
 void Server::initConfig(ServerConfig &conf, size_t size)
 {
 	int PORT;
@@ -38,7 +36,7 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 		return;
 	}
 	if (std::find(_opened_ports.begin(), _opened_ports.end(), PORT) != _opened_ports.end()) // Port already opened
-		return ;
+		return;
 	server_cli.push_back(new Sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
@@ -72,7 +70,7 @@ int Server::is_server(int fd, bool *is_client) const
 
 void Server::emergencyFree() // !CALL THE POLICE.
 {
-	int fd = server_cli.back()->get_fd(); // get Fd
+	int fd = server_cli.back()->get_fd();  // get Fd
 	(req_res.getMap())[fd].resetRequest(); // clear request content
 	// remove fd from read/write sets
 	req_res.remove_fd(fd, true, true, true);
@@ -108,42 +106,27 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;  
-
+			// std::cout << "request : \n" << (req_res.getMap())[fd].get_req().str() << std::endl;
 			// TODO: Should check the request body size.
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
-
-			if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
-				_MSG("found forbidden method");
-				exit(1);
-			}
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
-			// if ((req_res.getMap())[fd].isBadRequest())
-			// 	exitError("message: bad request");
+			ServerConfig chosen_config;
 
-			// extract the host, port and server_name from the request map. 
-			// use them to choose which server block to handle the request with.
-			std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
-			std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
-			host = host == "localhost" ? "127.0.0.1" : host;
+			if (!((req_res.getMap())[fd].getIsFobiddenMethod()))
+			{
+				std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
+				std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
+				host = host == "localhost" ? "127.0.0.1" : host;
 
-
-			ServerConfig chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
-
-			// std::map<std::string, std::vector<std::string> >::iterator it = _request_map.begin();
-			// for (; it != _request_map.end(); it++)
-			// 	std::cout << '(' << it->first << ", " << it->second << ')' << std::endl;
-			
-
-            /* mosan is done right here!!  Yaaaaaaaay */
-
-
-			// TODO: check if a forbidden method is provided <mamoussa>.
-			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD());
+				chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
+			}
+			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD(), (req_res.getMap())[fd].getIsFobiddenMethod());
 			try
 			{
-				if (!chosen_config._redirect.first.empty())
+				if ((req_res.getMap())[fd].getIsFobiddenMethod())
+					res.Forbidden_method();
+				else if (!chosen_config._redirect.first.empty())
 					res.Redirection();
 				else if (_request_map["SL"][0] == "GET")
 					res.Get_request();
@@ -153,19 +136,19 @@ bool Server::readFromFd(int fd)
 					res.Delete_request();
 			}
 
-			catch(std::bad_alloc const& e)
+			catch (std::bad_alloc const &e)
 			{
 				(void)e;
 				res.bad_allocation();
 			}
-			catch(std::exception const& e)
+			catch (std::exception const &e)
 			{
 				(void)e;
 				res.internal_error();
 			}
 			// std::cout << res.get_response() << std::endl;
 			res._size = res.get_response().length();
-            req_res.add_response(fd, res);
+			req_res.add_response(fd, res);
 			/* mamoussa done! */
 			req_res.set_fd(fd, false, true); // add client fd to write set
 			req_res.remove_fd(fd, 1, 1);
@@ -178,17 +161,16 @@ void Server::sendResponse(int fd)
 {
 	// send response
 	// req_res.send_all(fd, res);
-	
-	
-	// std::cout << req_res.getResponse(fd) << std::endl; 
+
+	// std::cout << req_res.getResponse(fd) << std::endl;
 	int sent;
 	// sleep(5);
-	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0);	// std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
-		//ToDo: Handle Error case 0 and -1
-	if (sent == -1) // send failed
+	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
+																																										//ToDo: Handle Error case 0 and -1
+	if (sent == -1)																																						// send failed
 	{
 		perror("send ");
-		req_res.remove_fd(fd, 1, 1, 1); // erase client req object from map 
+		req_res.remove_fd(fd, 1, 1, 1); // erase client req object from map
 		req_res.remove_fd(fd, 0, 1, 1); // remove client from write fd and erase res object from map
 		req_res.close_connection(fd);
 		socketFree(fd);
@@ -199,9 +181,9 @@ void Server::sendResponse(int fd)
 	if (req_res.get_response_length(fd) == req_res.get_res_bytes_sent(fd)) // response is completely sent
 	{
 		// std::cout << "Keep alive " << req_res.getMap()[fd]._is_alive_connection << std::endl;
-		if (!req_res.getMap()[fd]._is_alive_connection) // close connection 
+		if (!req_res.getMap()[fd]._is_alive_connection) // close connection
 		{
-			req_res.remove_fd(fd, 1, 1, 1); // erase req object from map 
+			req_res.remove_fd(fd, 1, 1, 1); // erase req object from map
 			req_res.remove_fd(fd, 0, 1, 1); // remove from write fd and erase res object from map
 			req_res.close_connection(fd);
 			socketFree(fd);
@@ -232,7 +214,7 @@ void Server::listen()
 		for (size_t i = 0; i < server_cli.size(); ++i)
 		{
 			if (req_res.is_ready((server_cli[i])->get_fd(), 1)) // check if fd is ready to read
-				if (!readFromFd((server_cli[i])->get_fd())) // return false in case of connection closed
+				if (!readFromFd((server_cli[i])->get_fd()))		// return false in case of connection closed
 					continue;
 			if (req_res.is_ready((server_cli[i])->get_fd(), 0)) // check if fd is ready to write
 				sendResponse((server_cli[i])->get_fd());
@@ -251,7 +233,7 @@ void Server::socketFree(int fd)
 			delete *first;
 			*first = NULL;
 			server_cli.erase(first);
-			return ;
+			return;
 		}
 	}
 	return;

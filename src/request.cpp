@@ -209,6 +209,10 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 
 	if (_RequestMap.count("SL") == 0)
 	{
+		if (tokens[0].empty())
+			std::cout << "tokens[0] is empty" << std::endl;
+		else
+			std::cout << tokens[0] << std::endl;
 		if (std::find(_forbidden_http_methods.begin(), _forbidden_http_methods.end(), tokens[0]) != _forbidden_http_methods.end()) {
 			_is_forbiden_method = true;
 			return;
