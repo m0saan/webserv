@@ -612,11 +612,11 @@ void Response::Post_request(void)
 			return;
 		}
 	}
-	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
-	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
-	}
+	// if (_server_configs._index.empty() && _server_configs._auto_index.empty())
+	// {
+	// 	_fill_response(".html", 403, "Forbiden");
+	// 	return;
+	// }
 	if (_server_configs._loc_path == "/upload")
 	{
 		if (!_request_map.count("Content-Disposition"))
@@ -669,11 +669,11 @@ void Response::Get_request(void)
 		_default_response();
 		return;
 	}
-	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
-	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
-	}
+	// if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
+	// {
+	// 	_fill_response(".html", 403, "Forbiden");
+	// 	return;
+	// }
 	// lets first check for alowed methods in this location
 	if (loc_path[0] != '/')
 		loc_path = '/' + loc_path;
@@ -801,7 +801,7 @@ std::vector<char const *> Response::_cgi_meta_var(void)
 std::string *get_res(int fd)
 {
 	std::string *ans = new std::string();
-	char buff[1024];
+	char buff[1024] = {0};
 	int ret;
 
 	while ((ret = read(fd, buff, 1024)))
@@ -836,13 +836,6 @@ void Response::_cgi(void)
 	size_t index;
 	int status;
 
-	// if (_fd == -1)
-	// {
-	// 	_file_path = _root + '/' + _uri;
-	// 	if (!_file_is_good(true))
-	// 		return;
-	// 	_fd = open(_file_path.c_str(), O_RDONLY);
-	// }
 	pipe(pfd);
 	if (!(pid = fork()))
 	{
@@ -972,14 +965,14 @@ void Response::_process_post_delete(std::string const &req_method)
 			return;
 		}
 	}
-	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
-	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
-	}
 	// lets first check for alowed methods in this location
 	if (loc_path[0] != '/')
 		loc_path = '/' + loc_path;
+	// if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
+	// {
+	// 	_fill_response(".html", 403, "Forbiden");
+	// 	return;
+	// }
 	// first lets check if the loc path is valid
 	if (_server_configs._cgi.empty())
 	{

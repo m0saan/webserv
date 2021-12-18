@@ -110,7 +110,7 @@ void Request::parseRequest()
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
 	_body_stream.close();
 	ifs.close();
-	// std::remove((_req_filename).c_str());
+	std::remove((_req_filename).c_str());
 }
 
 bool Request::_isChunckStart(std::string const &line) const

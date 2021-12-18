@@ -1,8 +1,8 @@
 <?php
 $servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "Mo_San";
+$username = "leet_admin";
+$password = "leetask";
+$dbname = "webserv";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

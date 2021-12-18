@@ -1,30 +1,24 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "Mo_San";
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+// $host="localhost";
+// $port="5432";
+// $dbname="sampledb";
+// $username="postgres";
+// $password="1234";
+// $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;user=$username;password=$password";
 
-// sql to create table
-$sql = "CREATE TABLE MyGuests (
-id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-firstname VARCHAR(30) NOT NULL,
-lastname VARCHAR(30) NOT NULL,
-email VARCHAR(50),
-reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)";
+// try{
+// // creates the PostgreSQL database connection
+// $conn = new PDO($dsn);
 
-if ($conn->query($sql) === TRUE) {
-  echo "Table MyGuests created successfully";
-} else {
-  echo "Error creating table: " . $conn->error;
-}
+// // message if connected to the PostgreSQL successfully
+// if($conn){
+// echo "Connected to the $dbname database successfully!";
+// }
+// }catch (PDOException $e){
+// // should there be an error lets get that and show it to the user.
+// echo $e->getMessage();
+// }
 
-$conn->close();
+echo "hello";
 ?>
