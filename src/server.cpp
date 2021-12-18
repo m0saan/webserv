@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/18 14:48:19 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/18 18:08:45 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,9 +111,9 @@ bool Server::readFromFd(int fd)
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
-			ServerConfig chosen_config;
-			bool is_body_size_exceeded;
-			bool is_bad_request;
+			bool			is_bad_request(false);
+			ServerConfig	chosen_config;
+			bool			is_body_size_exceeded(false);
 
 			if (!((req_res.getMap())[fd].getIsFobiddenMethod()))
 			{
@@ -207,7 +207,7 @@ void Server::sendResponse(int fd)
 	}
 	req_res.update_sent_bytes(fd, sent);
 	// std::cout << "Sent : " << sent << std::endl;
-	if (req_res.get_response_length(fd) == req_res.get_res_bytes_sent(fd)) // response is completely sent
+	if (req_res.get_response_length(fd) == (ssize_t)req_res.get_res_bytes_sent(fd)) // response is completely sent
 	{
 		// std::cout << "Keep alive " << req_res.getMap()[fd]._is_alive_connection << std::endl;
 		if (!req_res.getMap()[fd]._is_alive_connection) // close connection

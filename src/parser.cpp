@@ -29,7 +29,7 @@ int getDirective(std::string const &token)
         std::make_pair("}", Directives::SERVER_END),
     };
 
-    for (int i = 0; i < globalDirectives.size(); ++i)
+    for (size_t i = 0; i < globalDirectives.size(); ++i)
         if (token == globalDirectives[i].first)
             return globalDirectives[i].second;
     return INVALID_DIRECTIVE;
@@ -75,11 +75,11 @@ void getServerName(std::vector<std::string> &tokens, bool const &isLocation, std
         fillGlobalDirectives(globalConfig[i]._location[j]._server_name, tokens[1], tokens[0]);
 }
 
-void getErrorPage(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+void getErrorPage(std::vector<std::string> &tokens, std::vector<ServerConfig> &globalConfig, int i)
 {
     if (tokens.size() <= 2 || tokens[1] != "<" || tokens[tokens.size() - 1] != ">" || !globalConfig[i]._error_page.empty())
         exitError("error near directive: <" + tokens[0] + ">");
-    for (int k = 2; k < tokens.size(); ++k)
+    for (size_t k = 2; k < tokens.size(); ++k)
     {
         if (tokens[k] == ">")
             break;
@@ -139,7 +139,7 @@ void getAllowedMethods(std::vector<std::string> &tokens, bool const &isLocation,
         if (!globalConfig[i]._allowed_method.empty())
             exitError("error near directive: <" + tokens[0] + ">");
 
-        for (int k = 1; k < tokens.size(); ++k)
+        for (size_t k = 1; k < tokens.size(); ++k)
             globalConfig[i]._allowed_method.insert(tokens[k]);
     }
     else
@@ -147,12 +147,12 @@ void getAllowedMethods(std::vector<std::string> &tokens, bool const &isLocation,
 
         if (!globalConfig[i]._location[j]._allowed_method.empty())
             exitError("error near directive: <" + tokens[0] + ">");
-        for (int k = 1; k < tokens.size(); ++k)
+        for (size_t k = 1; k < tokens.size(); ++k)
             globalConfig[i]._location[j]._allowed_method.insert(tokens[k]);
     }
 }
 
-void getRedirect(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+void getRedirect(std::vector<std::string> &tokens, std::vector<ServerConfig> &globalConfig, int i, int j)
 {
     if (tokens.size() != 3 || !globalConfig[i]._location[j]._redirect.first.empty())
         exitError("error near directive: <redirect>");
@@ -160,14 +160,14 @@ void getRedirect(std::vector<std::string> &tokens, bool const &isLocation, std::
     globalConfig[i]._location[j]._redirect.second = tokens[2];
 }
 
-void getUpload(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+void getUpload(std::vector<std::string> &tokens, std::vector<ServerConfig> &globalConfig, int i, int j)
 {
     if (tokens.size() != 2 || !globalConfig[i]._location[j]._upload_store.empty())
         exitError("error near directive: <upload>");
     globalConfig[i]._location[j]._upload_store = tokens[1];
 }
 
-void getCGI(std::vector<std::string> &tokens, bool const &isLocation, std::vector<ServerConfig> &globalConfig, int i, int j)
+void getCGI(std::vector<std::string> &tokens, std::vector<ServerConfig> &globalConfig, int i, int j)
 {
     if (tokens.size() != 2 || !globalConfig[i]._location[j]._cgi.empty())
         exitError("error near directive: <cgi>");
@@ -257,7 +257,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 break;
 
             case Directives::ERROR_PAGE:
-                getErrorPage(tokens, isLocation, globalConfig, i, j);
+                getErrorPage(tokens, globalConfig, i);
                 break;
 
             case Directives::MAX_FILE_SIZE:
@@ -277,15 +277,15 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                 break;
 
             case Directives::REDIRECT: // Handle the redirection directive.
-                getRedirect(tokens, isLocation, globalConfig, i, j);
+                getRedirect(tokens, globalConfig, i, j);
                 break;
 
             case Directives::UPLOAD: // Handle the redirection directive.
-                getUpload(tokens, isLocation, globalConfig, i, j);
+                getUpload(tokens, globalConfig, i, j);
                 break;
 
             case Directives::CGI: // Handle the cgi directive.
-                getCGI(tokens, isLocation, globalConfig, i, j);
+                getCGI(tokens, globalConfig, i, j);
                 break;
 
             case Directives::INDEX:

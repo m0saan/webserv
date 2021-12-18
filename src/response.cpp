@@ -20,13 +20,14 @@ std::string *error_page(std::string const &message)
 }
 Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::string> > &request_map,
 				   std::pair<std::string, std::string> &queries_script_name, int fd, bool found_forbidden_method)
-	: _error_pages(config._error_page),
+	: 
+	  _size(0),
+	  _bytes_sent(0),
+	  _error_pages(config._error_page),
 	  _server_configs(config),
 	  _request_map(request_map),
 	  _queries_script_name(queries_script_name),
-	  _fd(fd),
-	  _size(0),
-	  _bytes_sent(0)
+	  _fd(fd)
 {
 	if (!found_forbidden_method)
 	{
@@ -42,13 +43,14 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 }
 
 Response::Response(Response const &x)
-	: _error_pages(x._error_pages),
+	: 
+	  _size(0),
+	  _bytes_sent(0),
+	  _error_pages(x._error_pages),
 	  _server_configs(x._server_configs),
 	  _request_map(x._request_map),
 	  _queries_script_name(x._queries_script_name),
-	  _fd(x._fd),
-	  _size(0),
-	  _bytes_sent(0)
+	  _fd(x._fd)
 {
 	*this = x;
 }
@@ -527,7 +529,7 @@ void Response::_redirect_with_location(size_t status_code)
 void Response::_redirect_without_location(size_t status_code)
 {
 	time_t rawtime;
-	std::string *tmp_res;
+	std::string *tmp_res = NULL;
 	std::string status = _server_configs._redirect.first;
 	std::string message = _status_codes->operator[](status);
 	std::stringstream ss;

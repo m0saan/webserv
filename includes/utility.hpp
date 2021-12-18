@@ -57,7 +57,8 @@ public:
     {
         std::string ret;
         char ch;
-        int i, ii;
+        size_t i; 
+        int ii;
         for (i = 0; i < SRC.length(); i++)
         {
             if (int(SRC[i]) == 37)
