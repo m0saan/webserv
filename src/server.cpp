@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/16 18:58:52 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/18 10:23:01 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	int PORT;
 	if (conf._port == "null" || conf._host == "null" || size == 0)
 		return;
-	std::cout << conf._host << std::endl;
+	// std::cout << conf._host << std::endl;
 	try
 	{
 		/* code */
@@ -37,11 +37,14 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	{
 		return;
 	}
+	if (std::find(_opened_ports.begin(), _opened_ports.end(), PORT) != _opened_ports.end()) // Port already opened
+		return ;
 	server_cli.push_back(new Sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
 	(server_cli.back())->bind_socket();
 	(server_cli.back())->listen_socket();
+	_opened_ports.push_back(PORT);
 	return;
 }
 
@@ -109,13 +112,11 @@ bool Server::readFromFd(int fd)
 
 			// TODO: Should check the request body size.
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
-			
+
 			if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
 				_MSG("found forbidden method");
 				exit(1);
 			}
-			
-			// std::remove(((req_res.getMap())[fd]._req_filename).c_str()); // remove request file
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
 			// if ((req_res.getMap())[fd].isBadRequest())
@@ -242,16 +243,15 @@ void Server::listen()
 void Server::socketFree(int fd)
 {
 	std::vector<Sockets *>::iterator first(server_cli.begin());
-	std::vector<Sockets *>::iterator last(server_cli.end());
 
-	for (; first != last; ++first)
+	for (; first != server_cli.end(); ++first)
 	{
-		if ((*first)->get_fd() == fd)
+		if (*first && (*first)->get_fd() == fd)
 		{
 			delete *first;
 			*first = NULL;
 			server_cli.erase(first);
-			// std::cout << "Freed " << std::endl;
+			return ;
 		}
 	}
 	return;

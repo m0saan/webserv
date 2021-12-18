@@ -34,8 +34,8 @@ bool		RequestResponse::receive(int fd, Server &server) // return false if connec
 	status = recv(fd, buffer, BUFFER_SIZE, 0);
 	if (status == 0 || status == -1) // Closed connection or Invalid fd
 	{
-		remove_fd(fd, true, true); // remove from read set
 		server.socketFree(fd);
+		remove_fd(fd, true, true); // remove from read set
 		return false;
 	}
 	req_fd[fd].append(buffer, status, fd);

@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:39:53 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/14 14:03:55 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/18 09:59:32 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class Server
 		void initConfig(ServerConfig& conf, size_t size);
 		RequestResponse req_res;
 		std::vector<ServerConfig> &_config;
+		std::vector<int>		_opened_ports;
 	public:
 		Server(std::vector<ServerConfig>& );
 		void	listen();
