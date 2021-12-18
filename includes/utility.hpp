@@ -76,9 +76,9 @@ public:
 
     static std::string getScriptName(std::string &url)
     {
-        std::vector<std::string> res = Utility::split(url, '/');
+        std::vector<std::string> res = Utility::split(url, '?');
         if (!res.empty())
-            return res[res.size() - 1];
+            return res.at(0);
         return std::string("");
     }
 
