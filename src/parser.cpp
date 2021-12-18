@@ -230,6 +230,8 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
                         exitError("error near directive: <" + tokens[0] + ">");
                     directive = -1;
                     ++N_curly_braces_open;
+                    if (N_square_bracket_close != N_square_bracket_open)
+                        exitError("syntax error: config block is not well structured.");
                 }
             }
             else
