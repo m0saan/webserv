@@ -349,6 +349,7 @@ void Response::_fill_status_codes(void)
 /*-------------------------------------------------------------------------------*/
 /* public methods to hand bad_allocation, iternal_errors and Forbidden_methods response */
 void Response::Forbidden_method(void) { _fill_response(".html", 403, "Forbidden"); }
+void Response::handleMaxBodySize(void) {_fill_response(".html", 413, "Request Entity Too Large"); }	
 void Response::bad_allocation(void)
 {
 	time_t rawtime;
