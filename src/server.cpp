@@ -36,7 +36,7 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 		return;
 	}
 	if (std::find(_opened_ports.begin(), _opened_ports.end(), PORT) != _opened_ports.end()) // Port already opened
-		return ;
+		return;
 	server_cli.push_back(new Sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
@@ -111,38 +111,47 @@ bool Server::readFromFd(int fd)
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
-			ServerConfig	chosen_config;
-			bool			is_body_size_exceeded;
+			ServerConfig chosen_config;
+			bool is_body_size_exceeded;
+			bool is_bad_request;
 
 			if (!((req_res.getMap())[fd].getIsFobiddenMethod()))
 			{
-				std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
-				std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
-				host = host == "localhost" ? "127.0.0.1" : host;
 
-				chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
+				if (_request_map.count("Host") == 0)
+					is_bad_request = true;
+				if (!is_bad_request)
+				{
+					std::string host = (_request_map["Host"][0]).substr(0, _request_map["Host"][0].find(":"));
+					std::string port = (_request_map["Host"][0]).substr(_request_map["Host"][0].find(":") + 1);
+					host = host == "localhost" ? "127.0.0.1" : host;
 
-				std::stringstream tmp_convert;
-				long request_content_length = 0;
-				long config_content_length = 0;
-				if (_request_map.count("Content-Length")){
-					
-					tmp_convert << _request_map["Content-Length"][0];
-					tmp_convert >> request_content_length;
-					tmp_convert.clear();
+					chosen_config = Utility::getRightConfig(port, host, _request_map["Host"][0], _request_map["SL"][1], _config);
 
-					tmp_convert << chosen_config._max_file_size;
-					tmp_convert >> config_content_length;
+					std::stringstream tmp_convert;
+					long request_content_length = 0;
+					long config_content_length = 0;
+					if (_request_map.count("Content-Length"))
+					{
+						tmp_convert << _request_map["Content-Length"][0];
+						tmp_convert >> request_content_length;
+						tmp_convert.clear();
+
+						tmp_convert << chosen_config._max_file_size;
+						tmp_convert >> config_content_length;
+						config_content_length = chosen_config._max_file_size.empty() ? 1000000 : config_content_length;
+					}
+					if (request_content_length > config_content_length)
+						is_body_size_exceeded = true;
 				}
-
-				if ( request_content_length > config_content_length)
-					is_body_size_exceeded = true;
-
 			}
 			Response res(chosen_config, _request_map, req_res.getMap()[fd].getQueriesScriptName(), (req_res.getMap())[fd].getBodyFD(), (req_res.getMap())[fd].getIsFobiddenMethod());
 			try
 			{
-				if (is_body_size_exceeded)
+				if (is_bad_request)
+					res.handleBadRequest();
+
+				else if (is_body_size_exceeded)
 					res.handleMaxBodySize();
 				else if ((req_res.getMap())[fd].getIsFobiddenMethod())
 					res.Forbidden_method();
@@ -244,7 +253,7 @@ void Server::listen()
 
 void Server::socketFree(int fd)
 {
-	// remove sockket 
+	// remove sockket
 	std::vector<Sockets *>::iterator first(server_cli.begin());
 
 	for (; first != server_cli.end(); ++first)

@@ -34,7 +34,7 @@ private:
     bool                                                _is_chunked_completed;
     bool                                                _is_forbiden_method;
     std::fstream                                        _req_file;
-    std::vector<std::string>                            _forbidden_http_methods;
+    std::vector<std::string>                            _allowed_http_methods;
 public:
 
     std::string                                         _req_filename;

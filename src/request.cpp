@@ -8,11 +8,9 @@
 
 Request::Request(long long max_size) : _is_alive_connection(true), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
 {
-	_forbidden_http_methods.push_back("PATCH");
-	_forbidden_http_methods.push_back("PUT");
-	_forbidden_http_methods.push_back("OPTIONS");
-	_forbidden_http_methods.push_back("TRACE");
-	_forbidden_http_methods.push_back("CONNECT");
+	_allowed_http_methods.push_back("GET");
+	_allowed_http_methods.push_back("POST");
+	_allowed_http_methods.push_back("DELETE");
 }
 
 Request::~Request() {}
@@ -26,7 +24,7 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_transfer_encoding = x._transfer_encoding;
 	_content_type = x._content_type;
 	_is_chunked_completed = x._is_chunked_completed;
-	_forbidden_http_methods = x._forbidden_http_methods;
+	_allowed_http_methods = x._allowed_http_methods;
 }
 
 // Request &Request::operator=(const Request &x) {
@@ -73,7 +71,7 @@ void Request::parseRequest()
 			return;
 		}
 
-		if (!line.empty())
+		if (!line.empty() && line.at(line.length() - 1) == '\r')
 			line.pop_back();
 		if (line.empty() || _isBodyStart(line, is_body))
 		{
@@ -210,7 +208,7 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 
 	if (_RequestMap.count("SL") == 0)
 	{
-		if (std::find(_forbidden_http_methods.begin(), _forbidden_http_methods.end(), tokens[0]) != _forbidden_http_methods.end()) {
+		if (std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end()) {
 			_is_forbiden_method = true;
 			return;
 		}

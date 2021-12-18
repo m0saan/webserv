@@ -350,6 +350,7 @@ void Response::_fill_status_codes(void)
 /* public methods to hand bad_allocation, iternal_errors and Forbidden_methods response */
 void Response::Forbidden_method(void) { _fill_response(".html", 403, "Forbidden"); }
 void Response::handleMaxBodySize(void) {_fill_response(".html", 413, "Request Entity Too Large"); }	
+void Response::handleBadRequest(void) {_fill_response(".html", 400, "Bad Request"); }
 void Response::bad_allocation(void)
 {
 	time_t rawtime;
@@ -620,6 +621,7 @@ void Response::Post_request(void)
 		file_name.erase(file_name.begin());
 		file_name.erase(--file_name.end());
 		_file_path = _server_configs._upload_store;
+		std::cout << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_file_path += '/' + file_name;
@@ -1052,7 +1054,6 @@ void Response::_process_as_dir(void)
 	else
 	{
 		_file_path = _root;
-		// std::cout << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_fill_response(_file_path, 200, "OK");
@@ -1125,7 +1126,7 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 			path = _error_pages[ss.str()];
 			if (path[0] == '/')
 				path.erase(path.begin());
-			path = _root + '/' + path; // here we join the error_page with the root
+			path = _server_configs._root + '/' + path; // here we join the error_page with the root
 			_file_path = path;
 			if (!_file_is_good(true))
 				return;

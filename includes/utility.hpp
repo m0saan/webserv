@@ -122,24 +122,23 @@ public:
             {
                 if (server_name.find(start->_server_name, 0) != std::string::npos)
                     ++start;
-                else {
+                else
+                {
                     possible_blocks.erase(start);
                     start = possible_blocks.begin();
                 }
             }
         }
 
-        // std::cout << possible_blocks.size() << std::endl;
-
         // request_url.starts_with(location_url)  -> right location
-        if (possible_blocks.empty()){
+        if (possible_blocks.empty())
+        {
             // std::cout << "default" << std::endl;
             return getDefaultServerConfig();
         }
-        
+
         ServerConfig loc;
         ServerConfig default_loc;
-
         loc._loc_path = default_loc._loc_path = "";
 
         for (size_t j = 0; j < possible_blocks[0]._location.size(); ++j)
@@ -150,13 +149,14 @@ public:
                 continue;
             }
             if (url.find(possible_blocks[0]._location[j]._loc_path) != std::string::npos)
+            {
                 loc = loc._loc_path.length() < possible_blocks[0]._location[j]._loc_path.length()
                           ? possible_blocks[0]._location[j]
                           : loc;
+            }
         }
 
         /*
-
          * Location:
          * - root
          * - index

@@ -33,6 +33,7 @@ class Response
 		void				internal_error(void);
 		void				Forbidden_method(void);
 		void				handleMaxBodySize();
+		void				handleBadRequest();
 		std::string const& 	get_response(void) const;
 		ssize_t				getResponseLength()const;
 		ssize_t 			_size;
