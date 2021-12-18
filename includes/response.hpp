@@ -20,7 +20,7 @@ class Response
 {
 	public:
 		Response(ServerConfig & config, std::map<std::string, std::vector<std::string> >& request_map,
-		std::pair<std::string, std::string>& queries_script_name, int);
+		std::pair<std::string, std::string>& queries_script_name, int, bool);
 		Response(Response const&);
 		Response& operator=(Response const&);
 		~Response(void);
