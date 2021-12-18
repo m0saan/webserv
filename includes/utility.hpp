@@ -129,11 +129,11 @@ public:
             }
         }
 
-        std::cout << possible_blocks.size() << std::endl;
+        // std::cout << possible_blocks.size() << std::endl;
 
         // request_url.starts_with(location_url)  -> right location
         if (possible_blocks.empty()){
-            std::cout << "default" << std::endl;
+            // std::cout << "default" << std::endl;
             return getDefaultServerConfig();
         }
         

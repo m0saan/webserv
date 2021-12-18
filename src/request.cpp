@@ -158,7 +158,8 @@ bool Request::is_completed() const
 void Request::append(char *content, long long size, int fd)
 {
 	std::string tmp(content, size);
-	_req_filename = generateFilename(fd);
+	if (_req_filename.empty())
+		_req_filename = generateFilename(fd);
 	_req_file.open(_req_filename, std::fstream::in | std::fstream::out | std::fstream::app);
 
 	if (_content_length == -1) // 1st time reading req
@@ -209,10 +210,6 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 
 	if (_RequestMap.count("SL") == 0)
 	{
-		if (tokens[0].empty())
-			std::cout << "tokens[0] is empty" << std::endl;
-		else
-			std::cout << tokens[0] << std::endl;
 		if (std::find(_forbidden_http_methods.begin(), _forbidden_http_methods.end(), tokens[0]) != _forbidden_http_methods.end()) {
 			_is_forbiden_method = true;
 			return;
