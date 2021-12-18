@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/18 10:23:01 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/18 14:06:02 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ void Server::initConfig(ServerConfig &conf, size_t size)
 	}
 	if (std::find(_opened_ports.begin(), _opened_ports.end(), PORT) != _opened_ports.end()) // Port already opened
 		return ;
+		// PORT+=1;
 	server_cli.push_back(new Sockets());
 	(server_cli.back())->create_socket();
 	(server_cli.back())->set_addr(PORT, conf._host);
@@ -112,15 +113,16 @@ bool Server::readFromFd(int fd)
 
 			// TODO: Should check the request body size.
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
-
-			if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
-				_MSG("found forbidden method");
-				exit(1);
-			}
+			
+			// std::cout << "fd " << fd << std::endl;
+			// if ((req_res.getMap())[fd].getIsFobiddenMethod()) {
+			// 	_MSG("found forbidden method");
+			// 	exit(1);
+			// }
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
-			// if ((req_res.getMap())[fd].isBadRequest())
-			// 	exitError("message: bad request");
+			if ((req_res.getMap())[fd].isBadRequest())
+				exitError("message: bad request");
 
 			// extract the host, port and server_name from the request map. 
 			// use them to choose which server block to handle the request with.
@@ -242,6 +244,7 @@ void Server::listen()
 
 void Server::socketFree(int fd)
 {
+	// remove sockket 
 	std::vector<Sockets *>::iterator first(server_cli.begin());
 
 	for (; first != server_cli.end(); ++first)
