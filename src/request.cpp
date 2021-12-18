@@ -6,7 +6,7 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::Request(long long max_size) : _is_alive_connection(true), _size(-1), _content_length(-1), _header_length(-1), _max_body_size(max_size), _content_type(false), _is_chunked_completed(false)
+Request::Request(long long max_size) :  _size(-1), _content_length(-1), _header_length(-1),  _content_type(false), _max_body_size(max_size), _is_chunked_completed(false), _is_alive_connection(true)
 {
 	_forbidden_http_methods.push_back("PATCH");
 	_forbidden_http_methods.push_back("PUT");
