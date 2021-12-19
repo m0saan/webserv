@@ -34,6 +34,7 @@ class Response
 		void				Forbidden_method(void);
 		void				handleMaxBodySize();
 		void				handleBadRequest();
+		int					get_ret(void) const;
 		std::string const& 	get_response(void) const;
 		ssize_t				getResponseLength()const;
 		ssize_t 			_size;

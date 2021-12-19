@@ -88,6 +88,7 @@ Response &Response::operator=(Response const &x)
 	return *this;
 }
 
+int  Response::get_ret(void) const { return _ret; }
 void Response::_fill_status_codes(void)
 {
 	_status_codes = new std::map<std::string, std::string>();
