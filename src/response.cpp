@@ -624,11 +624,6 @@ void Response::Post_request(void)
 			return;
 		}
 	}
-	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
-	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
-	}
 	if (_server_configs._loc_path == "/upload")
 	{
 		if (!_request_map.count("Content-Disposition"))
@@ -643,7 +638,7 @@ void Response::Post_request(void)
 		file_name.erase(file_name.begin());
 		file_name.erase(--file_name.end());
 		_file_path = _server_configs._upload_store;
-		std::cout << _file_path << std::endl;
+		std::cout << "_file path" << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_file_path += '/' + file_name;

@@ -6,7 +6,7 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::Request(long long max_size) :  _size(-1), _content_length(-1), _header_length(-1),  _content_type(false), _max_body_size(max_size), _is_chunked_completed(false), _req_method(POST), _is_alive_connection(true)
+Request::Request(long long max_size) : _size(-1), _content_length(-1), _header_length(-1), _content_type(false), _max_body_size(max_size), _is_chunked_completed(false), _req_method(POST), _is_alive_connection(true)
 {
 	_is_forbiden_method = false;
 	_bad_request_found = false;
@@ -86,16 +86,12 @@ void Request::parseRequest()
 
 		if (!line.empty() && line.at(line.length() - 1) == '\r')
 			line.pop_back();
-		if (line.empty() || _isBodyStart(line, is_body))
+
+		if (!is_body && line.empty())
 		{
 			is_body = true;
 			continue;
 		}
-		if (_isBodyEnd(line))
-		{
-			is_body = false;
-			continue;
-		};
 
 		if (_isChunckStart(line))
 		{
@@ -106,10 +102,16 @@ void Request::parseRequest()
 		if (!boundary.empty() && line.find(boundary) != std::string::npos)
 		{
 			is_form_data = true;
+			is_body = false;
 			continue;
 		}
-		if ((!is_body && !is_form_data) || (line.find("Content-Disposition:") != std::string::npos || line.find("Content-Type:") != std::string::npos))
-			_getHeader(line, http_method, boundary);
+		if (!is_body)
+		{
+			std::vector<std::string> res = Utility::split(line);
+			std::size_t key_length = res.at(0).length() - 1;
+			if ((!res.empty() && std::isupper(res.at(0).at(0)) && res.at(0).at(key_length) == ':') || !_RequestMap.count("SL"))
+				_getHeader(line, http_method, boundary);
+		}
 		else
 			_getBody(line, is_chunked, total_read);
 	}
@@ -130,10 +132,6 @@ bool Request::_isChunckStart(std::string const &line) const
 {
 	return (line.length() > 0 && isnumber(line[0]));
 }
-
-bool Request::_isBodyStart(const std::string &line, bool is_body) const { return is_body && line == "{"; }
-
-bool Request::_isBodyEnd(const std::string &line) const { return line == "}"; }
 
 void Request::_getBody(std::string &line, bool is_chunked, int &total_read)
 {
@@ -172,7 +170,7 @@ void Request::append(char *content, long long size, int fd)
 {
 	std::string tmp(content, size);
 	if (_req_filename.empty())
-			_req_filename = generateFilename(fd);
+		_req_filename = generateFilename(fd);
 	_req_file.open(_req_filename, std::fstream::in | std::fstream::out | std::fstream::app);
 	_req_header.append(tmp);
 	if (_header_length == -1) // 1st time reading req
@@ -199,7 +197,7 @@ void Request::append(char *content, long long size, int fd)
 
 void Request::getReqInfo()
 {
-	_req_method = (_req_header.substr(0, _req_header.find(" ")) == "GET") ? GET : POST ;
+	_req_method = (_req_header.substr(0, _req_header.find(" ")) == "GET") ? GET : POST;
 	_content_length = getContentLength();
 	_header_length = getHeaderLength();
 	setContentType();
@@ -222,7 +220,8 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 
 	if (_RequestMap.count("SL") == 0)
 	{
-		if (tokens.size() && std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end()) {
+		if (tokens.size() && std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end())
+		{
 			std::cout << tokens[0] << std::endl;
 			_is_forbiden_method = true;
 			return;
@@ -230,8 +229,11 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 	}
 
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
-	if (http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload" && boundary.empty())
+	if (tokens.size() > 2 && http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload" && boundary.empty())
+	{
 		boundary = Utility::split(tokens[2], '=')[1];
+		tokens.erase(tokens.begin() + tokens.size() - 1);
+	}
 
 	if (tokens[0] == "GET" || tokens[0] == "POST" || tokens[0] == "DELETE")
 	{
@@ -314,4 +316,9 @@ std::string Request::generateFilename(int fd)
 const bool &Request::getIsFobiddenMethod() const
 {
 	return _is_forbiden_method;
+}
+
+bool _is_allowed_method(std::string const &http_method)
+{
+	return (http_method == "GET" || http_method == "POST" || http_method == "DELETE");
 }
