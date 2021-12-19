@@ -95,6 +95,8 @@ private:
 
     bool is_allowed_method(std::string const& http_method);
 
+    bool _canGetBoundary(std::vector<std::string> &tokens, std::string &http_method, std::string &boundary);
+
 };
 
 #endif // __Request_HPP__

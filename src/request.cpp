@@ -228,7 +228,7 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 	}
 
 	// Content-Type: multipart/form-data; boundary=--------------------------590098799345060955619546
-	if (tokens.size() > 2 && http_method == "POST" && tokens[0] == "Content-Type:" && _RequestMap["SL"][1] == "/upload" && boundary.empty())
+	if (_canGetBoundary(tokens, http_method, boundary))
 	{
 		boundary = Utility::split(tokens[2], '=')[1];
 		tokens.erase(tokens.begin() + tokens.size() - 1);
@@ -320,4 +320,9 @@ const bool &Request::getIsFobiddenMethod() const
 bool _is_allowed_method(std::string const &http_method)
 {
 	return (http_method == "GET" || http_method == "POST" || http_method == "DELETE");
+}
+
+bool Request::_canGetBoundary(std::vector<std::string> &tokens, std::string &http_method, std::string &boundary) {
+	return tokens.size() > 2 && http_method == "POST" && tokens[0] == "Content-Type:"
+	&& (_RequestMap["SL"][1] == "/upload" || _RequestMap["SL"][1] == "/upload/") && boundary.empty();
 }
