@@ -308,7 +308,7 @@ std::string Request::generateFilename(int fd)
 	time_t seconds;
 
 	seconds = time(NULL);
-	return "/tmp/mbani/req_" + std::to_string(fd) + "_" + std::to_string(seconds);
+	return "/tmp/req_" + std::to_string(fd) + "_" + std::to_string(seconds);
 }
 
 const bool &Request::getIsFobiddenMethod() const

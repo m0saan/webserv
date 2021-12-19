@@ -17,7 +17,7 @@ FLAGS = -Wall -Wextra -Werror -g
 all : $(NAME)
 
 $(NAME) : $(SRCS)
-	@clang++ $(FLAGS) $(SRCS) -o $(NAME)
+	@clang++ $(FLAGS) $(SRCS) -fsanitize=address -o $(NAME)
 
 run:
 	@ ./$(NAME) config_files/multiple-servers.config
