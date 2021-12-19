@@ -6,8 +6,11 @@
 #include "../includes/utility.hpp"
 #include <iostream>
 
-Request::Request(long long max_size) :  _size(-1), _content_length(-1), _header_length(-1),  _content_type(false), _max_body_size(max_size), _is_chunked_completed(false), _is_alive_connection(true)
+Request::Request(long long max_size) :  _size(-1), _content_length(-1), _header_length(-1),  _content_type(false), _max_body_size(max_size), _is_chunked_completed(false), _req_method(POST), _is_alive_connection(true)
 {
+	_is_forbiden_method = false;
+	_bad_request_found = false;
+	_is_chunked_completed = false;
 	_allowed_http_methods.push_back("GET");
 	_allowed_http_methods.push_back("POST");
 	_allowed_http_methods.push_back("DELETE");
@@ -30,6 +33,9 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_fd = x._fd;
 	_bad_request_found = x._bad_request_found;
 	_RequestMap = x._RequestMap;
+	_req_filename = x._req_filename;
+	_req_method = x._req_method;
+	_req_header = x._req_header;
 }
 
 // Request &Request::operator=(const Request &x) {
@@ -44,6 +50,8 @@ void Request::resetRequest()
 	_header_length = -1;
 	_content_type = false;
 	_is_chunked_completed = false;
+	_req_method = POST;
+	_req_header = "";
 }
 
 std::vector<std::string> const &Request::getValue(const std::string &key)
@@ -147,9 +155,11 @@ std::map<std::string, std::vector<std::string> > const &Request::getMap() const
 
 bool Request::is_completed() const
 {
+	if (_req_method == GET)
+		return _size >= _header_length + 4;
 	if (_transfer_encoding == COMPLETED)
 	{
-		if ((_content_length == -1 || _content_length == 0)) // completed request without body
+		if (_content_length == -1 || _content_length == 0) // completed request without body
 			return _size == _header_length + 4;
 		return (_size == _content_length + _header_length);
 	}
@@ -162,13 +172,13 @@ void Request::append(char *content, long long size, int fd)
 {
 	std::string tmp(content, size);
 	if (_req_filename.empty())
-		_req_filename = generateFilename(fd);
+			_req_filename = generateFilename(fd);
 	_req_file.open(_req_filename, std::fstream::in | std::fstream::out | std::fstream::app);
-
-	if (_content_length == -1) // 1st time reading req
+	_req_header.append(tmp);
+	if (_header_length == -1) // 1st time reading req
 		try
 		{
-			getReqInfo(tmp);
+			getReqInfo();
 		}
 		catch (std::exception &e)
 		{
@@ -187,11 +197,12 @@ void Request::append(char *content, long long size, int fd)
 		this->_is_chunked_completed = true;
 }
 
-void Request::getReqInfo(const std::string &str)
+void Request::getReqInfo()
 {
-	_content_length = getContentLength(str);
-	_header_length = getHeaderLength(str);
-	setContentType(str);
+	_req_method = (_req_header.substr(0, _req_header.find(" ")) == "GET") ? GET : POST ;
+	_content_length = getContentLength();
+	_header_length = getHeaderLength();
+	setContentType();
 }
 
 std::pair<std::string, std::string> _parseStartLine(std::string &url)
@@ -235,41 +246,35 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 	}
 }
 
-size_t Request::getHeaderLength(const std::string &str)
+size_t Request::getHeaderLength()
 {
-	size_t pos = 0;
-
-	if ((pos = str.find("\r\n\r\n")) != std::string::npos)
-		_header_length = (pos + 5);
+	size_t pos = -1;
+	if ((pos = _req_header.find("\r\n\r\n")) != std::string::npos)
+		return pos;
 	else
-	{
-		std::cout << "REQ {" << str << "}" << std::endl;
-		std::cout << "Here " << std::endl;
-		// throw std::exception();
-	}
-	return pos;
+		return -1;
 }
 
-void Request::setContentType(const std::string &str)
+void Request::setContentType()
 {
-	if (str.find("Content-Type: ") != std::string::npos)
+	if (_req_header.find("Content-Type: ") != std::string::npos)
 		this->_content_type = true;
 	else
 		this->_content_type = false;
 }
 
-long long Request::getContentLength(const std::string &str)
+long long Request::getContentLength()
 {
 	size_t pos;
 	long long length = 0;
 	char *ptr_end;
 
-	if (_content_length == -1 && (pos = str.find("Content-Length: ")) != std::string::npos) // if content-Length is found
+	if (_content_length == -1 && (pos = _req_header.find("Content-Length: ")) != std::string::npos) // if content-Length is found
 	{
-		length = std::strtoll(&str[pos + 16], &ptr_end, 10) + 4;
+		length = std::strtoll(&_req_header[pos + 16], &ptr_end, 10) + 4;
 		this->_transfer_encoding = COMPLETED;
 	}
-	else if (_content_length == -1 && (str.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked
+	else if (_content_length == -1 && (_req_header.find("Transfer-Encoding: chunked")) != std::string::npos) // !content-Lenght && transfer-Encoding = chunked
 		this->_transfer_encoding = CHUNKED;
 	else // Content-Length not found && !chunked
 		_transfer_encoding = COMPLETED;
@@ -303,7 +308,7 @@ std::string Request::generateFilename(int fd)
 	time_t seconds;
 
 	seconds = time(NULL);
-	return "/tmp/req_" + std::to_string(fd) + "_" + std::to_string(seconds);
+	return "/tmp/mbani/req_" + std::to_string(fd) + "_" + std::to_string(seconds);
 }
 
 const bool &Request::getIsFobiddenMethod() const
