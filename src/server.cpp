@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/18 22:09:38 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/19 16:01:10 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,6 +106,7 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
+			// std::cout << "completed " ;
 			(req_res.getMap())[fd].parseRequest(); // Parse Request
 			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 

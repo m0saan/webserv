@@ -16,6 +16,12 @@ typedef enum transfer_type {
     COMPLETED,
 }           transfer_type;
 
+typedef enum method {
+    GET,
+    DELETE,
+    POST,
+}           method;
+
 class Request {
 
 private:
@@ -35,6 +41,8 @@ private:
     bool                                                _is_forbiden_method;
     std::fstream                                        _req_file;
     std::vector<std::string>                            _allowed_http_methods;
+    method                                              _req_method;
+    std::string                                         _req_header;
 public:
 
     std::string                                         _req_filename;
@@ -64,13 +72,13 @@ public:
 
     std::stringstream const & get_req();
 
-    void getReqInfo(const std::string& );
+    void getReqInfo();
 
-    long long getContentLength(const std::string &str);
+    long long getContentLength();
 
-    size_t getHeaderLength(const std::string &str);
+    size_t getHeaderLength();
 
-    void            setContentType(const std::string &str);
+    void            setContentType();
     void            resetRequest();
     std::string     generateFilename(int fd);
 private:
