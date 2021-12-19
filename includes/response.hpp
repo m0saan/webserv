@@ -29,6 +29,7 @@ class Response
 		void				Redirection(void);
 		void 				Post_request(void);
 		void				Delete_request(void);
+		void				append_response(void);
 		void				bad_allocation(void);
 		void				internal_error(void);
 		void				Forbidden_method(void);
@@ -37,7 +38,6 @@ class Response
 		int					get_ret(void) const;
 		std::string const& 	get_response(void) const;
 		ssize_t				getResponseLength()const;
-		ssize_t 			_size;
 		ssize_t				_bytes_sent;
 	private:
 		void 	_set_headers(size_t, std::string const&, size_t, std::string const&);
@@ -73,4 +73,8 @@ class Response
         int                       			_fd;
 		int									_fd_file;
 		int									_ret;
+		std::string							_req_method;
+		size_t								_status_code;
+		std::string							_tmp_path;
+		std::string							_message;
 };

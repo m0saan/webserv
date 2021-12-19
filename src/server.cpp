@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/19 16:01:10 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/19 20:26:49 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,6 @@ bool Server::readFromFd(int fd)
 			{
 				if (is_bad_request)
 					res.handleBadRequest();
-
 				else if (is_body_size_exceeded)
 					res.handleMaxBodySize();
 				else if ((req_res.getMap())[fd].getIsFobiddenMethod())
@@ -176,7 +175,7 @@ bool Server::readFromFd(int fd)
 				res.internal_error();
 			}
 
-			res._size = res.get_response().length();
+			// res._size = res.get_response().length();
 			req_res.add_response(fd, res);
 
 			req_res.set_fd(fd, false, true); // add client fd to write set
@@ -190,8 +189,15 @@ void Server::sendResponse(int fd)
 {
 	int sent;
 	// sleep(5);
+	// std::cout << "Send from " << req_res.get_res_bytes_sent(fd) << " remaining bytes " << (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)) << std::endl;
 	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
-																																										//ToDo: Handle Error case 0 and -1
+	int ret = req_res.isResponseCompleted(fd);
+	// std::cout << "ret " << ret << std::endl;
+	if (ret != 0)
+	{
+		req_res.append_response(fd);
+		// std::cout << "New Length " << req_res.get_response_length(fd) << std::endl;
+	}																																			//ToDo: Handle Error case 0 and -1
 	if (sent == -1)																																						// send failed
 	{
 		perror("send ");
@@ -202,7 +208,7 @@ void Server::sendResponse(int fd)
 		return;
 	}
 	req_res.update_sent_bytes(fd, sent);
-	if (req_res.get_response_length(fd) == (ssize_t)req_res.get_res_bytes_sent(fd)) // response is completely sent
+	if (req_res.get_response_length(fd) == (ssize_t)req_res.get_res_bytes_sent(fd) && ret == 0) // response is completely sent
 	{
 		if (!req_res.getMap()[fd]._is_alive_connection) // close connection
 		{

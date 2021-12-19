@@ -123,7 +123,7 @@ void Request::parseRequest()
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
 	_body_stream.close();
 	ifs.close();
-	std::remove((_req_filename).c_str());
+	// std::remove((_req_filename).c_str());
 }
 
 bool Request::_isChunckStart(std::string const &line) const
@@ -223,7 +223,7 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 	if (_RequestMap.count("SL") == 0)
 	{
 		if (tokens.size() && std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end()) {
-			std::cout << tokens[0] << std::endl;
+			// std::cout << tokens[0] << std::endl;
 			_is_forbiden_method = true;
 			return;
 		}

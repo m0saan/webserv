@@ -126,6 +126,16 @@ const std::string &RequestResponse::getResponse(int fd)
 	return this->res_fd.find(fd)->second.get_response();
 }
 
+int RequestResponse::isResponseCompleted(int fd)
+{
+	return this->res_fd.find(fd)->second.get_ret();
+}
+
+void RequestResponse::append_response(int fd)
+{
+	return this->res_fd.find(fd)->second.append_response();
+}
+
 size_t	RequestResponse::get_res_bytes_sent(int fd)
 {
 	return this->res_fd.find(fd)->second._bytes_sent;

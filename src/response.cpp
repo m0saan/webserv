@@ -5,7 +5,7 @@
 /* this is the implementation of the default, param, and copy constructors plus the operator=*/
 ssize_t Response::getResponseLength() const
 {
-	return _size;
+	return _response.length();
 }
 
 std::string *error_page(std::string const &message)
@@ -21,7 +21,6 @@ std::string *error_page(std::string const &message)
 Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::string> > &request_map,
 				   std::pair<std::string, std::string> &queries_script_name, int fd, bool found_forbidden_method)
 	: 
-	  _size(0),
 	  _bytes_sent(0),
 	  _error_pages(config._error_page),
 	  _server_configs(config),
@@ -37,6 +36,11 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 		if (*_uri.begin() == '/')
 			_uri.erase(_uri.begin());
 		_root = _server_configs._root;
+		if (!_queries_script_name.second.empty())
+		{
+			if (_queries_script_name.second[0] == '/')
+				_queries_script_name.second.erase(_queries_script_name.second.begin());
+		}
 	}
 	std::ifstream extentions("./files/extentions.txt");
 	std::string	line;
@@ -47,11 +51,11 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 		_type.insert(std::make_pair(v[0], v[1]));
 	}
 	_fill_status_codes();
+	_req_method = _request_map["SL"][0];
 }
 
 Response::Response(Response const &x)
 	: 
-	  _size(0),
 	  _bytes_sent(0),
 	  _error_pages(x._error_pages),
 	  _server_configs(x._server_configs),
@@ -76,13 +80,21 @@ Response &Response::operator=(Response const &x)
 	_response = x._response;
 	_status_codes = new std::map<std::string, std::string>();
 	*_status_codes = *(x._status_codes);
-	_size = x._size;
 	_bytes_sent = x._bytes_sent;
-	_fd_file = x._fd_file;
+	_fd_file = dup(x._fd_file);
 	_ret = x._ret;
+	_root = x._root;
+	_uri = x._uri;
+	_tmp_path  = x._tmp_path;
+	_status_code = x._status_code;
+	_message = x._message;
 	return *this;
 }
 
+void Response::append_response(void)
+{
+	_fill_response(_tmp_path, _status_code, _message);
+}
 int  Response::get_ret(void) const { return _ret; }
 void Response::_fill_status_codes(void)
 {
@@ -624,26 +636,34 @@ void Response::Post_request(void)
 			return;
 		}
 	}
-	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
-	{
-		_fill_response(".html", 403, "Forbiden");
-		return;
-	}
 	if (_server_configs._loc_path == "/upload")
 	{
+		std::string file_name;
+
 		if (!_request_map.count("Content-Disposition"))
 		{
-			_fill_response(".html", 404, "Not Found");
-			return;
+			std::stringstream ss;
+			std::string		  extention;
+			time_t seconds;
+
+			if (_request_map.count("Content-Type"))
+				extention = Utility::split(_request_map["Content-Type"][0], '/')[1];
+			std::cout << extention << std::endl;
+			seconds = time(NULL);
+			ss << rand() % 20;
+			file_name = std::string("file_" + ss.str()) + std::to_string(seconds) +'.' + extention;
+			std::cout << file_name << std::endl;
+
 		}
-		std::string file_name;
 		time_t rawtime;
 
-		file_name = Utility::split(_request_map["Content-Disposition"][2], '=')[1];
-		file_name.erase(file_name.begin());
-		file_name.erase(--file_name.end());
+		if (file_name.empty())
+		{
+			file_name = Utility::split(_request_map["Content-Disposition"][2], '=')[1];
+			file_name.erase(file_name.begin());
+			file_name.erase(--file_name.end());
+		}
 		_file_path = _server_configs._upload_store;
-		std::cout << _file_path << std::endl;
 		if (!_file_is_good(true))
 			return;
 		_file_path += '/' + file_name;
@@ -657,7 +677,7 @@ void Response::Post_request(void)
 		_response += "Server: webserver\r\n";
 		_response += "Content-Length: 0\r\n";
 		_response += "Connection: close\r\n\r\n";
-		std::cout << _response;
+		// std::cout << _response;
 		return;
 	}
 	_process_post_delete("POST");
@@ -681,7 +701,7 @@ void Response::Get_request(void)
 		_default_response();
 		return;
 	}
-	if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
+	if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty() && _server_configs._cgi.empty())
 	{
 		_fill_response(".html", 403, "Forbiden");
 		return;
@@ -826,7 +846,10 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 	time_t rawtime;
 	std::stringstream ss;
 
-	ss << tmp_res->length() - (tmp_res->find("\r\n\r\n") + 4);
+	if (tmp_res->find("\r\n\r\n") != std::string::npos)
+		ss << tmp_res->length() - (tmp_res->find("\r\n\r\n") + 4);
+	else
+		ss << tmp_res->length();
 	time(&rawtime);
 	if (is_red)
 		_response += "HTTP/1.1 302 Found\r\n";
@@ -837,7 +860,10 @@ void Response::_fill_cgi_response(std::string *tmp_res, bool is_red)
 	_response += "\r\nServer: webserver\r\n";
 	_response += "Content-Length: " + ss.str() + "\r\n";
 	_response += "Connection: close\r\n";
-	_response += *tmp_res;
+	if (tmp_res->find("\r\n\r\n") != std::string::npos)
+		_response += *tmp_res;
+	else
+		_response += "\r\n" + *tmp_res;
 }
 
 void Response::_cgi(void)
@@ -898,6 +924,7 @@ void Response::_cgi(void)
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
 	close(_fd);
+	std::cout << _response;
 	delete tmp_res;
 }
 /*---------------------------------------------------------------------------------------------------*/
@@ -980,7 +1007,7 @@ void Response::_process_post_delete(std::string const &req_method)
 	// lets first check for alowed methods in this location
 	if (loc_path[0] != '/')
 		loc_path = '/' + loc_path;
-	if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
+	if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty() && _server_configs._cgi.empty())
 	{
 		_fill_response(".html", 403, "Forbiden");
 		return;
@@ -1140,6 +1167,9 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 
 	path = tmp_path;
 	ss << status_code;
+	_tmp_path = tmp_path;
+	_status_code = status_code;
+	_message = message;
 	if (status_code == 200 || (!_error_pages.empty() && _error_pages.count(ss.str()))) // check if this status_code has a error_page
 	{
 		// now if status_code is not 200 then we should change the path to be the error_page path
@@ -1179,7 +1209,7 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 	if (_response.empty())
 		_set_headers(status_code, message, len, path);
 	_response += *tmp_resp;
-	std::cout << _response << std::endl;
+	// std::cout << _response << std::endl;
 	delete tmp_resp;
 }
 

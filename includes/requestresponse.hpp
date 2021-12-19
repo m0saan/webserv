@@ -44,6 +44,8 @@ class RequestResponse
 		const std::stringstream&		get_req(int fd);
 		void			reset(int fd);
 		std::map<int , Request>& getMap();
+		int 			isResponseCompleted(int fd);
+		void 			append_response(int fd);
 		void			add_response(int fd, Response &res);
 		size_t			get_res_bytes_sent(int fd);
 		void 			update_sent_bytes(int fd, int nbrOfBytes);
