@@ -38,17 +38,12 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 			_uri.erase(_uri.begin());
 		_root = _server_configs._root;
 	}
-	std::ifstream extentions("/Users/mamoussa/Desktop/webserv/files/extentions.txt");
+	std::ifstream extentions("./files/extentions.txt");
 	std::string	line;
-	if (!extentions.good())
-	{
-		std::cout << "No extentions" << std::endl;
-		return;
-	}
 	while (!extentions.eof())
 	{
 		std::getline(extentions, line);
-		std::vector<std::string> v = Utility::split(line, ' ');
+		std::vector<std::string> v = Utility::split(line);
 		_type.insert(std::make_pair(v[0], v[1]));
 	}
 	_fill_status_codes();
