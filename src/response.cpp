@@ -38,7 +38,7 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 			_uri.erase(_uri.begin());
 		_root = _server_configs._root;
 	}
-	std::ifstream extentions("/Users/mamoussa/Desktop/webserv/files/.extentions.txt");
+	std::ifstream extentions("/Users/mamoussa/Desktop/webserv/files/extentions.txt");
 	std::string	line;
 	if (!extentions.good())
 	{
