@@ -25,6 +25,11 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_content_type = x._content_type;
 	_is_chunked_completed = x._is_chunked_completed;
 	_allowed_http_methods = x._allowed_http_methods;
+	_is_forbiden_method = x._is_forbiden_method;
+	_url_queries_scriptName = x._url_queries_scriptName;
+	_fd = x._fd;
+	_bad_request_found = x._bad_request_found;
+	_RequestMap = x._RequestMap;
 }
 
 // Request &Request::operator=(const Request &x) {
@@ -172,7 +177,7 @@ void Request::append(char *content, long long size, int fd)
 			return;
 		}
 	if (_req_file.is_open())
-		_req_file << std::string(content);
+		_req_file << std::string(content, size);
 	else
 		std::cout << "Cannot open file! " << std::endl;
 	_size = _req_file.tellg();
@@ -206,7 +211,8 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 
 	if (_RequestMap.count("SL") == 0)
 	{
-		if (std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end()) {
+		if (tokens.size() && std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end()) {
+			std::cout << tokens[0] << std::endl;
 			_is_forbiden_method = true;
 			return;
 		}

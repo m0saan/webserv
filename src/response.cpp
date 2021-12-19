@@ -36,9 +36,11 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 			_uri.erase(_uri.begin());
 		_root = _server_configs._root;
 	}
-	_type.insert(std::make_pair("json", "application"));
-	_type.insert(std::make_pair("html", "text"));
+	_type.insert(std::make_pair("json", "application/json"));
+	_type.insert(std::make_pair("html", "text/html"));
 	_type.insert(std::make_pair("php", "application/octet-stream"));
+	_type.insert(std::make_pair("jpg", "image/jpeg"));
+	_type.insert(std::make_pair("mp4", "video/std::map.insert(std::make_pair(mp4"));
 	_fill_status_codes();
 }
 
@@ -350,7 +352,7 @@ void Response::_fill_status_codes(void)
 
 /*-------------------------------------------------------------------------------*/
 /* public methods to hand bad_allocation, iternal_errors and Forbidden_methods response */
-void Response::Forbidden_method(void) { _fill_response(".html", 403, "Forbidden"); }
+void Response::Forbidden_method(void) { _fill_response(".html", 400, "mouad"); }
 void Response::handleMaxBodySize(void) {_fill_response(".html", 413, "Request Entity Too Large"); }	
 void Response::handleBadRequest(void) {_fill_response(".html", 400, "Bad Request"); }
 void Response::bad_allocation(void)
@@ -1114,10 +1116,7 @@ void Response::_set_headers(size_t status_code, std::string const &message, size
 	_response += "Server: webserver\r\n";
 	ss_content << content_length;
 	_response += "Content-Length: " + ss_content.str() + "\r\n";
-	if (extention == "php")
-		_response += "Content-Type: " + _type[extention] + "\r\n";
-	else
-		_response += "Content-Type: " + _type[extention] + '/' + extention + "\r\n";
+	_response += "Content-Type: " + _type[extention] + "\r\n";
 	_response += "Connection: close\r\n\r\n";
 }
 
@@ -1143,15 +1142,13 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 			if (!_file_is_good(true))
 				return;
 		}
-		_file.open(path);
-		while (!_file.eof())
-		{
-			std::getline(_file, line);
-			if (!_file.eof())
-				line += "\r\n";
-			*tmp_resp += line;
-		}
+		int fd = open(path.c_str(), O_RDONLY);
+		char buff[1024];
+		int ret;
+		while ((ret = read(fd, buff, 1024)))
+			*tmp_resp += std::string(buff, ret);
 		*tmp_resp += "\r\n";
+		close(fd);
 	}
 	else
 	{
