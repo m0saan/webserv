@@ -89,13 +89,11 @@ private:
 
     void _getBody(std::string &line, bool is_chunked, int&);
 
-    bool _isBodyEnd(const std::string &line) const;
-
-    bool _isBodyStart(const std::string &line, bool is_body) const;
-
     bool _isChunckStart(const std::string& line) const;
 
     void _checkForBadRequest();
+
+    bool is_allowed_method(std::string const& http_method);
 
 };
 
