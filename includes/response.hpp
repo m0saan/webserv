@@ -70,4 +70,6 @@ class Response
 		std::pair<std::string, std::string>& _queries_script_name;
 		std::map<std::string, std::string>*	_status_codes;
         int                       			_fd;
+		int									_fd_file;
+		int									_ret;
 };

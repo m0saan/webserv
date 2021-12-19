@@ -27,7 +27,9 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 	  _server_configs(config),
 	  _request_map(request_map),
 	  _queries_script_name(queries_script_name),
-	  _fd(fd)
+	  _fd(fd),
+	  _fd_file(-1),
+	  _ret(0)
 {
 	if (!found_forbidden_method)
 	{
@@ -36,11 +38,19 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 			_uri.erase(_uri.begin());
 		_root = _server_configs._root;
 	}
-	_type.insert(std::make_pair("json", "application/json"));
-	_type.insert(std::make_pair("html", "text/html"));
-	_type.insert(std::make_pair("php", "application/octet-stream"));
-	_type.insert(std::make_pair("jpg", "image/jpeg"));
-	_type.insert(std::make_pair("mp4", "video/std::map.insert(std::make_pair(mp4"));
+	std::ifstream extentions("/Users/mamoussa/Desktop/webserv/files/.extentions.txt");
+	std::string	line;
+	if (!extentions.good())
+	{
+		std::cout << "No extentions" << std::endl;
+		return;
+	}
+	while (!extentions.eof())
+	{
+		std::getline(extentions, line);
+		std::vector<std::string> v = Utility::split(line, ' ');
+		_type.insert(std::make_pair(v[0], v[1]));
+	}
 	_fill_status_codes();
 }
 
@@ -62,6 +72,8 @@ Response::~Response(void)
 	_file.close();
 	if (_fd != -1)
 		close(_fd);
+	if (_fd_file != -1)
+		close(_fd_file);
 	delete _status_codes;
 }
 Response &Response::operator=(Response const &x)
@@ -71,6 +83,8 @@ Response &Response::operator=(Response const &x)
 	*_status_codes = *(x._status_codes);
 	_size = x._size;
 	_bytes_sent = x._bytes_sent;
+	_fd_file = x._fd_file;
+	_ret = x._ret;
 	return *this;
 }
 
@@ -614,11 +628,11 @@ void Response::Post_request(void)
 			return;
 		}
 	}
-	// if (_server_configs._index.empty() && _server_configs._auto_index.empty())
-	// {
-	// 	_fill_response(".html", 403, "Forbiden");
-	// 	return;
-	// }
+	if (_server_configs._index.empty() && _server_configs._auto_index.empty())
+	{
+		_fill_response(".html", 403, "Forbiden");
+		return;
+	}
 	if (_server_configs._loc_path == "/upload")
 	{
 		if (!_request_map.count("Content-Disposition"))
@@ -671,11 +685,11 @@ void Response::Get_request(void)
 		_default_response();
 		return;
 	}
-	// if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
-	// {
-	// 	_fill_response(".html", 403, "Forbiden");
-	// 	return;
-	// }
+	if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
+	{
+		_fill_response(".html", 403, "Forbiden");
+		return;
+	}
 	// lets first check for alowed methods in this location
 	if (loc_path[0] != '/')
 		loc_path = '/' + loc_path;
@@ -970,11 +984,11 @@ void Response::_process_post_delete(std::string const &req_method)
 	// lets first check for alowed methods in this location
 	if (loc_path[0] != '/')
 		loc_path = '/' + loc_path;
-	// if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
-	// {
-	// 	_fill_response(".html", 403, "Forbiden");
-	// 	return;
-	// }
+	if (_is_dir(_root + '/' + loc_path) && _server_configs._index.empty() && _server_configs._auto_index.empty())
+	{
+		_fill_response(".html", 403, "Forbiden");
+		return;
+	}
 	// first lets check if the loc path is valid
 	if (_server_configs._cgi.empty())
 	{
@@ -1124,7 +1138,8 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 {
 	std::string line;
 	std::string *tmp_resp = new std::string();
-	std::stringstream ss;
+	std::stringstream 	ss;
+	size_t				len;
 	std::string path;
 
 	path = tmp_path;
@@ -1142,13 +1157,17 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 			if (!_file_is_good(true))
 				return;
 		}
-		int fd = open(path.c_str(), O_RDONLY);
+		if (_fd_file == -1)
+		{
+			struct stat s;
+
+			_fd_file = open(path.c_str(), O_RDONLY);
+			lstat(path.c_str(), &s);
+			len = s.st_size;
+		}
 		char buff[1024];
-		int ret;
-		while ((ret = read(fd, buff, 1024)))
-			*tmp_resp += std::string(buff, ret);
-		*tmp_resp += "\r\n";
-		close(fd);
+		_ret = read(_fd_file, buff, 1024);
+		*tmp_resp += std::string(buff, _ret);
 	}
 	else
 	{
@@ -1158,10 +1177,13 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 		ss >> buff;
 		delete tmp_resp;
 		tmp_resp = error_page(buff + ' ' + message);
+		len = tmp_resp->length();
 	}
 	// set all the needed response header
-	_set_headers(status_code, message, tmp_resp->length(), path);
+	if (_response.empty())
+		_set_headers(status_code, message, len, path);
 	_response += *tmp_resp;
+	std::cout << _response << std::endl;
 	delete tmp_resp;
 }
 

@@ -171,6 +171,7 @@ bool Server::readFromFd(int fd)
 			catch (std::exception const &e)
 			{
 				(void)e;
+				std::cerr << e.what() << std::endl;
 				res.internal_error();
 			}
 

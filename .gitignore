@@ -42,7 +42,5 @@ CMakeLists.txt
 request
 webserv
 .vscode/
-config_files/
-config_files/
 request
 response.html

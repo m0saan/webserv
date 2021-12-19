@@ -12,7 +12,7 @@
 
 SRCS = main.cpp src/parser.cpp src/request.cpp src/request_response.cpp src/response.cpp src/server.cpp src/sockets.cpp
 NAME = webserv
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -g
 
 all : $(NAME)
 
