@@ -63,13 +63,10 @@ std::vector<std::string> const &Request::getValue(const std::string &key)
 void Request::parseRequest()
 {
 	std::string line;
-	bool is_body(false);
 	bool is_chunked(false);
-	bool is_form_data(false);
 	bool is_header_end(false);
 	std::string http_method;
 	std::string boundary;
-	int total_read = 0;
 	int header_length = 0;
 	int read_ret = 0;
 	char *body_buffer = new char[1024];

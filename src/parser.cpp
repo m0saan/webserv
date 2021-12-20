@@ -300,7 +300,7 @@ std::vector<ServerConfig> performParsing(std::string const &filename)
 
             case Directives::LOCATION:
                 if (tokens.size() != 3 || tokens[2] != "[")
-                    exitError("erorr near token " + tokens[0]);
+                    exitError("erorr near block: <" + tokens[0] + ">");
                 globalConfig[i]._location.push_back(ServerConfig());
                 ++j;
                 globalConfig[i]._location[j]._loc_path = tokens[1];
