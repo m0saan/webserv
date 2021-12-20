@@ -233,7 +233,7 @@ void Server::sendResponse(int fd)
 	int ret = req_res.isResponseCompleted(fd);
 	if (ret != 0)
 		req_res.append_response(fd);
-	if (sent == -1 || sent == 0)																																						// send failed
+	if (sent == -1)																																						// send failed
 	{
 		perror("send ");
 		req_res.remove_fd(fd, 1, 1, 1); // erase client req object from map

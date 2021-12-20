@@ -42,6 +42,8 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 				_queries_script_name.second.erase(_queries_script_name.second.begin());
 		}
 		_req_method = _request_map["SL"][0];
+		FD_ZERO(&_set);
+		FD_ZERO(&_tmp_set);
 	}
 	std::ifstream extentions("./files/extentions.txt");
 	std::string	line;
@@ -88,6 +90,7 @@ Response &Response::operator=(Response const &x)
 	_tmp_path  = x._tmp_path;
 	_status_code = x._status_code;
 	_message = x._message;
+	FD_ZERO(&_set);
 	return *this;
 }
 
@@ -1202,9 +1205,26 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 			lstat(path.c_str(), &s);
 			len = s.st_size;
 		}
-		char buff[1024];
-		_ret = read(_fd_file, buff, 1024);
-		*tmp_resp += std::string(buff, _ret);
+		FD_SET(_fd_file, &_set);
+		_tmp_set = _set;
+		if (select(_fd_file + 1, &_tmp_set, NULL, NULL, NULL) < 0)
+		{
+			_response.clear();
+			internal_error();
+			return;
+		}
+		if (FD_ISSET(_fd_file, &_tmp_set))
+		{
+			char buff[1024];
+			_ret = read(_fd_file, buff, 1024);
+			*tmp_resp += std::string(buff, _ret);
+		}
+		else
+		{
+			_response.clear();
+			internal_error();
+			return;
+		}
 	}
 	else
 	{

@@ -77,4 +77,6 @@ class Response
 		size_t								_status_code;
 		std::string							_tmp_path;
 		std::string							_message;
+		fd_set								_set;
+		fd_set								_tmp_set;
 };
