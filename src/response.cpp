@@ -26,10 +26,11 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 	  _server_configs(config),
 	  _request_map(request_map),
 	  _queries_script_name(queries_script_name),
-	  _fd(fd),
 	  _fd_file(-1),
 	  _ret(0)
 {
+	if (fd != -1)
+		_fd = dup(fd);
 	if (!found_forbidden_method)
 	{
 		_uri = _request_map["SL"][1];
