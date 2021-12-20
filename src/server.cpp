@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/20 14:28:55 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/20 15:13:59 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,9 +227,10 @@ bool Server::readFromFd(int fd)
 
 void Server::sendResponse(int fd)
 {
-	int sent;
+	int sent = -1;
 
-	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
+	if ((req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)))
+		sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
 	int ret = req_res.isResponseCompleted(fd);
 	if (ret != 0)
 		req_res.append_response(fd);
