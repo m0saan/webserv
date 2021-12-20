@@ -66,83 +66,86 @@ void Request::parseRequest()
 	bool is_body(false);
 	bool is_chunked(false);
 	bool is_form_data(false);
+	bool is_header_end(false);
 	std::string http_method;
 	std::string boundary;
 	int total_read = 0;
+	int header_length = 0;
+	int read_ret = 0;
+	char *body_buffer = new char[1024];
 
 	system("rm -f /tmp/body"); // remove the file if it's existe
-	_body_stream.open("/tmp/body", std::fstream::in | std::fstream::out | std::fstream::app);
+	_fd = open("/tmp/body", O_CREAT | O_RDWR, 000777);
+
 	std::fstream ifs;
 	ifs.open(_req_filename, std::ios::in);
+
+	if (!_passFdThroughSelect(_fd))
+	{
+		_is_forbiden_method = true;
+		return;
+	}
 	while (std::getline(ifs, line))
 	{
+		header_length += (line.length() + 1);
 		if (_is_forbiden_method)
 		{
 			ifs.close();
-			_body_stream.close();
-			system("rm -f /tmp/body");								  // remove the file if it's existe
-			// system((std::string("rm -rf ") + _req_filename).c_str()); // remove the file if it's existe
+			close(_fd);
+			std::remove((_req_filename).c_str());
+			system("rm -f /tmp/body"); // remove the file if it exist
 			return;
+		}
+
+		if (line == "\r")
+		{
+			if (!is_header_end && !boundary.empty())
+			{
+				is_header_end = true;
+				continue;
+			}
+			if (is_header_end || boundary.empty())
+				break;
 		}
 
 		if (!line.empty() && line.at(line.length() - 1) == '\r')
 			line.pop_back();
 
-		if (!is_body && line.empty())
-		{
-			is_body = true;
-			continue;
-		}
-
-		if (_isChunckStart(line))
-		{
-			is_chunked = true;
-			continue;
-		}
-
 		if (!boundary.empty() && line.find(boundary) != std::string::npos)
-		{
-			is_form_data = true;
-			is_body = false;
 			continue;
-		}
-		if (!is_body)
-		{
-			std::vector<std::string> res = Utility::split(line);
-			std::size_t key_length = res.at(0).length() - 1;
-			if ((!res.empty() && std::isupper(res.at(0).at(0)) && res.at(0).at(key_length) == ':') || !_RequestMap.count("SL"))
-				_getHeader(line, http_method, boundary);
-		}
-		else
-			_getBody(line, is_chunked, total_read);
+		_getHeader(line, http_method, boundary);
 	}
-	_body_stream.close();
 
-	_checkForBadRequest();
+	int request_fd = open(_req_filename.c_str(), O_RDONLY);
+	if (!_passFdThroughSelect(request_fd))
+	{
+		_is_forbiden_method = true;
+		return;
+	}
+	int i = 0;
+	read(request_fd, body_buffer, header_length);
+	while ((read_ret = read(request_fd, body_buffer, 1024)))
+	{
+		if (!is_chunked && _isChunckStart(line))
+			is_chunked = true;
+		if (is_chunked)
+			if (i % 2 != 0)
+				continue;
+		write(_fd, body_buffer, read_ret);
+	}
 
-	_fd = !total_read ? -1 : open("/tmp/body", O_RDONLY);
-
+	delete[] body_buffer;
+	if (_RequestMap.count("Content-Disposition"))
+		system("sed '$d' /tmp/body > /tmp/temp; mv /tmp/temp /tmp/body");
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
-	_body_stream.close();
 	ifs.close();
-	// std::remove((_req_filename).c_str());
+	std::remove((_req_filename).c_str());
 }
 
 bool Request::_isChunckStart(std::string const &line) const
 {
 	return (line.length() > 0 && isnumber(line[0]));
-}
-
-void Request::_getBody(std::string &line, bool is_chunked, int &total_read)
-{
-	line.push_back('\n');
-	static int i = 0;
-	if (is_chunked)
-		if (i % 2 != 0)
-			return;
-	total_read += line.length();
-	_body_stream << line;
 }
 
 bool Request::_isBody(std::string const &line, bool const &is_body) const { return line == "{" && is_body; }
@@ -221,7 +224,8 @@ void Request::_getHeader(const std::string &line, std::string &http_method, std:
 
 	if (_RequestMap.count("SL") == 0)
 	{
-		if (tokens.size() && std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end()) {
+		if (tokens.size() && std::find(_allowed_http_methods.begin(), _allowed_http_methods.end(), tokens[0]) == _allowed_http_methods.end())
+		{
 			// std::cout << tokens[0] << std::endl;
 			_is_forbiden_method = true;
 			return;
@@ -323,7 +327,19 @@ bool _is_allowed_method(std::string const &http_method)
 	return (http_method == "GET" || http_method == "POST" || http_method == "DELETE");
 }
 
-bool Request::_canGetBoundary(std::vector<std::string> &tokens, std::string &http_method, std::string &boundary) {
-	return tokens.size() > 2 && http_method == "POST" && tokens[0] == "Content-Type:"
-	&& (_RequestMap["SL"][1] == "/upload" || _RequestMap["SL"][1] == "/upload/") && boundary.empty();
+bool Request::_canGetBoundary(std::vector<std::string> &tokens, std::string &http_method, std::string &boundary)
+{
+	return tokens.size() > 2 && http_method == "POST" && tokens[0] == "Content-Type:" && (_RequestMap["SL"][1] == "/upload" || _RequestMap["SL"][1] == "/upload/") && boundary.empty();
+}
+
+bool Request::_passFdThroughSelect(int fd)
+{
+	fd_set set;
+
+	FD_ZERO(&set);
+	FD_SET(fd, &set);
+
+	select(fd + 1, &set, NULL, NULL, NULL);
+
+	return FD_ISSET(fd, &set);
 }
