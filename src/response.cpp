@@ -35,6 +35,8 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 		_uri = _request_map["SL"][1];
 		if (*_uri.begin() == '/')
 			_uri.erase(_uri.begin());
+		if (*(--_server_configs._root.end()) == '/')
+			_server_configs._root.erase(--_server_configs._root.end());
 		_root = _server_configs._root;
 		if (!_queries_script_name.second.empty())
 		{
@@ -727,6 +729,8 @@ void Response::Get_request(void)
 	if (_server_configs._cgi.empty())
 	{
 		_file_path = _root + loc_path;
+		if (*(--_file_path.end()) == '/')
+			_file_path.erase(--_file_path.end());
 		if (!_file_is_good(true))
 			return;
 		_file_path.clear();
@@ -1104,6 +1108,8 @@ void Response::_process_as_dir(void)
 	{
 		for (size_t i = 0; i < index.size(); ++i)
 		{
+			if (*(--_root.end()) == '/')
+				_root.erase(--_root.end());
 			_file_path = _root + '/' + index[i];
 			if (!(found = _file_is_good(false)) && errno != 2) // if the file exists but we don't have the permissions to read from it
 			{
@@ -1248,7 +1254,6 @@ void Response::_fill_response(std::string const &tmp_path, size_t status_code, s
 	if (_response.empty())
 		_set_headers(status_code, message, len, path);
 	_response += *tmp_resp;
-	// std::cout << _response << std::endl;
 	delete tmp_resp;
 }
 
@@ -1257,7 +1262,11 @@ bool Response::_file_is_good(bool fill_resp)
 	int fd;
 
 	if (_file_path.empty())
+	{
+		if (*(--_root.end()) == '/')
+			_root.erase(--_root.end());
 		_file_path = _root + '/' + _uri;
+	}
 	if ((fd = open(_file_path.c_str(), O_RDONLY)) < 0)
 	{
 		if ((errno == 2 || errno == 13) && fill_resp)
