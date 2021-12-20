@@ -14,7 +14,7 @@ int getDirective(std::string const &token)
         std::make_pair("host", Directives::HOST),
         std::make_pair("server_name", Directives::SERVER_NAME),
         std::make_pair("error_page", Directives::ERROR_PAGE),
-        std::make_pair("max_file_size", Directives::MAX_FILE_SIZE),
+        std::make_pair("max_body_size", Directives::MAX_FILE_SIZE),
         std::make_pair("time_out", Directives::TIME_OUT),
         std::make_pair("location", Directives::LOCATION),
         std::make_pair("root", Directives::ROOT),
