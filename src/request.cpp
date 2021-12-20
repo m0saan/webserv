@@ -31,7 +31,7 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_allowed_http_methods = x._allowed_http_methods;
 	_is_forbiden_method = x._is_forbiden_method;
 	_url_queries_scriptName = x._url_queries_scriptName;
-	_fd = dup(x._fd);
+	_fd = x._fd;
 	_bad_request_found = x._bad_request_found;
 	_RequestMap = x._RequestMap;
 	_req_filename = x._req_filename;
@@ -142,6 +142,7 @@ void Request::parseRequest()
 	if (_RequestMap.count("Connection"))
 		_is_alive_connection = _RequestMap["Connection"][0] != "close";
 	ifs.close();
+	close(request_fd);
 	std::remove((_req_filename).c_str());
 }
 

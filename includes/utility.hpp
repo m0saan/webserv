@@ -93,7 +93,7 @@ public:
     static ServerConfig getDefaultServerConfig()
     {
         ServerConfig default_server_config;
-        default_server_config._port = "80";
+        default_server_config._port = "8000";
         default_server_config._host = "localhost";
         default_server_config._server_name = "localhost";
         default_server_config._root = "./";

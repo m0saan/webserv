@@ -569,7 +569,7 @@ void Response::_redirect_with_location(size_t status_code)
 void Response::_redirect_without_location(size_t status_code)
 {
 	time_t rawtime;
-	std::string *tmp_res = NULL;
+	std::string tmp_res;
 	std::string status = _server_configs._redirect.first;
 	std::string message = _status_codes->operator[](status);
 	std::stringstream ss;
@@ -583,17 +583,13 @@ void Response::_redirect_without_location(size_t status_code)
 	if (status_code == 204)
 		return;
 	if (status_code != 304)
-		tmp_res = error_page(status + ' ' + message);
-	else
-		*tmp_res = _server_configs._redirect.second + "\r\n";
-	ss << tmp_res->length();
+		tmp_res = _server_configs._redirect.second + "\r\n";
+	ss << tmp_res.length();
 	_response += "Content-Type: application/octet-stream\r\n";
-	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n\r\n";
 	if (status_code != 304)
-	{
-		_response += *tmp_res;
-		delete tmp_res;
-	}
+		_response += tmp_res;
+	std::cout << _response;
 }
 void Response::Redirection(void)
 {

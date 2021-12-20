@@ -6,7 +6,7 @@
 #    By: mbani <mbani@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/12/18 18:15:22 by mbani             #+#    #+#              #
-#    Updated: 2021/12/20 22:14:39 by mbani            ###   ########.fr        #
+#    Updated: 2021/12/21 00:31:14 by mbani            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ FLAGS = -Wall -Wextra -Werror
 all : $(NAME)
 
 $(NAME) : $(SRCS)
-	@clang++ $(FLAGS) $(SRCS) -g -o $(NAME)
+	@clang++ $(FLAGS) $(SRCS) -o $(NAME)
 
 run:
 	@ ./$(NAME) config_files/cgi_tests.config
