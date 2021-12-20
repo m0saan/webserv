@@ -98,7 +98,6 @@ private:
 
     bool _canGetBoundary(std::vector<std::string> &tokens, std::string &http_method, std::string &boundary);
 
-    bool _passFdThroughSelect(int fd);
 };
 
 #endif // __Request_HPP__

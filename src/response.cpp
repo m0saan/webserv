@@ -846,6 +846,8 @@ std::vector<char const *> Response::_cgi_meta_var(void)
 
 std::string *get_res(int fd)
 {
+	if (!Utility::passFdThroughSelect(fd))
+		return new std::string();
 	std::string *ans = new std::string();
 	char buff[1024] = {0};
 	int ret;
@@ -929,6 +931,12 @@ void Response::_cgi(void)
 		return;
 	}
 	tmp_res = get_res(pfd[0]);
+	if (tmp_res->empty())
+	{
+		_response.clear();
+		internal_error();
+		return;
+	}
 	// if the tmp_res contains the Status header field then we should erase it, because it will be added
 	if ((index = tmp_res->find("Status")) != std::string::npos)
 		tmp_res->erase(tmp_res->begin() + index, tmp_res->begin() + tmp_res->find_first_of('\n', index) + 1);

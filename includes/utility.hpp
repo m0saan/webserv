@@ -57,7 +57,7 @@ public:
     {
         std::string ret;
         char ch;
-        size_t i; 
+        size_t i;
         int ii;
         for (i = 0; i < SRC.length(); i++)
         {
@@ -189,6 +189,18 @@ public:
             possible_blocks[0]._max_file_size = loc._max_file_size;
 
         return possible_blocks[0];
+    }
+
+    static bool passFdThroughSelect(int fd)
+    {
+        fd_set set;
+
+        FD_ZERO(&set);
+        FD_SET(fd, &set);
+
+        select(fd + 1, &set, NULL, NULL, NULL);
+
+        return FD_ISSET(fd, &set);
     }
 };
 

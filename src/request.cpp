@@ -80,7 +80,7 @@ void Request::parseRequest()
 	std::fstream ifs;
 	ifs.open(_req_filename, std::ios::in);
 
-	if (!_passFdThroughSelect(_fd))
+	if (!Utility::passFdThroughSelect(_fd))
 	{
 		_is_forbiden_method = true;
 		return;
@@ -117,7 +117,7 @@ void Request::parseRequest()
 	}
 
 	int request_fd = open(_req_filename.c_str(), O_RDONLY);
-	if (!_passFdThroughSelect(request_fd))
+	if (!Utility::passFdThroughSelect(request_fd))
 	{
 		_is_forbiden_method = true;
 		return;
@@ -330,16 +330,4 @@ bool _is_allowed_method(std::string const &http_method)
 bool Request::_canGetBoundary(std::vector<std::string> &tokens, std::string &http_method, std::string &boundary)
 {
 	return tokens.size() > 2 && http_method == "POST" && tokens[0] == "Content-Type:" && (_RequestMap["SL"][1] == "/upload" || _RequestMap["SL"][1] == "/upload/") && boundary.empty();
-}
-
-bool Request::_passFdThroughSelect(int fd)
-{
-	fd_set set;
-
-	FD_ZERO(&set);
-	FD_SET(fd, &set);
-
-	select(fd + 1, &set, NULL, NULL, NULL);
-
-	return FD_ISSET(fd, &set);
 }
