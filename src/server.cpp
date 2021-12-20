@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/20 14:28:55 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/20 15:55:58 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,23 +227,28 @@ bool Server::readFromFd(int fd)
 
 void Server::sendResponse(int fd)
 {
-	int sent;
-
-	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
-	int ret = req_res.isResponseCompleted(fd);
-	if (ret != 0)
-		req_res.append_response(fd);
-	if (sent == -1 || sent == 0)																																						// send failed
+	int sent = -1;
+	
+	if (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd) != 0)
 	{
-		perror("send ");
-		req_res.remove_fd(fd, 1, 1, 1); // erase client req object from map
-		req_res.remove_fd(fd, 0, 1, 1); // remove client from write fd and erase res object from map
-		req_res.close_connection(fd);
-		socketFree(fd);
-		return;
+		sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
+		// std::cout << " Fd " << fd << " sent " << sent << " remaining  " << req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd) << std::endl;
+		int ret = req_res.isResponseCompleted(fd);
+		if (ret != 0)
+			req_res.append_response(fd);
+		if (sent == -1 || sent == 0)																																						// send failed
+		{
+			perror("send ");
+			// std::cout << fd << std::endl;
+			req_res.remove_fd(fd, 1, 1, 1); // erase client req object from map
+			req_res.remove_fd(fd, 0, 1, 1); // remove client from write fd and erase res object from map
+			req_res.close_connection(fd);
+			socketFree(fd);
+			return;
+		}
+		req_res.update_sent_bytes(fd, sent);
 	}
-	req_res.update_sent_bytes(fd, sent);
-	if (req_res.get_response_length(fd) == (ssize_t)req_res.get_res_bytes_sent(fd) && ret == 0) // response is completely sent
+	if (req_res.get_response_length(fd) == (ssize_t)req_res.get_res_bytes_sent(fd) && req_res.isResponseCompleted(fd) == 0) // response is completely sent
 	{
 		if (!req_res.getMap()[fd]._is_alive_connection) // close connection
 		{

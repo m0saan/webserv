@@ -107,7 +107,7 @@ void	Sockets::listen_socket() const
 
 Sockets* 	Sockets::accept_connection(int sock_fd)
 {
-	int client_fd;
+	int client_fd = -1;
 	struct sockaddr_in new_sock_add;
 	socklen_t new_socklen;
 	int option_value = 1 ;// to activate socket option (NOSIGPIPE)
