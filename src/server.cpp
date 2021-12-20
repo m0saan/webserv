@@ -238,7 +238,7 @@ void Server::sendResponse(int fd)
 {
 	int sent;
 	// sleep(5);
-	// std::cout << "Send from " << req_res.get_res_bytes_sent(fd) << " remaining bytes " << (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)) << std::endl;
+	std::cout << "Send from " << req_res.get_res_bytes_sent(fd) << " remaining bytes " << (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)) << std::endl;
 	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
 	int ret = req_res.isResponseCompleted(fd);
 	// std::cout << "ret " << ret << std::endl;

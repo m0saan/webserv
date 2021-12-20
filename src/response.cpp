@@ -41,6 +41,7 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 			if (_queries_script_name.second[0] == '/')
 				_queries_script_name.second.erase(_queries_script_name.second.begin());
 		}
+		_req_method = _request_map["SL"][0];
 	}
 	std::ifstream extentions("./files/extentions.txt");
 	std::string	line;
@@ -51,7 +52,6 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 		_type.insert(std::make_pair(v[0], v[1]));
 	}
 	_fill_status_codes();
-	_req_method = _request_map["SL"][0];
 }
 
 Response::Response(Response const &x)
@@ -374,7 +374,20 @@ void Response::_fill_status_codes(void)
 
 /*-------------------------------------------------------------------------------*/
 /* public methods to hand bad_allocation, iternal_errors and Forbidden_methods response */
-void Response::Forbidden_method(void) { _fill_response(".html", 400, "mouad"); }
+void Response::Forbidden_method(void) { 
+	time_t rawtime;
+
+	time(&rawtime);
+	_response += "HTTP/1.1 403 Forbidden\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Content-Length: 0\r\n";
+	_response += "Connection: close\r\n\r\n";
+	// _fill_response(".html", 403, "Forbidden"); 
+	std::cout << _response; 
+}
 void Response::handleMaxBodySize(void) {_fill_response(".html", 413, "Request Entity Too Large"); }	
 void Response::handleBadRequest(void) {_fill_response(".html", 400, "Bad Request"); }
 void Response::bad_allocation(void)
