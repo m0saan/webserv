@@ -64,11 +64,11 @@ class Response
 		std::string 						_file_path;
 		std::string							_root;
 		std::string							_uri;
-		std::map<std::string, std::string>& _error_pages;
+		std::map<std::string, std::string> _error_pages;
 		std::map<std::string, std::string> 	_type;
-		ServerConfig&						_server_configs;
-		std::map<std::string, std::vector<std::string> >& _request_map;
-		std::pair<std::string, std::string>& _queries_script_name;
+		ServerConfig						_server_configs;
+		std::map<std::string, std::vector<std::string> > _request_map;
+		std::pair<std::string, std::string> _queries_script_name;
 		std::map<std::string, std::string>*	_status_codes;
         int                       			_fd;
 		int									_fd_file;

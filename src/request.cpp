@@ -121,6 +121,11 @@ void Request::parseRequest()
 	}
 	int i = 0;
 	read(request_fd, body_buffer, header_length);
+	if (!Utility::passFdThroughSelect(_fd))
+	{
+		_is_forbiden_method = true;
+		return;
+	}
 	while ((read_ret = read(request_fd, body_buffer, 1024)))
 	{
 		if (!is_chunked && _isChunckStart(line))
