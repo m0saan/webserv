@@ -173,7 +173,7 @@ bool Server::readFromFd(int fd)
 					std::stringstream tmp_convert;
 					long request_content_length = 0;
 					long config_content_length = 0;
-					if (_request_map.count("Content-Length"))
+					if (_request_map["SL"][0] != "GET" && _request_map.count("Content-Length"))
 					{
 						tmp_convert << _request_map["Content-Length"][0];
 						tmp_convert >> request_content_length;
