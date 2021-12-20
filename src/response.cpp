@@ -26,11 +26,10 @@ Response::Response(ServerConfig &config, std::map<std::string, std::vector<std::
 	  _server_configs(config),
 	  _request_map(request_map),
 	  _queries_script_name(queries_script_name),
+	  _fd(fd),
 	  _fd_file(-1),
 	  _ret(0)
 {
-	if (fd != -1)
-		_fd = dup(fd);
 	if (!found_forbidden_method)
 	{
 		_uri = _request_map["SL"][1];
@@ -61,8 +60,7 @@ Response::Response(Response const &x)
 	  _error_pages(x._error_pages),
 	  _server_configs(x._server_configs),
 	  _request_map(x._request_map),
-	  _queries_script_name(x._queries_script_name),
-	  _fd(x._fd)
+	  _queries_script_name(x._queries_script_name)
 {
 	*this = x;
 }
@@ -83,6 +81,7 @@ Response &Response::operator=(Response const &x)
 	*_status_codes = *(x._status_codes);
 	_bytes_sent = x._bytes_sent;
 	_fd_file = dup(x._fd_file);
+	_fd = dup(x._fd);
 	_ret = x._ret;
 	_root = x._root;
 	_uri = x._uri;
