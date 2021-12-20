@@ -11,6 +11,7 @@ Request::Request(long long max_size) : _size(-1), _content_length(-1), _header_l
 	_is_forbiden_method = false;
 	_bad_request_found = false;
 	_is_chunked_completed = false;
+	_fd = -1;
 	_allowed_http_methods.push_back("GET");
 	_allowed_http_methods.push_back("POST");
 	_allowed_http_methods.push_back("DELETE");
@@ -30,7 +31,7 @@ Request::Request(const Request &x) : _is_alive_connection(x._is_alive_connection
 	_allowed_http_methods = x._allowed_http_methods;
 	_is_forbiden_method = x._is_forbiden_method;
 	_url_queries_scriptName = x._url_queries_scriptName;
-	_fd = x._fd;
+	_fd = dup(x._fd);
 	_bad_request_found = x._bad_request_found;
 	_RequestMap = x._RequestMap;
 	_req_filename = x._req_filename;
@@ -80,7 +81,7 @@ void Request::parseRequest()
 			ifs.close();
 			_body_stream.close();
 			system("rm -f /tmp/body");								  // remove the file if it's existe
-			system((std::string("rm -rf ") + _req_filename).c_str()); // remove the file if it's existe
+			// system((std::string("rm -rf ") + _req_filename).c_str()); // remove the file if it's existe
 			return;
 		}
 

@@ -385,8 +385,6 @@ void Response::Forbidden_method(void) {
 	_response += "Server: webserver\r\n";
 	_response += "Content-Length: 0\r\n";
 	_response += "Connection: close\r\n\r\n";
-	// _fill_response(".html", 403, "Forbidden"); 
-	std::cout << _response; 
 }
 void Response::handleMaxBodySize(void) {_fill_response(".html", 413, "Request Entity Too Large"); }	
 void Response::handleBadRequest(void) {_fill_response(".html", 400, "Bad Request"); }
@@ -661,11 +659,11 @@ void Response::Post_request(void)
 
 			if (_request_map.count("Content-Type"))
 				extention = Utility::split(_request_map["Content-Type"][0], '/')[1];
-			std::cout << extention << std::endl;
+			// std::cout << extention << std::endl;
 			seconds = time(NULL);
 			ss << rand() % 20;
 			file_name = std::string("file_" + ss.str()) + std::to_string(seconds) +'.' + extention;
-			std::cout << file_name << std::endl;
+			// std::cout << file_name << std::endl;
 
 		}
 		time_t rawtime;
@@ -937,7 +935,7 @@ void Response::_cgi(void)
 		_fill_cgi_response(tmp_res, false);
 	close(pfd[0]);
 	close(_fd);
-	std::cout << _response;
+	// std::cout << _response;
 	delete tmp_res;
 }
 /*---------------------------------------------------------------------------------------------------*/

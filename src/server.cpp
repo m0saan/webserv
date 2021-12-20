@@ -6,7 +6,7 @@
 /*   By: mbani <mbani@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 13:41:20 by mbani             #+#    #+#             */
-/*   Updated: 2021/12/19 20:26:49 by mbani            ###   ########.fr       */
+/*   Updated: 2021/12/20 14:28:55 by mbani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,18 +150,12 @@ bool Server::readFromFd(int fd)
 			return false;
 		if (req_res.req_completed(fd))
 		{
-			// std::cout << "completed " ;
-			(req_res.getMap())[fd].parseRequest(); // Parse Request
-			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
-			std::map<std::string, std::vector<std::string> >::iterator start = _request_map.begin();
-
-			for (; start != _request_map.end(); start++)
-				std::cout << '(' << start->first << ", " << start->second << ')' << std::endl;
-			
-
 			bool is_bad_request(false);
 			ServerConfig chosen_config;
 			bool is_body_size_exceeded(false);
+
+			(req_res.getMap())[fd].parseRequest(); // Parse Request
+			std::map<std::string, std::vector<std::string> > _request_map = req_res.getMap()[fd].getMap();
 
 			if (!((req_res.getMap())[fd].getIsFobiddenMethod()))
 			{
@@ -223,12 +217,9 @@ bool Server::readFromFd(int fd)
 				std::cerr << e.what() << std::endl;
 				res.internal_error();
 			}
-
-			// res._size = res.get_response().length();
-			req_res.add_response(fd, res);
-
+			req_res.add_response(fd, res); // add response to map
 			req_res.set_fd(fd, false, true); // add client fd to write set
-			req_res.remove_fd(fd, 1, 1);
+			req_res.remove_fd(fd, 1, 1); // remove fd from reading set
 		}
 	}
 	return true;
@@ -237,17 +228,12 @@ bool Server::readFromFd(int fd)
 void Server::sendResponse(int fd)
 {
 	int sent;
-	// sleep(5);
-	std::cout << "Send from " << req_res.get_res_bytes_sent(fd) << " remaining bytes " << (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)) << std::endl;
+
 	sent = send(fd, (void *)(req_res.getResponse(fd).c_str() + req_res.get_res_bytes_sent(fd)), (req_res.get_response_length(fd) - req_res.get_res_bytes_sent(fd)), 0); // std::cout << sent  << " " << req_res.get_response_length(fd) << std::endl;
 	int ret = req_res.isResponseCompleted(fd);
-	// std::cout << "ret " << ret << std::endl;
 	if (ret != 0)
-	{
 		req_res.append_response(fd);
-		// std::cout << "New Length " << req_res.get_response_length(fd) << std::endl;
-	}																																			//ToDo: Handle Error case 0 and -1
-	if (sent == -1)																																						// send failed
+	if (sent == -1 || sent == 0)																																						// send failed
 	{
 		perror("send ");
 		req_res.remove_fd(fd, 1, 1, 1); // erase client req object from map
